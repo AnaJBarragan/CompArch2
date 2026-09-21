@@ -41,7 +41,7 @@
 - Décisions : Apres allumer la DEL rouge, nous avons essaye de commencer le Lab 1. 
 - Difficultés et solutions : Apres avoir etabli que nous devions faire E1-E3, nous savions toujours pas comment le faire. Notre solution a ete de bien prendre le temps de lire la documentation avant la prochaine session pour ne pas avoir cette problematique lors de la session planifie du lab 1. 
 - Essais et mesures : N/A
-- Validations Git (auteur, message) :
+- Validations Git (auteur, message) : Ana, 'Journal Seance 0'
 
 ### Séance 1 — `<date>` — réalise : `<nom>` / valide : `<nom>`
 - Objectifs :
