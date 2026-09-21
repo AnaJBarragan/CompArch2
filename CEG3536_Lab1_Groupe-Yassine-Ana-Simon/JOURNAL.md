@@ -1,6 +1,6 @@
 # JOURNAL.md — Journal d'équipe, CEG 3536, laboratoire 1 (automne 2026)
 
-Équipe : `<NomA>` et `<NomB>` — Section : `A01 / A02` — Dépôt Git : `<adresse>`
+Équipe : `Ana Barragan Martinez`, `Yassine Yandouzi` et `Simon ` — Section : `A02` — Dépôt Git : `https://github.com/AnaJBarragan/CompArch2`
 
 ## Jalon J1 (au plus tard le vendredi 25 septembre 2026, validé dans Git)
 
@@ -35,12 +35,12 @@
 
 ## Journal des séances
 
-### Séance 0 — `<date>` — réalise : `<nom>` / valide : `<nom>`
-- Objectifs :
-- Fait :
-- Décisions :
-- Difficultés et solutions :
-- Essais et mesures :
+### Séance 0 — `15/09/2026 (ecrit le 21/09/2026)` — réalise : `Ana` / valide : `Ana`
+- Objectifs : Se familiariser avec le materiel et le programme, creer le git repo et faire marcher le premier programme pour allumer la DEL rouge. 
+- Fait : Nous avons complete les 3 objectifs, le repo est maintenant cree et nous avons reussi a allumer la DEL rouge. 
+- Décisions : Apres allumer la DEL rouge, nous avons essaye de commencer le Lab 1. 
+- Difficultés et solutions : Apres avoir etabli que nous devions faire E1-E3, nous savions toujours pas comment le faire. Notre solution a ete de bien prendre le temps de lire la documentation avant la prochaine session pour ne pas avoir cette problematique lors de la session planifie du lab 1. 
+- Essais et mesures : N/A
 - Validations Git (auteur, message) :
 
 ### Séance 1 — `<date>` — réalise : `<nom>` / valide : `<nom>`
