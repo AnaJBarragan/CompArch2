@@ -127,46 +127,45 @@ if(niveau_brut != niveau valide) {
 
 */
 
-	ldr r6, r6 = btn_valide[i]        /*(step 2)  nivBrut(r5) = btn => btn_cmp = 0 */
-	 ldr r0,  [r6, r4, lsl #2]          /*  r0 = btn [id] =>  */
-	 cmp r0, r5                        /*niveau brut == niveau */
-	bne    btn_step3                           /* CMP = FALSE = Branch not equal  */
+    ldr r6, =btn_valide                /* step 2: comparer avec la valeur validée */
+    ldr r0, [r6, r4, lsl #2]
+    cmp r0, r5
+    bne btn_step3
 
-
-	/* if step 2 = TRUE, return 0/ compteur[id] = 0*/
-	ldr r6,  =btn_compteur             /*  return compteur[id] = 0 and return 0     */
-	mov r0, #0   /* ro= 0*/
-	str r0, [r6, r4, lsl #2]    /*btn cmopteur ID = 0 */
-	pop [r4, r5, r6, lr]												/* return 0*/
+    /* niveau inchangé: remettre le compteur à 0 et retourner 0 */
+    ldr r6, =btn_compteur
+    movs r0, #0
+    str r0, [r6, r4, lsl #2]
+    pop {r4, r5, r6, pc}
 
 
 //STEP 3
 btn_step3: /*step 3 ==> ELSE : compteur[id] ++  */
-	ldr r6, = btn_compteur                                                  /*c */
-	ldr r0, [r6, r4, lsl #2]
-	add r0, r0  + #1 /* Compteur +1*/
-	str r0, [r6, r4, lsl #2]                                                /* r0 = compteur[id]*/
+    ldr r6, =btn_compteur
+    ldr r0, [r6, r4, lsl #2]
+    adds r0, r0, #1
+    str r0, [r6, r4, lsl #2]
 
 
 	/* STEP 4	*/
-	cmp r0,   #30                 /* IF: compteur[id] < 30/1*/
-	bge  btn_step4                 /* CMP = TRUE = compteur[id] > 30  ==> ELSE: branch*/
-	mov r0, #0
-	pop [r4, r5, r6, lr]    /* IF =TRUE= RETURN 0*/
+    cmp r0, #30
+    bge btn_step4
+    movs r0, #0
+    pop {r4, r5, r6, pc}
 
 //STEP4
 btn_step4: /*4. sinon (niveau stable depuis la fenêtre) : btn_valide[id] = niveau ;
  *      btn_compteur[id] = 0 ; retourner 1 si niveau == 1 (front d'appui), 0 sinon*/
-	ldr r6, =btn_valide
-	str r5, [r6, r4, lsl #2]                  /* valide[i] = niveau ] r5*/
+    ldr r6, =btn_valide
+    str r5, [r6, r4, lsl #2]
 
 
-	ldr r6, =btn_compteur
-	mov r0, #0                     /*ro = 0*/
-	str r0, [r6, r4, lsl #2]         /* btn_compteur[i] = 0*/
+    ldr r6, =btn_compteur
+    movs r0, #0
+    str r0, [r6, r4, lsl #2]
 
-	mov r0, r5 /*r5=niveu*/
-	pop [r4, r5, r6, lr]
+    mov r0, r5
+    pop {r4, r5, r6, pc}
 
 
 button_pressed_non:
