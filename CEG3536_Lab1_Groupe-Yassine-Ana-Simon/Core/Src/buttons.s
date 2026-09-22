@@ -79,8 +79,8 @@ button_raw_invalide:
     .type   button_pressed, %function
 button_pressed:
     push    {r4, r5, r6, lr}
-    cmp     r0, #2
-    bhi     button_pressed_non
+    cmp     r0, #2                      // C = 1 if r0>=r1; else C = 0. 
+    bhi     button_pressed_non          // Branch conditional on C = 1 and Z = 0
     mov     r4, r0                      /* r4 = id */
     bl      button_raw
     mov     r5, r0                      /* r5 = niveau brut normalisé */
@@ -89,6 +89,11 @@ button_pressed:
      * Indices : ldr r6, =btn_valide ; ldr r0, [r6, r4, lsl #2]
      *           ldr r6, =btn_compteur ; ... ; str r0, [r6, r4, lsl #2]
      */
+    ldr r6, =btn_valide 
+    ldr r0, [r6, r4, lsl #2] // Multiply r4x4 () //Store last value of btn_valide for that button id. IE was it active before?
+    ldr r6, =btn_compteur // Store value of 
+
+    str r0, [r6, r4, lsl #2]
 
 button_pressed_non:
     movs    r0, #0                      /* squelette : aucun événement */

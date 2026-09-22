@@ -28,7 +28,7 @@ gpio_init:
     str     r1, [r0, #RCC_AHB2ENR]
     ldr     r1, [r0, #RCC_AHB2ENR]  /* relecture : délai après activation */
 
-    /* --- GPIOA : PA9 sortie --- */
+    /* --- GPIOA : PA9 sortie --- */  // DEL ROUGE
     ldr     r0, =GPIOA_BASE
     ldr     r1, [r0, #GPIO_MODER]
     bic     r1, r1, #(3 << (2 * LED_ROUGE_PIN))
@@ -44,7 +44,7 @@ gpio_init:
     bic     r1, r1, #(3 << (2 * LED_ROUGE_PIN))     /* aucun tirage */
     str     r1, [r0, #GPIO_PUPDR]
 
-    /* --- GPIOC : PC7 sortie, PC13 entrée --- */
+    /* --- GPIOC : PC7 sortie, PC13 entrée --- */ // DEL VERTE ET BUTTON USER
     ldr     r0, =GPIOC_BASE
     ldr     r1, [r0, #GPIO_MODER]
     bic     r1, r1, #(3 << (2 * LED_VERTE_PIN))
@@ -63,7 +63,7 @@ gpio_init:
     orr     r1, r1, #(BTN_USER_PUPDR << (2 * BTN_USER_PIN))
     str     r1, [r0, #GPIO_PUPDR]
 
-    /* --- GPIOB : PB7 sortie, PB2 et PB5 entrées --- */
+    /* --- GPIOB : PB7 sortie, PB2 et PB5 entrées --- */ // DEL BLEUE, BUTTON E-STOP, BUTTON TOUCH EN
     ldr     r0, =GPIOB_BASE
     ldr     r1, [r0, #GPIO_MODER]
     bic     r1, r1, #(3 << (2 * LED_BLEUE_PIN))

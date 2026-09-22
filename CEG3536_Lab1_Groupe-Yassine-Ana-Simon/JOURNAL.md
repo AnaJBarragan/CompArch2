@@ -8,7 +8,7 @@
 | Id | Exigence (reformulée par l'équipe) | Critère d'acceptation | Hypothèses |
 |---|---|---|---|
 | E1 | | | |
-| E2 | | | |
+| E2 | Peut cycler entre les etats stop -> go -> stop -> reverse | Chaque etat est map a une couleur de DEL, elles s'allument dans la bonne sequence |  |
 | E3 | | | |
 | E4 | | | |
 | E5 | | | |
