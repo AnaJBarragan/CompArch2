@@ -41,6 +41,7 @@ etat_vers_del:
 /* void fsm_init(void)
  * État initial ARRÊT, variables à zéro, DEL rouge seule (E1).
  * Appelle fsm_maj_del : LR sauvegardé ; push {r4, lr} garde l'alignement 8. */
+
     .global fsm_init
     .type   fsm_init, %function
 fsm_init:

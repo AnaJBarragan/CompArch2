@@ -7,7 +7,7 @@
 ### Exigences de l'équipe
 | Id | Exigence (reformulée par l'équipe) | Critère d'acceptation | Hypothèses |
 |---|---|---|---|
-| E1 | | | |
+| E1 | Initialisation du systeme | La DEL rouge s'allume lors d'appuyer sur uC Reset |  |
 | E2 | Peut cycler entre les etats stop -> go -> stop -> reverse | Chaque etat est map a une couleur de DEL, elles s'allument dans la bonne sequence |  |
 | E3 | | | |
 | E4 | | | |
@@ -20,14 +20,14 @@
 ### Rôles et rotation
 | Séance | Réalise | Valide (essais, mesures, relecture) |
 |---|---|---|
-| Séance 0 | | |
-| Séance 1 | | |
+| Séance 0 | Creer le git, telecharger le code de demarrage et initializer la board. E1 | T1 Appuyer sur uC Reset |
+| Séance 1 | E2, E3 | T1, T2, T3, T4 |
 | Séance 2 | | |
 
 ### Échéancier des laboratoires 1 à 5
 | Laboratoire | Séances | Démonstration | Remise | Responsable du suivi |
 |---|---|---|---|---|
-| 1 | | | 9 octobre 2026 | |
+| 1 | 0 - 15 Septembre, 1 - 22 Septembre, 2 - 29 Septembre | | 9 octobre 2026 | |
 | 2 | | | | |
 | 3 | | | | |
 | 4 | | | | |
@@ -44,7 +44,7 @@
 - Validations Git (auteur, message) : Ana, 'Journal Seance 0'
 
 ### Séance 1 — `<date>` — réalise : `<nom>` / valide : `<nom>`
-- Objectifs :
+- Objectifs : Ecrire le code requis pour E1, E2 et E3 et tester leur fonctionnement. 
 - Fait :
 - Décisions :
 - Difficultés et solutions :
@@ -62,7 +62,7 @@
 ## Tableau des essais (T1 à T10)
 | Essai | Date | Résultat observé | Verdict | Preuve (fichier) |
 |---|---|---|---|---|
-| T1 Réinitialisation | | | | |
+| T1 Réinitialisation | 22 Sept | La DEL rouge s'allume lors d'appuyer sur uC Reset apres avoir telecharge le code dans la board | La board est bien initialise | |
 | T2 Cycle User | | | | |
 | T3 Anti-rebond | | | | |
 | T4 Niveaux logiques | | | | |
