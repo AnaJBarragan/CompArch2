@@ -89,11 +89,85 @@ button_pressed:
      * Indices : ldr r6, =btn_valide ; ldr r0, [r6, r4, lsl #2]
      *           ldr r6, =btn_compteur ; ... ; str r0, [r6, r4, lsl #2]
      */
-    ldr r6, =btn_valide 
-    ldr r0, [r6, r4, lsl #2] // Multiply r4x4 () //Store last value of btn_valide for that button id. IE was it active before?
-    ldr r6, =btn_compteur // Store value of 
+    @ ldr r6, =btn_valide 
+    @ ldr r0, [r6, r4, lsl #2] // Multiply r4x4 () //Store last value of btn_valide for that button id. IE was it active before?
+    @ ldr r6, =btn_compteur // Store value of 
 
-    str r0, [r6, r4, lsl #2]
+    @ str r0, [r6, r4, lsl #2]
+
+    /* ----- À COMPLÉTER : étapes 2 à 4 ci-dessus -----
+     * Indices : ldr r6, =btn_valide ; ldr r0, [r6, r4, lsl #2]
+     *           ldr r6, =btn_compteur ; ... ; str r0, [r6, r4, lsl #2]
+     */
+
+
+	/*E3- ANTI-REBOND*/
+
+
+/* PSEUDOCODE
+*Anti_rebond = 30
+Ms = 1
+r0 + appuie VALIDE =  1
+r0+ appuie pas VALIDE = 0
+
+
+if(id>2) {return 0)
+
+niveau brut = button_raw(id)
+
+if(niveau brut = niveau Valide) {no Signal change; return 0 }
+
+if(niveau_brut = btn_valide(id)){btn_compteur(id) = 0; retunr 0}
+
+if(niveau_brut != niveau valide) {
+		if( btn_compteur < ANTIREBOND_MS / PERIODE_SCRUTATION_MS : retourner 0) {   }
+
+ }
+
+
+*/
+
+	ldr r6, r6 = btn_valide[i]        /*(step 2)  nivBrut(r5) = btn => btn_cmp = 0 */
+	 ldr r0,  [r6, r4, lsl #2]          /*  r0 = btn [id] =>  */
+	 cmp r0, r5                        /*niveau brut == niveau */
+	bne    btn_step3                           /* CMP = FALSE = Branch not equal  */
+
+
+	/* if step 2 = TRUE, return 0/ compteur[id] = 0*/
+	ldr r6,  =btn_compteur             /*  return compteur[id] = 0 and return 0     */
+	mov r0, #0   /* ro= 0*/
+	str r0, [r6, r4, lsl #2]    /*btn cmopteur ID = 0 */
+	pop [r4, r5, r6, lr]												/* return 0*/
+
+
+//STEP 3
+btn_step3: /*step 3 ==> ELSE : compteur[id] ++  */
+	ldr r6, = btn_compteur                                                  /*c */
+	ldr r0, [r6, r4, lsl #2]
+	add r0, r0  + #1 /* Compteur +1*/
+	str r0, [r6, r4, lsl #2]                                                /* r0 = compteur[id]*/
+
+
+	/* STEP 4	*/
+	cmp r0,   #30                 /* IF: compteur[id] < 30/1*/
+	bge  btn_step4                 /* CMP = TRUE = compteur[id] > 30  ==> ELSE: branch*/
+	mov r0, #0
+	pop [r4, r5, r6, lr]    /* IF =TRUE= RETURN 0*/
+
+//STEP4
+btn_step4: /*4. sinon (niveau stable depuis la fenêtre) : btn_valide[id] = niveau ;
+ *      btn_compteur[id] = 0 ; retourner 1 si niveau == 1 (front d'appui), 0 sinon*/
+	ldr r6, =btn_valide
+	str r5, [r6, r4, lsl #2]                  /* valide[i] = niveau ] r5*/
+
+
+	ldr r6, =btn_compteur
+	mov r0, #0                     /*ro = 0*/
+	str r0, [r6, r4, lsl #2]         /* btn_compteur[i] = 0*/
+
+	mov r0, r5 /*r5=niveu*/
+	pop [r4, r5, r6, lr]
+
 
 button_pressed_non:
     movs    r0, #0                      /* squelette : aucun événement */
