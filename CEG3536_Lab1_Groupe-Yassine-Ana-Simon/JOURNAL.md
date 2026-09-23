@@ -1,6 +1,6 @@
 # JOURNAL.md — Journal d'équipe, CEG 3536, laboratoire 1 (automne 2026)
 
-Équipe : `Ana Barragan Martinez`, `Yassine Yandouzi` et `Simon ` — Section : `A02` — Dépôt Git : `https://github.com/AnaJBarragan/CompArch2`
+Équipe : `Ana Barragan Martinez`, `Yassine Yandouzi` et `Simon Brown` — Section : `A02` — Dépôt Git : `https://github.com/AnaJBarragan/CompArch2`
 
 ## Jalon J1 (au plus tard le vendredi 25 septembre 2026, validé dans Git)
 
@@ -43,13 +43,13 @@
 - Essais et mesures : N/A
 - Validations Git (auteur, message) : Ana, 'Journal Seance 0'
 
-### Séance 1 — `<date>` — réalise : `<nom>` / valide : `<nom>`
+### Séance 1 — `22/09/2026 (ecrit le 22/09/2026)` — réalise : `Ana` / valide : `Ana`
 - Objectifs : Ecrire le code requis pour E1, E2 et E3 et tester leur fonctionnement. 
-- Fait :
-- Décisions :
-- Difficultés et solutions :
-- Essais et mesures :
-- Validations Git :
+- Fait : Le code est ecrit et nous avons pris une video des DEL rouge, bleue et verte. 
+- Décisions : Apres des difficultes avec l'oscilloscope, nous avons decide d'attendre et demander au prof pendant le cours du 23 sept. 
+- Difficultés et solutions : Nous avions rencontre des difficultes a utiliser l'oscilloscope et a mesurer les broches car nous n'y avons pas acces. Les broches sont proteges par une plaque plastique, et aussi on a seulement des crocodile clips dans le lab. 
+- Essais et mesures : Nous n'avons pas pris des mesures, mais nous avons pris des captures d'ecran des valeures a IDR et ODR tel que requis dans le lab
+- Validations Git : Ana, 'Journal Seance 1'
 
 ### Séance 2 — `<date>` — réalise : `<nom>` / valide : `<nom>`
 - Objectifs :
