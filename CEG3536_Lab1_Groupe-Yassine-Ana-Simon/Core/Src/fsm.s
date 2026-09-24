@@ -26,7 +26,7 @@ compteur_transitions:   .space  4   /* nombre de transitions validées (T3, watc
 clignote_compteur:      .space  4   /* pas de scrutation écoulés dans la demi-période */
 clignote_phase:         .space  4   /* 0 rouge éteinte, 1 rouge allumée (E5)     */
 touch_signal_compteur:  .space  4   /* pas restants d'extinction brève (E7)      */
-
+prochain_sens			.space 	4   /*Variable inclut pour savoir quelle est prochain. 0 = par avant, 1 = par arrière*/
 /* ---- Table état -> DEL (un octet par état) ------------------------------ */
     .section .rodata
 etat_vers_del:
@@ -96,9 +96,75 @@ fsm_step:
 
     /* ----- À COMPLÉTER : étapes A et B ----- */
 
+    /*E2 Below*/
+    movs	r4, #BTN_USER
+    bl		button_pressed
+    cmp		r4,	#1
+
+   	ldr		r0, =etat
+   	ldr		r1, [r0]
+   	cmp 	r1, #ETAT_ARRET
+   	bne		fsm_vers_arret
+	ldr     r2, =prochain_sens
+    ldr     r3, [r2]
+    cmp		r3, #0
+    bne		fsm_marche_arriere
+    movs	r0,	#ETAT_MARCHE_AVANT
+    movs	r2,	#1
+    b		fsm_depart
+
     bl      fsm_maj_del
     pop     {r4, pc}
     .size   fsm_step, .-fsm_step
+
+//fsm_step_touche:
+
+/*
+fsm_arret:
+    ldr     r1, =prochain_sens
+    ldr     r2, [r1]
+    cmp     r2, #0
+    bne     fsm_marche_arriere //Si prochain sens != 0, va a fsm_marche_arriere, sinon va a fsm_marche_avant.
+    b		fsm_marche_avant
+*/
+/*
+fsm_marche_avant:
+	ldr 	r3, #ETAT_MARCHE_AVANT
+	str		r3, [r0]
+	movs	r2,	#1 //met a jour la valeur  dans registre r2 a 1 puis met a jour les flags aussi
+	str		r2, [r1] //stocke la valeur pointer par l'addresse r1 puis la stocke dans le registre r2. (prochain_sens = 1 dans ce cas).
+	b		fsm_compte_transition
+*/
+fsm_marche_arriere:
+	movs	r0, #ETAT_MARCHE_ARRIERE
+	movs r2, #1
+/*
+	ldr 	r3, #ETAT_MARCHE_ARRIERE
+	str		r3, [r0]
+	movs	r2,	#0 //met a jour la valeur  dans registre r2 a 1 puis met a jour les flags aussi
+	str		r2, [r1] //stocke la valeur pointer par l'addresse r1 puis la stocke dans le registre r2. (prochain_sens = 1 dans ce cas).
+	b		fsm_compte_transition
+*/
+
+fsm_depart:
+	str		r3, [r2]
+	str		r0,	[r1]
+	bl		fsm_compte_transition
+
+/*Faire une transition pour fsm vers arret? */
+fsm_vers_arret:
+	movs 	r1, #ETAT_ARRET
+	str 	r1, [r0]
+	bl		fsm_compte_transition
+
+
+fsm_compte_transition:
+    ldr     r0, =compteur_transitions
+    ldr     r1, [r0]
+    adds    r1, r1, #1
+    str     r1, [r0]
+
+
 
 /* static void fsm_maj_del(void)  — routine locale, seul point d'appel de led_set
  * ARRÊT, MARCHE_AVANT, MARCHE_ARRIÈRE : DEL fixe d'après etat_vers_del.
