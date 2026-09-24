@@ -1,131 +1,3 @@
-@ /* ---------------------------------------------------------------------------
-@  * fsm.s — machine à états du panneau de commande (CEG 3536, laboratoire 1)
-@  *
-@  * Routines exportées : fsm_init (fournie), fsm_step (À COMPLÉTER)
-@  * Variables (.bss)   : etat, touch_enabled, compteur_transitions,
-@  *                      clignote_compteur, clignote_phase, touch_signal_compteur
-@  *
-@  * États (section 3) : ETAT_ARRET (rouge fixe), ETAT_MARCHE_AVANT (verte),
-@  *                     ETAT_MARCHE_ARRIERE (bleue), ETAT_ARRET_URGENCE (rouge 2 Hz)
-@  * Un seul point de mise à jour des DEL : fsm_maj_del (critère B3).
-@  * ------------------------------------------------------------------------- */
-@ #include "registres.inc"
-
-@     .syntax unified
-@     .cpu    cortex-m33
-@     .thumb
-
-@     .bss
-@     .align  2
-@     .global etat
-@ etat:                   .space  4   /* état courant (ETAT_x)                     */
-@     .global touch_enabled
-@ touch_enabled:          .space  4   /* autorisation TouchPad, 0/1 (E7)           */
-@     .global compteur_transitions
-@ compteur_transitions:   .space  4   /* nombre de transitions validées (T3, watch) */
-@ clignote_compteur:      .space  4   /* pas de scrutation écoulés dans la demi-période */
-@ clignote_phase:         .space  4   /* 0 rouge éteinte, 1 rouge allumée (E5)     */
-@ touch_signal_compteur:  .space  4   /* pas restants d'extinction brève (E7)      */
-
-@ /* ---- Table état -> DEL (un octet par état) ------------------------------ */
-@     .section .rodata
-@ etat_vers_del:
-@     .byte   LED_ROUGE       /* ETAT_ARRET          */
-@     .byte   LED_VERTE       /* ETAT_MARCHE_AVANT   */
-@     .byte   LED_BLEUE       /* ETAT_MARCHE_ARRIERE */
-@     .byte   LED_ROUGE       /* ETAT_ARRET_URGENCE (clignotante, voir fsm_maj_del) */
-
-@     .text
-@     .align  2
-
-@ /* void fsm_init(void)
-@  * État initial ARRÊT, variables à zéro, DEL rouge seule (E1).
-@  * Appelle fsm_maj_del : LR sauvegardé ; push {r4, lr} garde l'alignement 8. */
-
-@     .global fsm_init
-@     .type   fsm_init, %function
-@ fsm_init:
-@     push    {r4, lr}
-@     movs    r1, #0
-@     ldr     r0, =etat
-@     movs    r2, #ETAT_ARRET
-@     str     r2, [r0]
-@     ldr     r0, =touch_enabled
-@     str     r1, [r0]
-@     ldr     r0, =compteur_transitions
-@     str     r1, [r0]
-@     ldr     r0, =clignote_compteur
-@     str     r1, [r0]
-@     ldr     r0, =clignote_phase
-@     str     r1, [r0]
-@     ldr     r0, =touch_signal_compteur
-@     str     r1, [r0]
-@     bl      fsm_maj_del
-@     pop     {r4, pc}
-@     .size   fsm_init, .-fsm_init
-
-@ /* void fsm_step(void)
-@  * Un pas de la machine à états, appelé toutes les PERIODE_SCRUTATION_MS.
-@  * Lit les événements validés (button_pressed) et le drapeau estop_flag,
-@  * applique les transitions E2 à E7, puis met à jour les DEL (fsm_maj_del).
-@  *
-@  * À COMPLÉTER — ordre recommandé :
-@  *   A. E4/E5 : si estop_flag == 1 : estop_flag = 0 ; etat = ETAT_ARRET_URGENCE ;
-@  *      clignote_compteur = 0 ; clignote_phase = 1.
-@  *   B. si etat == ETAT_ARRET_URGENCE :
-@  *        - E5 : les appuis sur User sont ignorés (appeler quand même
-@  *          button_pressed(BTN_USER) pour entretenir l'anti-rebond) ;
-@  *        - E6 : si button_pressed(BTN_TOUCH) == 1 ET button_raw(BTN_ESTOP) == 0
-@  *          (E-Stop relâché) : etat = ETAT_ARRET (acquittement). Sinon rester.
-@  *      sinon :
-@  *        - E2 : si button_pressed(BTN_USER) == 1 :
-@  *              ARRET -> MARCHE_AVANT, MARCHE_AVANT -> ARRET (puis ARRET -> MARCHE_ARRIERE
-@  *              au prochain appui, MARCHE_ARRIERE -> ARRET). Une variable "prochain sens"
-@  *              en .bss permet d'alterner avant/arrière à partir d'ARRÊT.
-@  *              compteur_transitions++ à chaque transition.
-@  *        - E7 : si button_pressed(BTN_TOUCH) == 1 : touch_enabled ^= 1 ;
-@  *              touch_signal_compteur = TOUCH_SIGNAL_MS / PERIODE_SCRUTATION_MS.
-@  *   C. bl fsm_maj_del.
-
-@  * Invariants (E9) : jamais deux DEL allumées (garanti par led_set) ; jamais de
-@  * sortie d'ARRÊT_URGENCE sans acquittement.
-@  * AAPCS : appelle d'autres routines -> push {r4, lr}.                         */
-@     .global fsm_step
-@     .type   fsm_step, %function
-@ fsm_step:
-@     push    {r4, lr}
-
-@     /* ----- À COMPLÉTER : étapes A et B ----- */
-
-@     bl      fsm_maj_del
-@     pop     {r4, pc}
-@     .size   fsm_step, .-fsm_step
-
-@ /* static void fsm_maj_del(void)  — routine locale, seul point d'appel de led_set
-@  * ARRÊT, MARCHE_AVANT, MARCHE_ARRIÈRE : DEL fixe d'après etat_vers_del.
-@  * ARRÊT_URGENCE : À COMPLÉTER (E5) — alterner rouge / aucune toutes les
-@  *   CLIGNOTEMENT_DEMI_MS / PERIODE_SCRUTATION_MS appels (clignote_compteur,
-@  *   clignote_phase).
-@  * Hors urgence : À COMPLÉTER (E7) — tant que touch_signal_compteur > 0,
-@  *   décrémenter et afficher LED_AUCUNE au lieu de la DEL de l'état.          */
-@     .type   fsm_maj_del, %function
-@ fsm_maj_del:
-@     push    {r4, lr}
-@     ldr     r0, =etat
-@     ldr     r4, [r0]
-@     cmp     r4, #ETAT_ARRET_URGENCE
-@     bhi     fsm_maj_del_fin             /* état invalide : ne rien changer */
-
-@     /* ----- À COMPLÉTER : clignotement (E5) et extinction brève (E7) ----- */
-
-@     ldr     r1, =etat_vers_del
-@     ldrb    r0, [r1, r4]                /* r0 = DEL associée à l'état */
-@     bl      led_set
-@ fsm_maj_del_fin:
-@     pop     {r4, pc}
-@     .size   fsm_maj_del, .-fsm_maj_del
-
-
 /* ---------------------------------------------------------------------------
  * fsm.s — machine à états du panneau de commande (CEG 3536, laboratoire 1)
  *
@@ -154,9 +26,7 @@ compteur_transitions:   .space  4   /* nombre de transitions validées (T3, watc
 clignote_compteur:      .space  4   /* pas de scrutation écoulés dans la demi-période */
 clignote_phase:         .space  4   /* 0 rouge éteinte, 1 rouge allumée (E5)     */
 touch_signal_compteur:  .space  4   /* pas restants d'extinction brève (E7)      */
-    .global prochain_sens
-prochain_sens:          .space  4   /* 0 = prochaine marche avant, 1 = arrière   */
-
+prochain_sens			.space 	4   /*Variable inclut pour savoir quelle est prochain. 0 = par avant, 1 = par arrière*/
 /* ---- Table état -> DEL (un octet par état) ------------------------------ */
     .section .rodata
 etat_vers_del:
@@ -171,6 +41,7 @@ etat_vers_del:
 /* void fsm_init(void)
  * État initial ARRÊT, variables à zéro, DEL rouge seule (E1).
  * Appelle fsm_maj_del : LR sauvegardé ; push {r4, lr} garde l'alignement 8. */
+
     .global fsm_init
     .type   fsm_init, %function
 fsm_init:
@@ -198,137 +69,110 @@ fsm_init:
  * Lit les événements validés (button_pressed) et le drapeau estop_flag,
  * applique les transitions E2 à E7, puis met à jour les DEL (fsm_maj_del).
  *
+ * À COMPLÉTER — ordre recommandé :
+ *   A. E4/E5 : si estop_flag == 1 : estop_flag = 0 ; etat = ETAT_ARRET_URGENCE ;
+ *      clignote_compteur = 0 ; clignote_phase = 1.
+ *   B. si etat == ETAT_ARRET_URGENCE :
+ *        - E5 : les appuis sur User sont ignorés (appeler quand même
+ *          button_pressed(BTN_USER) pour entretenir l'anti-rebond) ;
+ *        - E6 : si button_pressed(BTN_TOUCH) == 1 ET button_raw(BTN_ESTOP) == 0
+ *          (E-Stop relâché) : etat = ETAT_ARRET (acquittement). Sinon rester.
+ *      sinon :
+ *        - E2 : si button_pressed(BTN_USER) == 1 :
+ *              ARRET -> MARCHE_AVANT, MARCHE_AVANT -> ARRET (puis ARRET -> MARCHE_ARRIERE
+ *              au prochain appui, MARCHE_ARRIERE -> ARRET). Une variable "prochain sens"
+ *              en .bss permet d'alterner avant/arrière à partir d'ARRÊT.
+ *              compteur_transitions++ à chaque transition.
+ *        - E7 : si button_pressed(BTN_TOUCH) == 1 : touch_enabled ^= 1 ;
+ *              touch_signal_compteur = TOUCH_SIGNAL_MS / PERIODE_SCRUTATION_MS.
+ *   C. bl fsm_maj_del.
+ * Invariants (E9) : jamais deux DEL allumées (garanti par led_set) ; jamais de
+ * sortie d'ARRÊT_URGENCE sans acquittement.
  * AAPCS : appelle d'autres routines -> push {r4, lr}.                         */
     .global fsm_step
     .type   fsm_step, %function
 fsm_step:
     push    {r4, lr}
 
-    /* A. E4/E5 : si estop_flag == 1 */
-    ldr     r0, =estop_flag
-    ldr     r1, [r0]
-    cmp     r1, #1
-    bne     fsm_check_urgence
+    /* ----- À COMPLÉTER : étapes A et B ----- */
 
-    /* estop_flag = 0 ; etat = ETAT_ARRET_URGENCE ; reset clignote */
-    movs    r1, #0
-    str     r1, [r0]                    /* estop_flag = 0 */
-    ldr     r0, =etat
-    movs    r1, #ETAT_ARRET_URGENCE
-    str     r1, [r0]                    /* etat = ETAT_ARRET_URGENCE */
-    ldr     r0, =clignote_compteur
-    movs    r1, #0
-    str     r1, [r0]
-    ldr     r0, =clignote_phase
-    movs    r1, #1
-    str     r1, [r0]
-    b       fsm_step_fin
+    /*E2 Below*/
+    movs	r4, #BTN_USER
+    bl		button_pressed
+    cmp		r4,	#1
 
-fsm_check_urgence:
-    /* B. si etat == ETAT_ARRET_URGENCE */
-    ldr     r0, =etat
-    ldr     r1, [r0]
-    ldr     r2, =ETAT_ARRET_URGENCE
-    cmp     r1, r2
-    bne     fsm_normal_state
-
-    /* En urgence : entretenir l'anti-rebond User (ignoré) */
-    movs    r0, #BTN_USER
-    bl      button_pressed
-
-    /* E6 : acquittement si Touch pressé ET E-Stop relâché (button_raw == 0) */
-    movs    r0, #BTN_TOUCH
-    bl      button_pressed
-    cmp     r0, #1
-    bne     fsm_step_fin
-
-    movs    r0, #BTN_ESTOP
-    bl      button_raw
-    cmp     r0, #0
-    bne     fsm_step_fin
-
-    /* Acquittement valide -> retour à ETAT_ARRET */
-    ldr     r0, =etat
-    ldr     r2, =ETAT_ARRET
-    str     r2, [r0]
-    b       fsm_step_fin
-
-fsm_normal_state:
-    /* E2 : vérifier bouton User */
-    movs    r0, #BTN_USER
-    bl      button_pressed
-    cmp     r0, #1
-    bne     fsm_check_touch
-
-    /* Transition User gérée */
-    ldr     r0, =etat
-    ldr     r1, [r0]                    /* r1 = état courant */
-
-    ldr     r2, =ETAT_ARRET
-    cmp     r1, r2
-    bne     fsm_transition_vers_arret
-
-    /* De ARRÊT vers MARCHE_AVANT ou MARCHE_ARRIERE selon prochain_sens */
-    ldr     r2, =prochain_sens
+   	ldr		r0, =etat
+   	ldr		r1, [r0]
+   	cmp 	r1, #ETAT_ARRET
+   	bne		fsm_vers_arret
+	ldr     r2, =prochain_sens
     ldr     r3, [r2]
-    cmp     r3, #1
-    beq     fsm_vers_arriere
+    cmp		r3, #0
+    bne		fsm_marche_arriere
+    movs	r0,	#ETAT_MARCHE_AVANT
+    movs	r2,	#1
+    b		fsm_depart
 
-    /* Aller vers MARCHE_AVANT */
-    ldr     r3, =ETAT_MARCHE_AVANT
-    str     r3, [r0]
-    movs    r3, #1
-    str     r3, [r2]                    /* prochain_sens = 1 pour la prochaine fois */
-    b       fsm_inc_trans
+    bl      fsm_maj_del
+    pop     {r4, pc}
+    .size   fsm_step, .-fsm_step
 
-fsm_vers_arriere:
-    /* Aller vers MARCHE_ARRIERE */
-    ldr     r3, =ETAT_MARCHE_ARRIERE
-    str     r3, [r0]
-    movs    r3, #0
-    str     r3, [r2]                    /* prochain_sens = 0 pour la prochaine fois */
-    b       fsm_inc_trans
+//fsm_step_touche:
 
-fsm_transition_vers_arret:
-    /* De MARCHE_AVANT / MARCHE_ARRIERE vers ARRÊT */
-    ldr     r2, =ETAT_ARRET
-    str     r2, [r0]
+/*
+fsm_arret:
+    ldr     r1, =prochain_sens
+    ldr     r2, [r1]
+    cmp     r2, #0
+    bne     fsm_marche_arriere //Si prochain sens != 0, va a fsm_marche_arriere, sinon va a fsm_marche_avant.
+    b		fsm_marche_avant
+*/
+/*
+fsm_marche_avant:
+	ldr 	r3, #ETAT_MARCHE_AVANT
+	str		r3, [r0]
+	movs	r2,	#1 //met a jour la valeur  dans registre r2 a 1 puis met a jour les flags aussi
+	str		r2, [r1] //stocke la valeur pointer par l'addresse r1 puis la stocke dans le registre r2. (prochain_sens = 1 dans ce cas).
+	b		fsm_compte_transition
+*/
+fsm_marche_arriere:
+	movs	r0, #ETAT_MARCHE_ARRIERE
+	movs r2, #1
+/*
+	ldr 	r3, #ETAT_MARCHE_ARRIERE
+	str		r3, [r0]
+	movs	r2,	#0 //met a jour la valeur  dans registre r2 a 1 puis met a jour les flags aussi
+	str		r2, [r1] //stocke la valeur pointer par l'addresse r1 puis la stocke dans le registre r2. (prochain_sens = 1 dans ce cas).
+	b		fsm_compte_transition
+*/
 
-fsm_inc_trans:
-    /* compteur_transitions++ */
+fsm_depart:
+	str		r3, [r2]
+	str		r0,	[r1]
+	bl		fsm_compte_transition
+
+/*Faire une transition pour fsm vers arret? */
+fsm_vers_arret:
+	movs 	r1, #ETAT_ARRET
+	str 	r1, [r0]
+	bl		fsm_compte_transition
+
+
+fsm_compte_transition:
     ldr     r0, =compteur_transitions
     ldr     r1, [r0]
     adds    r1, r1, #1
     str     r1, [r0]
 
-fsm_check_touch:
-    /* E7 : vérifier bouton Touch */
-    movs    r0, #BTN_TOUCH
-    bl      button_pressed
-    cmp     r0, #1
-    bne     fsm_step_fin
 
-    /* touch_enabled ^= 1 */
-    ldr     r0, =touch_enabled
-    ldr     r1, [r0]
-    eors    r1, r1, #1
-    str     r1, [r0]
-
-    /* touch_signal_compteur = TOUCH_SIGNAL_MS / PERIODE_SCRUTATION_MS */
-    ldr     r0, =touch_signal_compteur
-    ldr     r1, =(TOUCH_SIGNAL_MS / PERIODE_SCRUTATION_MS)
-    str     r1, [r0]
-
-fsm_step_fin:
-    bl      fsm_maj_del
-    pop     {r4, pc}
-    .size   fsm_step, .-fsm_step
 
 /* static void fsm_maj_del(void)  — routine locale, seul point d'appel de led_set
  * ARRÊT, MARCHE_AVANT, MARCHE_ARRIÈRE : DEL fixe d'après etat_vers_del.
- * ARRÊT_URGENCE : clignotement rouge / aucune (E5).
- * Hors urgence : extinction brève si touch_signal_compteur > 0 (E7).         */
-
+ * ARRÊT_URGENCE : À COMPLÉTER (E5) — alterner rouge / aucune toutes les
+ *   CLIGNOTEMENT_DEMI_MS / PERIODE_SCRUTATION_MS appels (clignote_compteur,
+ *   clignote_phase).
+ * Hors urgence : À COMPLÉTER (E7) — tant que touch_signal_compteur > 0,
+ *   décrémenter et afficher LED_AUCUNE au lieu de la DEL de l'état.          */
     .type   fsm_maj_del, %function
 fsm_maj_del:
     push    {r4, lr}
@@ -337,61 +181,11 @@ fsm_maj_del:
     cmp     r4, #ETAT_ARRET_URGENCE
     bhi     fsm_maj_del_fin             /* état invalide : ne rien changer */
 
-    /* E5 : Si ARRÊT_URGENCE, clignotement 2 Hz (rouge / aucune) */
-    ldr     r1, =ETAT_ARRET_URGENCE
-    cmp     r4, r1
-    bne     fsm_maj_del_touch_check
+    /* ----- À COMPLÉTER : clignotement (E5) et extinction brève (E7) ----- */
 
-    ldr     r0, =clignote_compteur
-    ldr     r1, [r0]
-    adds    r1, r1, #1
-    ldr     r2, =(CLIGNOTEMENT_DEMI_MS / PERIODE_SCRUTATION_MS)
-    cmp     r1, r2
-    blo     fsm_maj_del_phase_set
-
-    movs    r1, #0                      /* reset compteur */
-    str     r1, [r0]
-    ldr     r0, =clignote_phase
-    ldr     r1, [r0]
-    eors    r1, r1, #1                  /* toggle phase */
-    str     r1, [r0]
-    b       fsm_maj_del_phase_apply
-
-fsm_maj_del_phase_set:
-    str     r1, [r0]                    /* stocker compteur incrémenté */
-
-fsm_maj_del_phase_apply:
-    ldr     r0, =clignote_phase
-    ldr     r1, [r0]
-    cmp     r1, #1
-    beq     fsm_maj_del_rouge           /* phase 1 -> rouge allumée */
-    movs    r0, #LED_AUCUNE
-    b       fsm_maj_del_apply
-
-fsm_maj_del_rouge:
-    movs    r0, #LED_ROUGE
-    b       fsm_maj_del_apply
-
-fsm_maj_del_touch_check:
-    /* E7 : Hors urgence, vérifier touch_signal_compteur */
-    ldr     r0, =touch_signal_compteur
-    ldr     r1, [r0]
-    cmp     r1, #0
-    ble     fsm_maj_del_normal_led
-
-    /* Décrémenter le compteur d'extinction brève et afficher LED_AUCUNE */
-    subs    r1, r1, #1
-    str     r1, [r0]
-    movs    r0, #LED_AUCUNE
-    b       fsm_maj_del_apply
-
-fsm_maj_del_normal_led:
     ldr     r1, =etat_vers_del
-    ldrb    r0, [r1, r4]                /* r0 = DEL associée à l'état normal */
-
-fsm_maj_del_apply:
+    ldrb    r0, [r1, r4]                /* r0 = DEL associée à l'état */
     bl      led_set
-
 fsm_maj_del_fin:
     pop     {r4, pc}
     .size   fsm_maj_del, .-fsm_maj_del
