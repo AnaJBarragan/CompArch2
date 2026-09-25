@@ -60,7 +60,7 @@ fsm_init:
     str     r1, [r0]
     ldr     r0, =touch_signal_compteur
     str     r1, [r0]
-    ldr 	r0, =prochain_sens
+    ldr 	r0, =prochain_sens // Initialize prochain_sens
     str		r1, [r0]
     bl      fsm_maj_del
     pop     {r4, pc}
@@ -94,53 +94,59 @@ fsm_init:
     .global fsm_step
     .type   fsm_step, %function
 fsm_step:
-    push    {r4, r5, r6, lr}
+    push    {r4, r5, r6, lr} // Push registres r4, r5, r6 et lr au stack (Pour les sauvegarder) (r6 pour garder alignement).
 
     /* ----- À COMPLÉTER : étapes A et B ----- */
 
-    /*E2 Below*/
-    movs	r0, #BTN_USER
-    bl		button_pressed
-    cmp		r0,	#1
+// E2 Dessous
+    movs	r0, #BTN_USER	//BTN_USER dans registre r0
+    bl		button_pressed 	//On branche à la fonction button_pressed
+    cmp		r0,	#1			//Si button_pressed n'est pas pesé on branche à la fonction fsm_step_fin
 	bne		fsm_step_fin
 
-   	ldr		r4, =etat
-   	ldr		r0, [r4]
-   	cmp 	r0, #ETAT_ARRET
+   	ldr		r4, =etat		//On set l'addresse memoire de etat au registre r4
+   	ldr		r0, [r4]		//Load la valeur de l'état actif au registre r0
+   	cmp 	r0, #ETAT_ARRET	//Si l'etat actif n'est pas ETAT_ARRET (Avant ou Arriere) -> Vers_Arret. Sinon Skip line et continue
    	bne		fsm_vers_arret
 
-	ldr     r5, =prochain_sens
-    ldr     r1, [r5]
-    cmp		r1, #0
+	ldr     r5, =prochain_sens //On set l'addresse memoire de prochain_sens au registre r5
+    ldr     r1, [r5]		   //Load la valeur du prochain sens au registre r1
+    cmp		r1, #0			   // Si le prochain sens n'est pas 0 (par avant) on branche à la fonction fsm_marche_arriere
     bne		fsm_marche_arriere
+    // Sinon Skip line et continue. Vue qu'on est à la fin, on tombera dans la fonction fsm_marche_avant prochainement.
 
+// Fonction qui load l'état à ETAT_MARCHE_AVANT et change le prochain sens au sens arrière, ensuite branche à fsm_depart.
 fsm_marche_avant:
 	movs	r0,	#ETAT_MARCHE_AVANT
     movs	r1,	#1
     b 		fsm_depart
-
+// Fonction qui load l'état à ETAT_MARCHE_ARRIERE et change le prochain sens au sens par avant, ensuite branche à fsm_depart.
 fsm_marche_arriere:
 	movs	r0, #ETAT_MARCHE_ARRIERE
 	movs 	r1, #0
 	b		fsm_depart
-
+//Pour fsm_depart on stocke la nouvelle valeur de l'état en mémoire ainsi que celle de prochain sens. (Adresse tenu par registre r4 et r5 respectivement)
+// Ensuite on branche à compte transition pour effectuer une transition et on va à la fin pour mettre à jour la DEL.
 fsm_depart:
 	str		r0, [r4]
 	str		r1,	[r5]
 	bl		fsm_compte_transition
 	b		fsm_step_fin
-
+// fsm_vers_arret effectue la transition vers l'etat arret, compte la transition et mets à jour la DEL en branchant à fsm_step_fin.
 fsm_vers_arret:
 	movs 	r0, #ETAT_ARRET
 	str 	r0, [r4]
 	bl		fsm_compte_transition
 	b		fsm_step_fin
 
+// Appelle fsm_maj_del qui effectue une mise à jour de la DEL, ainsi que pop le stack.
+// Cette fonction fsm_step_fin démarque la fin d'une transition complete dans la machine à état.
 fsm_step_fin:
     bl      fsm_maj_del
     pop     {r4, r5, r6, pc}
     .size   fsm_step, .-fsm_step
 
+// Effectue l'incrémentation/compte les transitions
 fsm_compte_transition:
     ldr     r0, =compteur_transitions
     ldr     r1, [r0]
