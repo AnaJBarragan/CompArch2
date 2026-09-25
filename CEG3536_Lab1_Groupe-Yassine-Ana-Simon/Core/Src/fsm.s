@@ -103,46 +103,50 @@ fsm_step:
     bl		button_pressed
     cmp		r0,	#1
 	bne		fsm_step_fin
-   	ldr		r0, =etat
-   	ldr		r1, [r0]
-   	cmp 	r1, #ETAT_ARRET
+
+   	ldr		r4, =etat
+   	ldr		r0, [r4]
+   	cmp 	r0, #ETAT_ARRET
    	bne		fsm_vers_arret
-	ldr     r2, =prochain_sens
-    ldr     r3, [r2]
-    cmp		r3, #0
+
+	ldr     r5, =prochain_sens
+    ldr     r1, [r5]
+    cmp		r1, #0
     bne		fsm_marche_arriere
-    movs	r0,	#ETAT_MARCHE_AVANT
-    movs	r2,	#1
-    b		fsm_depart
+
+fsm_marche_avant:
+	movs	r0,	#ETAT_MARCHE_AVANT
+    movs	r1,	#1
+    b 		fsm_depart
+
+fsm_marche_arriere:
+	movs	r0, #ETAT_MARCHE_ARRIERE
+	movs 	r1, #0
+	b		fsm_depart
+
+fsm_depart:
+	str		r0, [r4]
+	str		r1,	[r5]
+	bl		fsm_compte_transition
+	b		fsm_step_fin
+
+fsm_vers_arret:
+	movs 	r0, #ETAT_ARRET
+	str 	r0, [r4]
+	bl		fsm_compte_transition
+	b		fsm_step_fin
 
 fsm_step_fin:
     bl      fsm_maj_del
     pop     {r4, r5, r6, pc}
     .size   fsm_step, .-fsm_step
 
-
-fsm_marche_arriere:
-	movs	r0, #ETAT_MARCHE_ARRIERE
-	movs r2, #1
-
-
-fsm_depart:
-	str		r3, [r2]
-	str		r0,	[r1]
-	bl		fsm_compte_transition
-
-
-fsm_vers_arret:
-	movs 	r1, #ETAT_ARRET
-	str 	r1, [r0]
-	bl		fsm_compte_transition
-
-
 fsm_compte_transition:
     ldr     r0, =compteur_transitions
     ldr     r1, [r0]
     adds    r1, r1, #1
     str     r1, [r0]
+    bx		lr
 
 
 
