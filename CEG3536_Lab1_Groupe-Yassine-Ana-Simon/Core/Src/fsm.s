@@ -60,6 +60,8 @@ fsm_init:
     str     r1, [r0]
     ldr     r0, =touch_signal_compteur
     str     r1, [r0]
+    ldr 	r0, =prochain_sens
+    str		r1, [r0]
     bl      fsm_maj_del
     pop     {r4, pc}
     .size   fsm_init, .-fsm_init
@@ -92,15 +94,15 @@ fsm_init:
     .global fsm_step
     .type   fsm_step, %function
 fsm_step:
-    push    {r4, lr}
+    push    {r4, r5, r6, lr}
 
     /* ----- À COMPLÉTER : étapes A et B ----- */
 
     /*E2 Below*/
-    movs	r4, #BTN_USER
+    movs	r0, #BTN_USER
     bl		button_pressed
-    cmp		r4,	#1
-
+    cmp		r0,	#1
+	bne		fsm_step_fin
    	ldr		r0, =etat
    	ldr		r1, [r0]
    	cmp 	r1, #ETAT_ARRET
@@ -113,45 +115,23 @@ fsm_step:
     movs	r2,	#1
     b		fsm_depart
 
+fsm_step_fin:
     bl      fsm_maj_del
-    pop     {r4, pc}
+    pop     {r4, r5, r6, pc}
     .size   fsm_step, .-fsm_step
 
-//fsm_step_touche:
 
-/*
-fsm_arret:
-    ldr     r1, =prochain_sens
-    ldr     r2, [r1]
-    cmp     r2, #0
-    bne     fsm_marche_arriere //Si prochain sens != 0, va a fsm_marche_arriere, sinon va a fsm_marche_avant.
-    b		fsm_marche_avant
-*/
-/*
-fsm_marche_avant:
-	ldr 	r3, #ETAT_MARCHE_AVANT
-	str		r3, [r0]
-	movs	r2,	#1 //met a jour la valeur  dans registre r2 a 1 puis met a jour les flags aussi
-	str		r2, [r1] //stocke la valeur pointer par l'addresse r1 puis la stocke dans le registre r2. (prochain_sens = 1 dans ce cas).
-	b		fsm_compte_transition
-*/
 fsm_marche_arriere:
 	movs	r0, #ETAT_MARCHE_ARRIERE
 	movs r2, #1
-/*
-	ldr 	r3, #ETAT_MARCHE_ARRIERE
-	str		r3, [r0]
-	movs	r2,	#0 //met a jour la valeur  dans registre r2 a 1 puis met a jour les flags aussi
-	str		r2, [r1] //stocke la valeur pointer par l'addresse r1 puis la stocke dans le registre r2. (prochain_sens = 1 dans ce cas).
-	b		fsm_compte_transition
-*/
+
 
 fsm_depart:
 	str		r3, [r2]
 	str		r0,	[r1]
 	bl		fsm_compte_transition
 
-/*Faire une transition pour fsm vers arret? */
+
 fsm_vers_arret:
 	movs 	r1, #ETAT_ARRET
 	str 	r1, [r0]
