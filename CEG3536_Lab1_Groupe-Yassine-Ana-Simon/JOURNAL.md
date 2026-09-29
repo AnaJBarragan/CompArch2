@@ -9,20 +9,20 @@
 |---|---|---|---|
 | E1 | Initialisation du systeme | La DEL rouge s'allume lors d'appuyer sur uC Reset |  |
 | E2 | Peut cycler entre les etats stop -> go -> stop -> reverse | Chaque etat est map a une couleur de DEL, elles s'allument dans la bonne sequence |  |
-| E3 | | | |
-| E4 | | | |
-| E5 | | | |
-| E6 | | | |
-| E7 | | | |
-| E8 | | | |
-| E9 | | | |
+| E3 | Anti-Rebond | Un long appui du button compte comme un seul appui, plusieurs appuis rapides ne sont pas manques | |
+| E4 | E-Stop par interruption | Les DEL bleue ou verte s'eteint quand appuie | |
+| E5 | DEL E-Stop | Le DEL roughe clignote pour signaler qu'on est arrete d'urgence | |
+| E6 | Touch Enable en arret | La DEL rouge passe de clignoter a rouge solide, et le button USER est utilisable a nouveau | |
+| E7 | Touch Enable en fonctionnement | La DEL allume s'eteint pour un instant tres court | |
+| E8 | Calibrer le delay avec l'oscilloscope | *Pas a faire, on n'utilisera pas l'oscilloscope | |
+| E9 | Priorite E-Stop et Appuis simultanes | Appuyer sur User et Touch En ne genere pas deux DEL allumes, on ne sort pas de l'etat d'arret d'urgence sans Touch En. | |
 
 ### Rôles et rotation
 | Séance | Réalise | Valide (essais, mesures, relecture) |
 |---|---|---|
 | Séance 0 | Creer le git, telecharger le code de demarrage et initializer la board. E1 | T1 Appuyer sur uC Reset |
 | Séance 1 | E2, E3 | T1, T2, T3, T4 |
-| Séance 2 | | |
+| Séance 2 | E4, E5, E6, E7, E9 |  |
 
 ### Échéancier des laboratoires 1 à 5
 | Laboratoire | Séances | Démonstration | Remise | Responsable du suivi |
@@ -52,11 +52,11 @@
 - Validations Git : Ana, 'Journal Seance 1'
 
 ### Séance 2 — `<date>` — réalise : `<nom>` / valide : `<nom>`
-- Objectifs :
-- Fait :
-- Décisions :
-- Difficultés et solutions :
-- Essais et mesures :
+- Objectifs : Ecrire le code pour E4-E9 (sans compter E8) et le demontrer au TA. Aussi, revoir notre code pour E1-E3 maintenant qu'on comprend mieux. 
+- Fait : Code du E2 et E3 a ete revu et reecrit, E5, 56, 57, 59 sont faits. 
+- Décisions : Nous avons decide de refaire E2 et E3 car on ne comprennait pas trop bien notre ancien code. 
+- Difficultés et solutions : La board que nous utilisions en premier donnait une erreure sur le link du STM32 IDE. Nous avons passe a une autre board. 
+- Essais et mesures : 
 - Validations Git :
 
 ## Tableau des essais (T1 à T10)
@@ -79,5 +79,5 @@
 - Cas d'essai :
 
 ## Déclaration des sources et de l'usage d'outils d'IA générative
-- Sources :
-- Outils d'IA (outil, version, usage) ou « aucun usage » :
+- Sources : Documents de lab fournis dans Brightspace
+- Outils d'IA (outil, version, usage) ou « aucun usage » : Claude Sonnet 5.5. Prompt: "Explain the given file line per line so that I can understand its functioning better before filling in the 'A COMPLETER' sections. "
