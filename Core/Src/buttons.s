@@ -86,7 +86,12 @@ button_pressed:
 //e3 debut
 
 
-// ===== [AJOUTÉ - E3] Anti-rebond + détection de front =====
+//  E3- Anti-rebond 
+
+
+
+
+
     cmp     r0, #2                      //  id > 2
     bhi     button_pressed_non          //  if oui alors  return 0
     mov     r4, r0                      // r4 = id (conservé à travers l'appel)
