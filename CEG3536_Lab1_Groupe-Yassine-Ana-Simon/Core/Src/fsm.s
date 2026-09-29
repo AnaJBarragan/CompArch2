@@ -26,7 +26,7 @@ compteur_transitions:   .space  4   /* nombre de transitions validées (T3, watc
 clignote_compteur:      .space  4   /* pas de scrutation écoulés dans la demi-période */
 clignote_phase:         .space  4   /* 0 rouge éteinte, 1 rouge allumée (E5)     */
 touch_signal_compteur:  .space  4   /* pas restants d'extinction brève (E7)      */
-prochain_sens			.space 	4   /*Variable inclut pour savoir quelle est prochain. 0 = par avant, 1 = par arrière*/
+prochain_sens:			.space 	4   /*Variable inclut pour savoir quelle est prochain. 0 = par avant, 1 = par arrière*/
 /* ---- Table état -> DEL (un octet par état) ------------------------------ */
     .section .rodata
 etat_vers_del:
