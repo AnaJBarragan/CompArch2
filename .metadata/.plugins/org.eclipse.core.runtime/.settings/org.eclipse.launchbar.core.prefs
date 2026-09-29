@@ -1,7 +1,10 @@
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/arch=x86_64
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/name=Local
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/os=win32
-configDescList=org.eclipse.launchbar.core.descriptorType.default\:Core,org.eclipse.launchbar.core.descriptorType.default\:Core (1)
+configDescList=org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:Core,org.eclipse.launchbar.core.descriptorType.default\:Core (1)
 eclipse.preferences.version=1
+org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:Core/activeLaunchTarget=null\:---
+org.eclipse.launchbar.core.descriptorType.default\:Core\ (1)/activeLaunchMode=run
+org.eclipse.launchbar.core.descriptorType.default\:Core\ (1)/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local
 org.eclipse.launchbar.core.descriptorType.default\:Core/activeLaunchMode=run
 org.eclipse.launchbar.core.descriptorType.default\:Core/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local

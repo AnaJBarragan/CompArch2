@@ -43,10 +43,66 @@ estop_flag:     .space  4           /* 1 = E-Stop reçu, à consommer par fsm_st
  *      puis NVIC_ISER0 = (1 << EXTI2_IRQn) pour activer l'interruption.
  *   (RCC_APB2ENR.SYSCFGEN n'est pas nécessaire pour EXTICR sur la L5.)
  * Registres modifiés : r0-r3 (routine feuille).                             */
-    .global estop_init
+.global estop_init
     .type   estop_init, %function
 estop_init:
-    /* ----- À COMPLÉTER : étapes 1 à 4 ci-dessus ----- */
+    /* 1. EXTI_EXTICR1 : champ EXTI2 (bits 18:16) = EXTICR_PORT_B (0x01) */
+    ldr     r0, =EXTI_BASE
+    ldr     r1, [r0, #EXTI_EXTICR1]
+    ldr     r2, =~(0x7 << 16)          /* Masque pour effacer les bits 18:16 */
+    and     r1, r1, r2
+    ldr     r2, =(EXTICR_PORT_B << 16) /* Valeur pour Port B (0x01) */
+    orr     r1, r1, r2
+    str     r1, [r0, #EXTI_EXTICR1]
+
+    /* 2. Front de déclenchement selon BTN_ESTOP_ACTIF_HAUT */
+    ldr     r2, =BTN_ESTOP_ACTIF_HAUT
+    cmp     r2, #1
+    bne     estop_init_falling
+
+    /* Actif haut -> RTSR1 (front montant) */
+    ldr     r1, [r0, #EXTI_RTSR1]
+    ldr     r2, =EXTI_LIGNE2
+    orr     r1, r1, r2
+    str     r1, [r0, #EXTI_RTSR1]
+    ldr     r1, [r0, #EXTI_FPR1]
+    ldr     r2, =EXTI_LIGNE2
+    bic     r1, r1, r2
+    str     r1, [r0, #EXTI_FPR1]
+    b       estop_init_imr
+
+estop_init_falling:
+    /* Actif bas -> FPR1 (front descendant) */
+    ldr     r1, [r0, #EXTI_FPR1]
+    ldr     r2, =EXTI_LIGNE2
+    orr     r1, r1, r2
+    str     r1, [r0, #EXTI_FPR1]
+    ldr     r1, [r0, #EXTI_RTSR1]
+    ldr     r2, =EXTI_LIGNE2
+    bic     r1, r1, r2
+    str     r1, [r0, #EXTI_RTSR1]
+
+estop_init_imr:
+    /* Effacer toute requête en attente avant d'activer */
+    ldr     r1, =EXTI_LIGNE2
+    str     r1, [r0, #EXTI_RPR1]
+    str     r1, [r0, #EXTI_FPR1]
+
+    /* 3. Démasquer la ligne 2 (EXTI_IMR1 |= EXTI_LIGNE2) */
+    ldr     r1, [r0, #EXTI_IMR1]
+    ldr     r2, =EXTI_LIGNE2
+    orr     r1, r1, r2
+    str     r1, [r0, #EXTI_IMR1]
+
+    /* 4. NVIC : priorité et activation */
+    ldr     r0, =NVIC_IPR_BASE
+    movs    r1, #NVIC_PRIO_MAX
+    strb    r1, [r0, #EXTI2_IRQn]
+
+    ldr     r0, =NVIC_ISER0
+    movs    r1, #(1 << EXTI2_IRQn)
+    str     r1, [r0]
+
     bx      lr
     .size   estop_init, .-estop_init
 
@@ -63,10 +119,31 @@ estop_init:
  *   2. estop_flag = 1
  *   3. effacer la requête EXTI (fourni ci-dessous) et se terminer.
  * Rien d'autre : pas de temporisation, pas de changement d'état ici.       */
-    .global EXTI2_IRQHandler
+
+
+.global EXTI2_IRQHandler
     .type   EXTI2_IRQHandler, %function
 EXTI2_IRQHandler:
-    /* ----- À COMPLÉTER : étapes 1 et 2 ----- */
+    /* 1. État sûr immédiat par BSRR */
+    /* Verte éteinte */
+    ldr     r0, =GPIOC_BASE
+    ldr     r1, =(1 << (LED_VERTE_PIN + 16))
+    str     r1, [r0, #GPIO_BSRR]
+
+    /* Bleue éteinte */
+    ldr     r0, =GPIOB_BASE
+    ldr     r1, =(1 << (LED_BLEUE_PIN + 16))
+    str     r1, [r0, #GPIO_BSRR]
+
+    /* Rouge allumée */
+    ldr     r0, =GPIOA_BASE
+    ldr     r1, =(1 << LED_ROUGE_PIN)
+    str     r1, [r0, #GPIO_BSRR]
+
+    /* 2. estop_flag = 1 */
+    ldr     r0, =estop_flag
+    movs    r1, #1
+    str     r1, [r0]
 
     /* 3. effacement de la requête (écriture de 1 : w1c) */
     ldr     r0, =EXTI_BASE

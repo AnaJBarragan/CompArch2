@@ -1,0 +1,394 @@
+/* ---------------------------------------------------------------------------
+ * fsm.s — machine à états du panneau de commande (CEG 3536, laboratoire 1)
+ *
+ * Routines exportées : fsm_init (fournie), fsm_step (À COMPLÉTER)
+ * Variables (.bss)   : etat, touch_enabled, compteur_transitions,
+ *                      clignote_compteur, clignote_phase, touch_signal_compteur
+ *
+ * États (section 3) : ETAT_ARRET (rouge fixe), ETAT_MARCHE_AVANT (verte),
+ *                     ETAT_MARCHE_ARRIERE (bleue), ETAT_ARRET_URGENCE (rouge 2 Hz)
+ * Un seul point de mise à jour des DEL : fsm_maj_del (critère B3).
+ * ------------------------------------------------------------------------- */
+#include "registres.inc"
+
+    .syntax unified
+    .cpu    cortex-m33
+    .thumb
+
+    .bss
+    .align  2
+    .global etat
+etat:                   .space  4   /* état courant (ETAT_x)                     */
+    .global touch_enabled
+touch_enabled:          .space  4   /* autorisation TouchPad, 0/1 (E7)           */
+    .global compteur_transitions
+compteur_transitions:   .space  4   /* nombre de transitions validées (T3, watch) */
+clignote_compteur:      .space  4   /* pas de scrutation écoulés dans la demi-période */
+clignote_phase:         .space  4   /* 0 rouge éteinte, 1 rouge allumée (E5)     */
+touch_signal_compteur:  .space  4   /* pas restants d'extinction brève (E7)      */
+
+
+
+/* ================= DEBUT AJOUT E2 ================= */
+
+prochain_sens: .space 4                 /* 0 = prochain depart avant ; 1 = arriere. */
+
+/* ================== FIN AJOUT E2 ================== */
+
+
+
+/* ---- Table état -> DEL (un octet par état) ------------------------------ */
+    .section .rodata
+etat_vers_del:
+    .byte   LED_ROUGE       /* ETAT_ARRET          */
+    .byte   LED_VERTE       /* ETAT_MARCHE_AVANT   */
+    .byte   LED_BLEUE       /* ETAT_MARCHE_ARRIERE */
+    .byte   LED_ROUGE       /* ETAT_ARRET_URGENCE (clignotante, voir fsm_maj_del) */
+
+    .text
+    .align  2
+
+/* void fsm_init(void)
+ * État initial ARRÊT, variables à zéro, DEL rouge seule (E1).
+ * Appelle fsm_maj_del : LR sauvegardé ; push {r4, lr} garde l'alignement 8. */
+    .global fsm_init
+    .type   fsm_init, %function
+fsm_init:
+    push    {r4, lr}
+    movs    r1, #0
+    ldr     r0, =etat
+    movs    r2, #ETAT_ARRET
+    str     r2, [r0]
+    ldr     r0, =touch_enabled
+    str     r1, [r0]
+    ldr     r0, =compteur_transitions
+    str     r1, [r0]
+    ldr     r0, =clignote_compteur
+    str     r1, [r0]
+    ldr     r0, =clignote_phase
+    str     r1, [r0]
+    ldr     r0, =touch_signal_compteur
+    str     r1, [r0]
+    bl      fsm_maj_del
+    pop     {r4, pc}
+    .size   fsm_init, .-fsm_init
+
+/* void fsm_step(void)
+ * Un pas de la machine à états, appelé toutes les PERIODE_SCRUTATION_MS.
+ * Lit les événements validés (button_pressed) et le drapeau estop_flag,
+ * applique les transitions E2 à E7, puis met à jour les DEL (fsm_maj_del).
+ *
+ * À COMPLÉTER — ordre recommandé :
+ *   A. E4/E5 : si estop_flag == 1 : estop_flag = 0 ; etat = ETAT_ARRET_URGENCE ;
+ *      clignote_compteur = 0 ; clignote_phase = 1.
+ *   B. si etat == ETAT_ARRET_URGENCE :
+ *        - E5 : les appuis sur User sont ignorés (appeler quand même
+ *          button_pressed(BTN_USER) pour entretenir l'anti-rebond) ;
+ *        - E6 : si button_pressed(BTN_TOUCH) == 1 ET button_raw(BTN_ESTOP) == 0
+ *          (E-Stop relâché) : etat = ETAT_ARRET (acquittement). Sinon rester.
+ *      sinon :
+ *        - E2 : si button_pressed(BTN_USER) == 1 :
+ *              ARRET -> MARCHE_AVANT, MARCHE_AVANT -> ARRET (puis ARRET -> MARCHE_ARRIERE
+ *              au prochain appui, MARCHE_ARRIERE -> ARRET). Une variable "prochain sens"
+ *              en .bss permet d'alterner avant/arrière à partir d'ARRÊT.
+ *              compteur_transitions++ à chaque transition.
+ *        - E7 : si button_pressed(BTN_TOUCH) == 1 : touch_enabled ^= 1 ;
+ *              touch_signal_compteur = TOUCH_SIGNAL_MS / PERIODE_SCRUTATION_MS.
+ *   C. bl fsm_maj_del.
+ * Invariants (E9) : jamais deux DEL allumées (garanti par led_set) ; jamais de
+ * sortie d'ARRÊT_URGENCE sans acquittement.
+ * AAPCS : appelle d'autres routines -> push {r4, lr}.                         */
+    .global fsm_step
+    .type   fsm_step, %function
+fsm_step:
+
+    /* CORRECTION : correspond au POP {r4, pc} fourni.
+     * Les instructions incompletes utilisant r6 et r0 sont retirees. */
+    push    {r4, lr}
+
+    /* ----- À COMPLÉTER : étapes A et B ----- */
+
+
+
+/* ================= DEBUT AJOUT E4/E5 ================= */
+/* A. Consommer le drapeau de l'ISR et entrer en urgence. */
+
+    ldr     r0, =estop_flag             /* Adresse du drapeau d'urgence. */
+    ldr     r1, [r0]                    /* Lire la notification de l'ISR. */
+    cmp     r1, #0                      /* Une notification est-elle presente ? */
+    beq     fsm_lire_boutons            /* Sinon, passer a la lecture des boutons. */
+
+    movs    r1, #0                      /* Preparer la consommation du drapeau. */
+    str     r1, [r0]                    /* Effacer la notification traitee. */
+
+    ldr     r0, =etat                   /* Adresse de l'etat courant. */
+    ldr     r1, [r0]                    /* Lire cet etat. */
+    cmp     r1, #ETAT_ARRET_URGENCE     /* L'urgence est-elle deja active ? */
+    beq     fsm_lire_boutons            /* Ne pas recommencer le clignotement sur un rebond. */
+
+    movs    r1, #ETAT_ARRET_URGENCE     /* Choisir l'etat urgence. */
+    str     r1, [r0]                    /* Enregistrer cet etat. */
+
+    ldr     r0, =clignote_compteur      /* Adresse du compteur de clignotement. */
+    movs    r1, #0                      /* Preparer un compteur nul. */
+    str     r1, [r0]                    /* Commencer une nouvelle demi-periode. */
+
+    ldr     r0, =touch_signal_compteur  /* Adresse de l'extinction Touch. */
+    str     r1, [r0]                    /* Annuler un ancien signal Touch. */
+
+    ldr     r0, =clignote_phase         /* Adresse de la phase du clignotement. */
+    movs    r1, #1                      /* Choisir rouge allumee. */
+    str     r1, [r0]                    /* Memoriser la phase initiale. */
+
+/* ================== FIN AJOUT E4/E5 ================== */
+
+
+
+
+
+/* ================= DEBUT AJOUT — LECTURE DES BOUTONS ================= */
+/* B. Lire les deux boutons a chaque pas, comme dans le tutoriel.
+ * r4 conserve l'evenement User pendant l'appel pour Touch.
+ * Ensuite r3 contient l'evenement Touch. */
+
+fsm_lire_boutons:                       /* Point commun de lecture des boutons. */
+    movs    r0, #BTN_USER               /* Selectionner User. */
+    bl      button_pressed             /* Appeler ton anti-rebond E3. */
+    mov     r4, r0                      /* Conserver l'evenement User dans r4. */
+
+    movs    r0, #BTN_TOUCH              /* Selectionner Touch. */
+    bl      button_pressed             /* Lire un nouvel appui Touch valide. */
+    mov     r3, r0                      /* Conserver l'evenement Touch dans r3. */
+
+    ldr     r1, =etat                   /* Adresse de l'etat courant. */
+    ldr     r2, [r1]                    /* Lire l'etat courant dans r2. */
+    cmp     r2, #ETAT_ARRET_URGENCE     /* Sommes-nous en urgence ? */
+    beq     fsm_urgence                 /* Si oui, ignorer User et verifier Touch. */
+
+/* ================== FIN AJOUT — LECTURE DES BOUTONS ================== */
+
+
+
+
+
+/* ================= DEBUT AJOUT E2 ================= */
+/* Hors urgence : ARRET -> AVANT -> ARRET -> ARRIERE -> ARRET.
+ * Aucun appel de fonction dans ce bloc : r3 conserve l'evenement Touch. */
+
+    cmp     r4, #0                      /* Un evenement User est-il present ? */
+    beq     fsm_touch                   /* Sinon, traiter uniquement Touch. */
+
+    cmp     r2, #ETAT_ARRET             /* Le systeme est-il a l'arret ? */
+    bne     fsm_vers_arret              /* Depuis une marche, revenir a ARRET. */
+
+    ldr     r0, =prochain_sens          /* Adresse du sens du prochain depart. */
+    ldr     r4, [r0]                    /* Lire ce sens. */
+    cmp     r4, #0                      /* Le prochain depart est-il en avant ? */
+    bne     fsm_marche_arriere          /* Sinon, choisir l'arriere. */
+
+    movs    r2, #ETAT_MARCHE_AVANT     /* Preparer la marche avant. */
+    movs    r4, #1                      /* Preparer l'arriere pour le depart suivant. */
+    b       fsm_depart                  /* Enregistrer ce depart. */
+
+fsm_marche_arriere:                     /* Preparer un depart en arriere. */
+    movs    r2, #ETAT_MARCHE_ARRIERE    /* Choisir la marche arriere. */
+    movs    r4, #0                      /* Preparer l'avant pour le depart suivant. */
+
+fsm_depart:                            /* Memoriser le prochain sens. */
+    str     r4, [r0]                    /* Ecrire le sens du prochain depart. */
+    b       fsm_enregistrer             /* Enregistrer le nouvel etat. */
+
+fsm_vers_arret:                         /* Appui User pendant une marche. */
+    movs    r2, #ETAT_ARRET             /* Choisir ARRET sans modifier prochain_sens. */
+
+fsm_enregistrer:                        /* Point commun aux transitions normales. */
+    str     r2, [r1]                    /* Memoriser le nouvel etat. */
+    ldr     r0, =compteur_transitions   /* Adresse du compteur de transitions. */
+    ldr     r2, [r0]                    /* Lire le compteur. */
+    adds    r2, r2, #1                  /* Ajouter une transition. */
+    str     r2, [r0]                    /* Enregistrer le compteur. */
+
+/* ================== FIN AJOUT E2 ================== */
+
+
+
+
+
+/* ================= DEBUT AJOUT E7 ================= */
+/* Hors urgence : Touch inverse l'autorisation et lance le signal de 100 ms. */
+
+fsm_touch:                             /* Traiter l'evenement Touch conserve dans r3. */
+    cmp     r3, #0                      /* Un appui Touch a-t-il ete valide ? */
+    beq     fsm_step_fin                /* Sinon, terminer ce pas. */
+
+    ldr     r0, =touch_enabled          /* Adresse de l'autorisation Touch. */
+    ldr     r1, [r0]                    /* Lire sa valeur actuelle. */
+    eors    r1, r1, #1                  /* Inverser zero et un. */
+    str     r1, [r0]                    /* Enregistrer la nouvelle autorisation. */
+
+    ldr     r0, =touch_signal_compteur  /* Adresse du compteur d'extinction. */
+    ldr     r1, =(TOUCH_SIGNAL_MS / PERIODE_SCRUTATION_MS) /* Duree en pas. */
+    str     r1, [r0]                    /* Demarrer l'extinction temporaire. */
+    b       fsm_step_fin                /* Terminer le traitement normal. */
+
+/* ================== FIN AJOUT E7 ================== */
+
+
+
+
+
+/* ================= DEBUT AJOUT E5/E6 ================= */
+/* En urgence, l'evenement User n'est jamais utilise.
+ * Seul Touch valide avec E-Stop relache peut ramener a ARRET. */
+
+fsm_urgence:                           /* Traitement de l'etat urgence. */
+    cmp     r3, #0                      /* Un nouvel appui Touch est-il present ? */
+    beq     fsm_step_fin                /* Sinon, rester en urgence. */
+
+    movs    r0, #BTN_ESTOP              /* Selectionner E-Stop. */
+    bl      button_raw                 /* Lire son niveau actuel. */
+    cmp     r0, #0                      /* E-Stop est-il relache ? */
+    bne     fsm_step_fin                /* Sinon, refuser l'acquittement. */
+
+    ldr     r0, =estop_flag             /* Adresse d'une eventuelle nouvelle notification. */
+    ldr     r1, [r0]                    /* Lire le drapeau ISR. */
+    cmp     r1, #0                      /* Une nouvelle urgence a-t-elle ete signalee ? */
+    bne     fsm_step_fin                /* Si oui, refuser cet acquittement. */
+
+    ldr     r0, =etat                   /* Recharger l'adresse apres l'appel de button_raw. */
+    movs    r1, #ETAT_ARRET             /* Choisir ARRET, sans reprise automatique. */
+    str     r1, [r0]                    /* Memoriser l'acquittement. */
+
+    ldr     r0, =compteur_transitions   /* Adresse du compteur de transitions. */
+    ldr     r1, [r0]                    /* Lire sa valeur. */
+    adds    r1, r1, #1                  /* Compter la transition d'acquittement. */
+    str     r1, [r0]                    /* Enregistrer le compteur. */
+
+/* ================== FIN AJOUT E5/E6 ================== */
+
+
+
+/* AJOUT : etiquette devant la fin fournie de fsm_step. */
+fsm_step_fin:
+    bl      fsm_maj_del
+    pop     {r4, pc}
+    .size   fsm_step, .-fsm_step
+
+/* static void fsm_maj_del(void)  — routine locale, seul point d'appel de led_set
+ * ARRÊT, MARCHE_AVANT, MARCHE_ARRIÈRE : DEL fixe d'après etat_vers_del.
+ * ARRÊT_URGENCE : À COMPLÉTER (E5) — alterner rouge / aucune toutes les
+ *   CLIGNOTEMENT_DEMI_MS / PERIODE_SCRUTATION_MS appels (clignote_compteur,
+ *   clignote_phase).
+ * Hors urgence : À COMPLÉTER (E7) — tant que touch_signal_compteur > 0,
+ *   décrémenter et afficher LED_AUCUNE au lieu de la DEL de l'état.          */
+    .type   fsm_maj_del, %function
+fsm_maj_del:
+    push    {r4, lr}
+    ldr     r0, =etat
+    ldr     r4, [r0]
+    cmp     r4, #ETAT_ARRET_URGENCE
+    bhi     fsm_maj_del_fin             /* état invalide : ne rien changer */
+
+    /* ----- À COMPLÉTER : clignotement (E5) et extinction brève (E7) ----- */
+
+
+
+/* ================= DEBUT AJOUT E5 ================= */
+/* Compter les appels, puis inverser la phase toutes les 250 ms nominales.
+ * Aucun delay_ms ici : la routine ne bloque pas la lecture des boutons. */
+
+    cmp     r4, #ETAT_ARRET_URGENCE     /* L'affichage doit-il suivre l'urgence ? */
+    bne     fsm_del_touch               /* Sinon, examiner l'extinction Touch. */
+
+    ldr     r1, =clignote_compteur      /* Adresse du compteur de demi-periode. */
+    ldr     r2, [r1]                    /* Lire le nombre de pas ecoules. */
+    adds    r2, r2, #1                  /* Compter ce nouvel appel. */
+    ldr     r3, =(CLIGNOTEMENT_DEMI_MS / PERIODE_SCRUTATION_MS) /* Seuil en pas. */
+    cmp     r2, r3                      /* La demi-periode est-elle terminee ? */
+    blo     fsm_del_phase               /* Sinon, garder la phase actuelle. */
+
+    movs    r2, #0                      /* Recommencer le compteur a zero. */
+    ldr     r3, =clignote_phase         /* Adresse de la phase. */
+    ldr     r0, [r3]                    /* Lire la phase actuelle. */
+    eors    r0, r0, #1                  /* Alterner allume et eteint. */
+    str     r0, [r3]                    /* Memoriser la nouvelle phase. */
+
+fsm_del_phase:                         /* Enregistrer le compteur et choisir la DEL. */
+    str     r2, [r1]                    /* Memoriser les pas ecoules. */
+    ldr     r3, =clignote_phase         /* Adresse de la phase actuelle. */
+    ldr     r0, [r3]                    /* Lire cette phase. */
+    cmp     r0, #0                      /* La phase est-elle eteinte ? */
+    beq     fsm_del_eteinte             /* Si oui, choisir aucune DEL. */
+    movs    r0, #LED_ROUGE              /* Sinon, choisir rouge. */
+    b       fsm_del_appliquer           /* Rejoindre l'appel commun a led_set. */
+
+/* ================== FIN AJOUT E5 ================== */
+
+
+
+
+
+/* ================= DEBUT AJOUT E7 ================= */
+/* Hors urgence, le compteur Touch impose temporairement l'extinction. */
+
+fsm_del_touch:                         /* Examiner le signal Touch. */
+    ldr     r1, =touch_signal_compteur  /* Adresse des pas d'extinction restants. */
+    ldr     r2, [r1]                    /* Lire le compteur. */
+    cmp     r2, #0                      /* Une extinction est-elle en cours ? */
+    beq     fsm_del_normale             /* Sinon, utiliser la table fournie. */
+
+    subs    r2, r2, #1                  /* Consommer un pas d'extinction. */
+    str     r2, [r1]                    /* Memoriser les pas restants. */
+
+fsm_del_eteinte:                        /* Point commun aux deux causes d'extinction. */
+    movs    r0, #LED_AUCUNE             /* Choisir l'extinction des trois DEL. */
+    b       fsm_del_appliquer           /* Rejoindre l'appel commun a led_set. */
+
+/* ================== FIN AJOUT E7 ================== */
+
+
+
+/* AJOUT : etiquette devant la lecture de table fournie. */
+fsm_del_normale:
+    ldr     r1, =etat_vers_del
+    ldrb    r0, [r1, r4]                /* r0 = DEL associée à l'état */
+
+
+
+/* ================= DEBUT AJOUT E9 ================= */
+/* Proteger les ecritures successives de led_set contre l'ISR E-Stop.
+ * Cette courte section ne contient aucune temporisation.
+ * r4 est deja sauvegarde par le prologue fourni. */
+
+fsm_del_appliquer:                     /* Point commun de toutes les commandes de DEL. */
+    mrs     r4, PRIMASK                 /* Sauver le masque d'interruptions precedent. */
+    cpsid   i                          /* Masquer temporairement les interruptions configurables. */
+
+    ldr     r1, =estop_flag             /* Adresse de la notification d'urgence. */
+    ldr     r1, [r1]                    /* Lire une notification survenue depuis le choix de DEL. */
+    cmp     r1, #0                      /* Une urgence a-t-elle ete signalee ? */
+    beq     fsm_del_ecrire              /* Sinon, conserver la commande dans r0. */
+    movs    r0, #LED_ROUGE              /* Si oui, donner priorite au rouge. */
+
+fsm_del_ecrire:                        /* Rejoindre l'unique appel fourni au pilote. */
+
+/* ================== FIN AJOUT E9 AVANT L'APPEL ================== */
+
+
+
+    bl      led_set
+
+
+
+/* ================= DEBUT AJOUT E9 APRES L'APPEL ================= */
+
+    dsb                                /* Attendre l'achevement des acces memoire precedents. */
+    msr     PRIMASK, r4                 /* Restaurer exactement le masque sauvegarde. */
+
+/* ================== FIN AJOUT E9 APRES L'APPEL ================== */
+
+
+
+fsm_maj_del_fin:
+    pop     {r4, pc}
+    .size   fsm_maj_del, .-fsm_maj_del
