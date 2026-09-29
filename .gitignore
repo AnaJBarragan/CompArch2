@@ -1,0 +1,11 @@
+.metadata/
+Debug/
+Release/
+*.o
+*.d
+*.elf
+*.bin
+*.hex
+*.map
+.DS_Store
+Thumbs.db
