@@ -47,6 +47,33 @@ estop_flag:     .space  4           /* 1 = E-Stop reçu, à consommer par fsm_st
     .type   estop_init, %function
 estop_init:
     /* ----- À COMPLÉTER : étapes 1 à 4 ci-dessus ----- */
+    // Etape 1:
+   	ldr 	r0, =EXTI_BASE // load l'adresse de EXTI_BASE dans r0
+   	ldr		r1, [r0, #EXTI_EXTICR1] // load adresse r0 avec offset pour EXTI_EXTICR1
+
+   	bic		r1,	r1,	#(0xFF << EXTICR1_EXTI2_POS) // Clear le champ EXTI2 dans r1
+   	orr		r1, r1, #(EXTICR_PORT_B << EXTICR1_EXTI2_POS) // Insert EXTI_PORT_B a la position du champ EXTI2
+   	str		r1, [r0, #EXTI_EXTICR1] // ecrire EXTI_PORT_B (0x01) a EXTI_EXTICR1
+
+   	//Etape 2:
+   	// Actif haut
+   	ldr 	r1, [r0, #EXTI_RTSR1]
+   	// Actif bas
+   	ldr		r2, [r0, #EXTI_FTSR1]
+
+   	ldr 	r3, =BTN_ESTOP_ACTIF_HAUT
+   	cmp		r3,	#0 // If NOT BTN_ESTOP_ACTIF_BAS
+   	bne 	estop_init_actifhaut
+
+
+estop_init_actifbas:
+	orr	r2, r2, #EXTI_LIGNE2 // Active front descendant
+	bic r1, r1, #EXTI_LIGNE2 // Desactive front montant
+estop_init_actifhaut:
+	orr	r1, r1, #EXTI_LIGNE2 // Active front montant
+	bic r2, r2, #EXTI_LIGNE2 // Desactive front descendant
+estop_init_step2_store:
+	str r1
     bx      lr
     .size   estop_init, .-estop_init
 
