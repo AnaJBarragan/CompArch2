@@ -7,3 +7,5 @@ build/
 *.o
 *.su
 *.list
+.settings/
+*.launch

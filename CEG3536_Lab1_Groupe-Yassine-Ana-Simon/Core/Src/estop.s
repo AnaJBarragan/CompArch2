@@ -51,29 +51,49 @@ estop_init:
    	ldr 	r0, =EXTI_BASE // load l'adresse de EXTI_BASE dans r0
    	ldr		r1, [r0, #EXTI_EXTICR1] // load adresse r0 avec offset pour EXTI_EXTICR1
 
-   	bic		r1,	r1,	#(0xFF << EXTICR1_EXTI2_POS) // Clear le champ EXTI2 dans r1
+   	bic		r1,	r1,	#(0xFF << EXTICR1_EXTI2_POS) // Clear le champ EXTI2 dans r1 (Test to see if 0xFF is the correct one)
    	orr		r1, r1, #(EXTICR_PORT_B << EXTICR1_EXTI2_POS) // Insert EXTI_PORT_B a la position du champ EXTI2
    	str		r1, [r0, #EXTI_EXTICR1] // ecrire EXTI_PORT_B (0x01) a EXTI_EXTICR1
 
    	//Etape 2:
-   	// Actif haut
+   	// load Actif haut dans r1
    	ldr 	r1, [r0, #EXTI_RTSR1]
-   	// Actif bas
+   	// load Actif bas dans r2
    	ldr		r2, [r0, #EXTI_FTSR1]
 
-   	ldr 	r3, =BTN_ESTOP_ACTIF_HAUT
+   	ldr 	r3, =BTN_ESTOP_ACTIF_HAUT //Changer a mov au lieu de ldr? Verifier si tu as le temps sur la difference en terme de performance.
    	cmp		r3,	#0 // If NOT BTN_ESTOP_ACTIF_BAS
    	bne 	estop_init_actifhaut
 
-
-estop_init_actifbas:
-	orr	r2, r2, #EXTI_LIGNE2 // Active front descendant
-	bic r1, r1, #EXTI_LIGNE2 // Desactive front montant
-estop_init_actifhaut:
-	orr	r1, r1, #EXTI_LIGNE2 // Active front montant
-	bic r2, r2, #EXTI_LIGNE2 // Desactive front descendant
+estop_init_actifbas:	// actif bas -> EXTI_FTSR1 |= EXTI_LIGNE2.
+	orr		r2, r2, #EXTI_LIGNE2 // Active front descendant
+	bic 	r1, r1, #EXTI_LIGNE2 // Desactive front montant
+	b		estop_init_step2_store
+estop_init_actifhaut:	// actif haut -> EXTI_RTSR1 |= EXTI_LIGNE2
+	orr		r1, r1, #EXTI_LIGNE2 // Active front montant
+	bic 	r2, r2, #EXTI_LIGNE2 // Desactive front descendant
 estop_init_step2_store:
-	str r1
+	// Ecrire r1 et r2 au registres RTSR1 et FTSR1 (Actif front montant ou descendant)
+	str 	r1, [r0, #EXTI_RTSR1]
+	str		r2, [r0, #EXTI_FTSR1]
+estop_init_step2_fin:
+	mov		r3, #EXTI_LIGNE2
+	str		r3, [r0, #EXTI_RPR1]
+	str		r3, [r0, #EXTI_FPR1]
+
+//Etape 3:
+	ldr		r1, [r0, #EXTI_IMR1] // load l'addresse de EXIT_IMR1 dans registre r1 (EXTI_BASE + Offset EXTI_IMR1)
+	orr		r1, r1, #EXTI_LIGNE2 // Demasquer la ligne 2
+	str 	r1, [r0, #EXTI_IMR1] // Stock nouvelle valeur de EXTI_IMR1 dans la memoire
+
+//Etape 4:
+	ldr 	r0, =NVIC_IPR_BASE //0xE000E400 un octet par IRQ, 3 bits utiles (7:5)
+	movs	r1, #NVIC_PRIO_MAX // Le 0 est la priorite la plus eleve, Place la valeur 0 dans registre r1
+	strb	r1, [r0, #EXTI2_IRQn]
+	ldr		r0, =NVIC_ISER0
+	mov		r1, #(1 << EXTI2_IRQn)
+	str		r1, [r0]
+
     bx      lr
     .size   estop_init, .-estop_init
 
