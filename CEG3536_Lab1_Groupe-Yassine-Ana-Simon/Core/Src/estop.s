@@ -51,7 +51,7 @@ estop_init:
    	ldr 	r0, =EXTI_BASE // load l'adresse de EXTI_BASE dans r0
    	ldr		r1, [r0, #EXTI_EXTICR1] // load adresse r0 avec offset pour EXTI_EXTICR1
 
-   	bic		r1,	r1,	#(0xFF << EXTICR1_EXTI2_POS) // Clear le champ EXTI2 dans r1 (Test to see if 0xFF is the correct one)
+   	bic		r1,	r1,	#(0x07 << EXTICR1_EXTI2_POS) // Clear le champ EXTI2 dans r1
    	orr		r1, r1, #(EXTICR_PORT_B << EXTICR1_EXTI2_POS) // Insert EXTI_PORT_B a la position du champ EXTI2
    	str		r1, [r0, #EXTI_EXTICR1] // ecrire EXTI_PORT_B (0x01) a EXTI_EXTICR1
 
