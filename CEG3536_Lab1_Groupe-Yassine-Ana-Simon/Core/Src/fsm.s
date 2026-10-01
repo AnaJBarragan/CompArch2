@@ -97,8 +97,28 @@ fsm_step:
     push    {r4, r5, r6, lr} // Push registres r4, r5, r6 et lr au stack (Pour les sauvegarder) (r6 pour garder alignement).
 
     /* ----- À COMPLÉTER : étapes A et B ----- */
+//Etape A (E4):
+	ldr		r0, =estop_flag
+	ldr		r1, [r0] // load valeur dans l'adresse de estop_flag
+	cmp		r1, #1 // Si estop_flag n'est pas == 1
+	bne		fsm_check_urgence
+
+	// estop_flag ce fait mettre a 0, on le stocke dans la memoire a l'adresse dans r0
+	movs	r1, #0
+	str		r1,	[r0]
+
+	// On mets l'etat a l'etat arret urgence
+	ldr		r0, =etat
+	movs	r1, #ETAT_ARRET_URGENCE
+	str		r1, [r0]
+
+	b		fsm_step_fin //Branche a la fin
+
+fsm_check_urgence:
+
 
 // E2 Dessous
+fsm_normal_branch:
     movs	r0, #BTN_USER	//BTN_USER dans registre r0
     bl		button_pressed 	//On branche à la fonction button_pressed
     cmp		r0,	#1			//Si button_pressed n'est pas pesé on branche à la fonction fsm_step_fin
