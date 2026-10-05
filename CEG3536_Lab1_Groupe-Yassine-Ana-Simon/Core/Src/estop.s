@@ -47,6 +47,7 @@ estop_flag:     .space  4           /* 1 = E-Stop reçu, à consommer par fsm_st
     .type   estop_init, %function
 estop_init:
     /* ----- À COMPLÉTER : étapes 1 à 4 ci-dessus ----- */
+    // Double check if any changes that yassine made need to be added in here or not
     // Etape 1:
    	ldr 	r0, =EXTI_BASE // load l'adresse de EXTI_BASE dans r0
    	ldr		r1, [r0, #EXTI_EXTICR1] // load adresse r0 avec offset pour EXTI_EXTICR1

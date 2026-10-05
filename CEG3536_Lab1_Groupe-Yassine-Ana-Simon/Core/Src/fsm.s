@@ -112,11 +112,69 @@ fsm_step:
 	movs	r1, #ETAT_ARRET_URGENCE
 	str		r1, [r0]
 
+	//Yassine clignote compteur?:
+	ldr		r0, =clignote_compteur	// adresse du compteur de demi-periode
+    movs	r1, #0					//  zero
+    str		r1, [r0]				//  repartir d'une demi-periode neuve
+
+    ldr		r0, =clignote_phase		// adresse de la phase
+    movs	r1, #1					// phase 1 = rouge allume d'abord
+    str		r1, [r0]				//  écrire la phase
+
+    ldr		r0, =touch_signal_compteur	//  adresse du compteur d'extinction
+    movs	r1, #0	//return  zero
+    str		r1, [r0]				   //  annuler une extinction en cours
+	// Yassine code block stops here
 	b		fsm_step_fin //Branche a la fin
 
+// Yassine: (Why r4 for etat at the start instead of r0?
 fsm_check_urgence:
+	ldr		r4, =etat				// adresse de etat
+    ldr		r0, [r4]				// lire etat
+    cmp		r0, #ETAT_ARRET_URGENCE	// deja en urgence?
+    bne		fsm_normal_branch		// if no ,  branche normale
 
+	//e5 - read+skip
 
+    movs	r0, #BTN_USER			//  identifiant User
+    bl		button_pressed			//  resultat off, effet de bord sur l'anti-rebond
+
+	//E6 - touch (estop relacher)
+
+    movs	r0, #BTN_TOUCH			//  identifiant Touch
+    bl		button_pressed
+    cmp		r0, #1					//  événement
+    bne		fsm_step_fin
+
+    movs	r0, #BTN_ESTOP			//  identifiant E-Stop
+    bl		button_raw				// lire niveau brut
+    cmp		r0, #0
+    bne		fsm_step_fin			//if no, refuser l'acquittement
+
+    ldr		r0, =estop_flag			//  adresse du drapeau
+    ldr		r1, [r0]				// lire estop_flag
+    cmp		r1, #0					//  nouvelle urgence entre-temps
+    bne		fsm_step_fin			// if yes, refuser l'acquittement
+
+    movs	r0, #ETAT_ARRET			         // acquittement : retour à ARRET
+    str		r0, [r4] //  ecrire etat
+
+    ldr		r0, =touch_signal_compteur	     // adresse du compteur d'extinction
+    movs	r1, #0					                // return zero
+    str		r1, [r0]		//  permettre au rouge fixe de reprendre
+
+    ldr		r0, =btn_valide			// adresse des niveaux validés
+    movs	r1, #1
+    str		r1, [r0, #(BTN_USER * 4)]	// btn_valide[BTN_USER] = 1
+
+    ldr		r0, =btn_compteur		//  adresse des compteurs
+    movs	r1, #0					//  zero
+    str		r1, [r0, #(BTN_USER * 4)]	//  btn_compteur[BTN_USER]  = 0
+
+    bl		fsm_compte_transition	//  compter cette transition d'acquittement
+    b		fsm_step_fin
+// fin b
+// Yassine code bloc stops here
 // E2 Dessous
 fsm_normal_branch:
     movs	r0, #BTN_USER	//BTN_USER dans registre r0
@@ -159,6 +217,28 @@ fsm_vers_arret:
 	bl		fsm_compte_transition
 	b		fsm_step_fin
 
+
+// Yassine code:
+//E7
+fsm_check_touch:
+    movs	r0, #BTN_TOUCH			//  identifiant Touch
+    bl		button_pressed	//  front valide
+    cmp		r0, #1
+    bne		fsm_step_fin			    // non = terminer ce pas
+
+    ldr		r0, =touch_enabled		//adresse de touch_enabled
+    ldr		r1, [r0]				//    lire
+    eors	r1, r1, #1
+    str		r1, [r0]				// ecrire (visible au watch T9)
+
+    ldr		r0, =touch_signal_compteur	//  adresse du compteur d'extinction
+
+    ldr		r1, =(TOUCH_SIGNAL_MS / PERIODE_SCRUTATION_MS)	//  100 pas de 1 ms
+    str		r1, [r0]				// demarrer l'extinction
+    b		fsm_step_fin			//    terminer ce pas
+//E7 FIN
+// Yassine code block ends here
+
 // Appelle fsm_maj_del qui effectue une mise à jour de la DEL, ainsi que pop le stack.
 // Cette fonction fsm_step_fin démarque la fin d'une transition complete dans la machine à état.
 fsm_step_fin:
@@ -192,10 +272,93 @@ fsm_maj_del:
     bhi     fsm_maj_del_fin             /* état invalide : ne rien changer */
 
     /* ----- À COMPLÉTER : clignotement (E5) et extinction brève (E7) ----- */
+// Yassine code block start:
+    // E5--- Clignotement non bloquant en ARRET_URGENCE
 
+// On compte les pas de scrutation. 250 pas allumés + 250 pas éteints = 2 Hz.   Tolerance +_ 10%, del bleu et vert etwinte
+
+    cmp		r4, #ETAT_ARRET_URGENCE		// en ARRET_URGENCE
+    bne		fsm_maj_del_touch_check		//if no, branche hors urgence
+
+    ldr		r0, =clignote_compteur		//  adresse du compteur de demi-période
+    ldr		r1, [r0]					//  lire
+    adds	r1, r1, #1					//  +1
+
+    ldr		r2, =(CLIGNOTEMENT_DEMI_MS / PERIODE_SCRUTATION_MS)	//  seuil = 250
+    cmp		r1, r2						//  seuil atteint r1=r2?
+    blo		fsm_maj_del_compt_save		//ifno, sauvegarder le compteur
+
+    movs	r1, #0						//  yes, return 0
+    str		r1, [r0]
+
+
+    ldr		r0, =clignote_phase			//  ldr adr
+    ldr		r1, [r0]
+    eors	r1, r1, #1					   //  inverser la phase
+    str		r1, [r0]
+    b		fsm_maj_del_phase_apply		 //    appliquer
+
+fsm_maj_del_compt_save:
+    str		r1, [r0]			// sauvegarder le compteur
+
+fsm_maj_del_phase_apply:
+    ldr		r0, =clignote_phase			//    adresse de la phase
+    ldr		r1, [r0]				      	//     lire
+    cmp		r1, #1						   //    phase allumee
+    beq		fsm_maj_del_rouge		//  if oui,   allumer
+    movs	r0, #LED_AUCUNE				//    sinon tout eteindre
+    b		fsm_maj_del_apply			    //appliquer
+
+fsm_maj_del_rouge:
+    movs	r0, #LED_ROUGE				//allumer la rouge
+    b		fsm_maj_del_apply
+
+//E5-FIN
+
+//  E7 --- Extinction brève hors urgence
+
+fsm_maj_del_touch_check:
+    ldr		r0, =touch_signal_compteur	//  adresse du compteur
+    ldr		r1, [r0]
+    cmp		r1, #0					     	//  zero?
+    ble		fsm_maj_del_normal		//     oui  DEL de l'etat present
+
+
+
+    subs	r1, r1, #1					//    - un pas
+    str		r1, [r0]		// sauvegarder
+    movs	r0, #LED_AUCUNE			     	//   forcer l'extinction
+    b		fsm_maj_del_apply
+
+//FIN E7
+
+fsm_maj_del_normal:
     ldr     r1, =etat_vers_del
-    ldrb    r0, [r1, r4]                /* r0 = DEL associée à l'état */
+    ldrb    r0, [r1, r4]                /* r0 = DEL associee à l'etat */
+
+//E9-- Robustesse :
+
+fsm_maj_del_apply:
+    mrs		r4, PRIMASK					// sauver PRIMASK
+    cpsid	i							//  masquer les IRQ configurables
+
+    ldr		r1, =estop_flag				    //flag address
+    ldr		r1, [r1]				    	//  lire estop_flag
+
+
+    cmp		r1, #0				//  urgence signalee pendant le calcul (ARRET_URGENCE APPEL)
+    bne		fsm_maj_del_force_rouge		    // oui == red
+    b		fsm_maj_del_write  // ifno,  garder la commande calcule
+
+fsm_maj_del_force_rouge:
+    movs	r0, #LED_ROUGE				// immediate
+
+fsm_maj_del_write:
     bl      led_set
+    dsb						  //  barriere memoire
+    msr		PRIMASK, r4			 		//  restaurer exactement le masque sauvegard
+
+// Yassine code block end
 fsm_maj_del_fin:
     pop     {r4, pc}
     .size   fsm_maj_del, .-fsm_maj_del
