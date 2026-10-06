@@ -143,6 +143,7 @@ fsm_entree_urgence:					//  etiquette commune
 
 
     movs	r0, #ETAT_ARRET_URGENCE	                   //  ecrire etat
+	str		r0, [r4]
 
     ldr		r0, =clignote_compteur	// adresse du compteur de demi-periode
     movs	r1, #0					//  zero
@@ -243,8 +244,7 @@ fsm_check_urgence:
 
 //E2 -
 
-fsm_normal_branch:				s
-
+fsm_normal_branch:
 // E2 Dessous
     movs	r0, #BTN_USER	//BTN_USER dans registre r0
     bl		button_pressed 	//On branche à la fonction button_pressed
@@ -451,7 +451,7 @@ fsm_maj_del_rouge:
 fsm_maj_del_touch_check:
     ldr		r0, =touch_signal_compteur	//  adresse du compteur
     ldr		r1, [r0]
-    cmp		r1, #0					     	//  zero?
+    cmp		r1, #0					     	//  z?
     ble		fsm_maj_del_normal		//     oui  DEL de l'etat present
 
 

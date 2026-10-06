@@ -43,65 +43,57 @@ estop_flag:     .space  4           /* 1 = E-Stop reçu, à consommer par fsm_st
  *      puis NVIC_ISER0 = (1 << EXTI2_IRQn) pour activer l'interruption.
  *   (RCC_APB2ENR.SYSCFGEN n'est pas nécessaire pour EXTICR sur la L5.)
  * Registres modifiés : r0-r3 (routine feuille).                             */
-.global estop_init
+    .global estop_init
     .type   estop_init, %function
 estop_init:
-    /* 1. EXTI_EXTICR1 : champ EXTI2 (bits 18:16) = EXTICR_PORT_B (0x01) */
-    ldr     r0, =EXTI_BASE
-    ldr     r1, [r0, #EXTI_EXTICR1]
-    ldr     r2, =~(0x7 << 16)          /* Masque pour effacer les bits 18:16 */
-    and     r1, r1, r2
-    ldr     r2, =(EXTICR_PORT_B << 16) /* Valeur pour Port B (0x01) */
-    orr     r1, r1, r2
-    str     r1, [r0, #EXTI_EXTICR1]
+    /* ----- À COMPLÉTER : étapes 1 à 4 ci-dessus ----- */
+    // Etape 1:
+   	ldr 	r0, =EXTI_BASE // load l'adresse de EXTI_BASE dans r0
+   	ldr		r1, [r0, #EXTI_EXTICR1] // load adresse r0 avec offset pour EXTI_EXTICR1
 
-    /* 2. Front de déclenchement selon BTN_ESTOP_ACTIF_HAUT */
-    ldr     r2, =BTN_ESTOP_ACTIF_HAUT
-    cmp     r2, #1
-    bne     estop_init_falling
+   	bic		r1,	r1,	#(0x07 << EXTICR1_EXTI2_POS) // Clear le champ EXTI2 dans r1
+   	orr		r1, r1, #(EXTICR_PORT_B << EXTICR1_EXTI2_POS) // Insert EXTI_PORT_B a la position du champ EXTI2
+   	str		r1, [r0, #EXTI_EXTICR1] // ecrire EXTI_PORT_B (0x01) a EXTI_EXTICR1
 
-    /* Actif haut -> RTSR1 (front montant) */
-    ldr     r1, [r0, #EXTI_RTSR1]
-    ldr     r2, =EXTI_LIGNE2
-    orr     r1, r1, r2
-    str     r1, [r0, #EXTI_RTSR1]
-    ldr     r1, [r0, #EXTI_FPR1]
-    ldr     r2, =EXTI_LIGNE2
-    bic     r1, r1, r2
-    str     r1, [r0, #EXTI_FPR1]
-    b       estop_init_imr
+   	//Etape 2:
+   	// load Actif haut dans r1
+   	ldr 	r1, [r0, #EXTI_RTSR1]
+   	// load Actif bas dans r2
+   	ldr		r2, [r0, #EXTI_FTSR1]
 
-estop_init_falling:
-    /* Actif bas -> FPR1 (front descendant) */
-    ldr     r1, [r0, #EXTI_FPR1]
-    ldr     r2, =EXTI_LIGNE2
-    orr     r1, r1, r2
-    str     r1, [r0, #EXTI_FPR1]
-    ldr     r1, [r0, #EXTI_RTSR1]
-    ldr     r2, =EXTI_LIGNE2
-    bic     r1, r1, r2
-    str     r1, [r0, #EXTI_RTSR1]
+   	ldr 	r3, =BTN_ESTOP_ACTIF_HAUT //Changer a mov au lieu de ldr? Verifier si tu as le temps sur la difference en terme de performance.
+   	cmp		r3,	#0 // If NOT BTN_ESTOP_ACTIF_BAS
+   	bne 	estop_init_actifhaut
 
-estop_init_imr:
-    /* Effacer toute requête en attente avant d'activer */
-    ldr     r1, =EXTI_LIGNE2
-    str     r1, [r0, #EXTI_RPR1]
-    str     r1, [r0, #EXTI_FPR1]
+estop_init_actifbas:	// actif bas -> EXTI_FTSR1 |= EXTI_LIGNE2.
+	orr		r2, r2, #EXTI_LIGNE2 // Active front descendant
+	bic 	r1, r1, #EXTI_LIGNE2 // Desactive front montant
+	b		estop_init_step2_store
+estop_init_actifhaut:	// actif haut -> EXTI_RTSR1 |= EXTI_LIGNE2
+	orr		r1, r1, #EXTI_LIGNE2 // Active front montant
+	bic 	r2, r2, #EXTI_LIGNE2 // Desactive front descendant
+estop_init_step2_store:
+	// Ecrire r1 et r2 au registres RTSR1 et FTSR1 (Actif front montant ou descendant)
+	str 	r1, [r0, #EXTI_RTSR1]
+	str		r2, [r0, #EXTI_FTSR1]
+estop_init_step2_fin:
+// Effacer toutes requetes en attente:
+	mov		r3, #EXTI_LIGNE2 // load 0x00000004 (1 << 2) dans r3
+	str		r3, [r0, #EXTI_RPR1] //Ecrire valeur de registre r3 a l'adresse EXTI_RPR1 (Ecrire 1 pour effacer)
+	str		r3, [r0, #EXTI_FPR1] //Ecrire valeur de registre r3 a l'adresse EXTI_FPR1
 
-    /* 3. Démasquer la ligne 2 (EXTI_IMR1 |= EXTI_LIGNE2) */
-    ldr     r1, [r0, #EXTI_IMR1]
-    ldr     r2, =EXTI_LIGNE2
-    orr     r1, r1, r2
-    str     r1, [r0, #EXTI_IMR1]
+//Etape 3:
+	ldr		r1, [r0, #EXTI_IMR1] // load l'addresse de EXIT_IMR1 dans registre r1 (EXTI_BASE + Offset EXTI_IMR1)
+	orr		r1, r1, #EXTI_LIGNE2 // Demasquer la ligne 2
+	str 	r1, [r0, #EXTI_IMR1] // Stock la valeur de EXTI_IMR1 dans la memoire (adresse: r0+EXTI_IMR1)
 
-    /* 4. NVIC : priorité et activation */
-    ldr     r0, =NVIC_IPR_BASE
-    movs    r1, #NVIC_PRIO_MAX
-    strb    r1, [r0, #EXTI2_IRQn]
-
-    ldr     r0, =NVIC_ISER0
-    movs    r1, #(1 << EXTI2_IRQn)
-    str     r1, [r0]
+//Etape 4:
+	ldr 	r0, =NVIC_IPR_BASE //Load l'adresse de base du registre NVIC IPR (0xE000E400 un octet par IRQ, 3 bits utiles (7:5)) dans r0
+	movs	r1, #NVIC_PRIO_MAX // Le 0 est la priorite la plus eleve, Place la valeur 0 dans registre r1
+	strb	r1, [r0, #EXTI2_IRQn] //Utilise strb au lieu de str car on veux modifier l'octet pour l'interruption EXTI2_IRQn sans changer les autres IRQ dans NVIC
+	ldr		r0, =NVIC_ISER0 //Load adresse du registre NVIC_ISER0 dans r0
+	mov		r1, #(1<< EXTI2_IRQn)	//NVIC_ISER0 = (1 << EXTI2_IRQn) pour activer l'interruption.
+	str		r1, [r0] //Interruption EXTI2 active en ecrivant ce qui est dans r1 directement dans le registre r0 (NVIC_ISER0)
 
     bx      lr
     .size   estop_init, .-estop_init
@@ -119,32 +111,28 @@ estop_init_imr:
  *   2. estop_flag = 1
  *   3. effacer la requête EXTI (fourni ci-dessous) et se terminer.
  * Rien d'autre : pas de temporisation, pas de changement d'état ici.       */
-
-
-.global EXTI2_IRQHandler
+    .global EXTI2_IRQHandler
     .type   EXTI2_IRQHandler, %function
 EXTI2_IRQHandler:
-    /* 1. État sûr immédiat par BSRR */
-    /* Verte éteinte */
-    ldr     r0, =GPIOC_BASE
-    ldr     r1, =(1 << (LED_VERTE_PIN + 16))
-    str     r1, [r0, #GPIO_BSRR]
+    /* ----- À COMPLÉTER : étapes 1 et 2 ----- */
+    //Etape 1:
+    // Eteindre LED verte:
+    ldr		r0,	=GPIOC_BASE	//
+    mov		r1,	#(1 << (LED_VERTE_PIN + 16))
+    str 	r1, [r0, #GPIO_BSRR]
+    // Eteindre LED bleue:
+    ldr		r0,	=GPIOB_BASE
+    mov		r1,	#(1 << (LED_BLEUE_PIN + 16))
+    str 	r1, [r0, #GPIO_BSRR]
+    // Allumer LED rouge:
+    ldr		r0,	=GPIOA_BASE
+    mov		r1,	#(1 << LED_ROUGE_PIN)
+    str 	r1, [r0, #GPIO_BSRR]
 
-    /* Bleue éteinte */
-    ldr     r0, =GPIOB_BASE
-    ldr     r1, =(1 << (LED_BLEUE_PIN + 16))
-    str     r1, [r0, #GPIO_BSRR]
-
-    /* Rouge allumée */
-    ldr     r0, =GPIOA_BASE
-    ldr     r1, =(1 << LED_ROUGE_PIN)
-    str     r1, [r0, #GPIO_BSRR]
-
-    /* 2. estop_flag = 1 */
-    ldr     r0, =estop_flag
-    movs    r1, #1
-    str     r1, [r0]
-
+//Etape 2:
+	ldr		r0, =estop_flag	// Load estop_flag dans registre r0
+	mov		r1, #1 // estop_flag = 1
+	str		r1, [r0] // Mettre valeur estop_flag dans la memoire
     /* 3. effacement de la requête (écriture de 1 : w1c) */
     ldr     r0, =EXTI_BASE
     mov     r1, #EXTI_LIGNE2
