@@ -78,129 +78,51 @@ button_raw_invalide:
     .global button_pressed
     .type   button_pressed, %function
 button_pressed:
-    push    {r4, r5, r6, lr}
-    cmp     r0, #2                      // C = 1 if r0>=2; else C = 0. 
-    bhi     button_pressed_non          // Branch conditional on C = 1 and Z = 0
-    mov     r4, r0                      /* r4 = id */
-    bl      button_raw
-    mov     r5, r0                      /* r5 = niveau brut normalisé */
+    push    {r4, r5, r6, lr}            /* prologue fourni */
 
-    /* ----- À COMPLÉTER : étapes 2 à 4 ci-dessus -----
-     * Indices : ldr r6, =btn_valide ; ldr r0, [r6, r4, lsl #2]
-     *           ldr r6, =btn_compteur ; ... ; str r0, [r6, r4, lsl #2]
-     */
-    @ ldr r6, =btn_valide 
-    @ ldr r0, [r6, r4, lsl #2] // Multiply r4x4 () //Store last value of btn_valide for that button id. IE was it active before?
-    @ ldr r6, =btn_compteur // Store value of 
+//e3 debut
 
-    @ str r0, [r6, r4, lsl #2]
+//  E3- Anti-rebond 
 
-    /* ----- À COMPLÉTER : étapes 2 à 4 ci-dessus -----
-     * Indices : ldr r6, =btn_valide ; ldr r0, [r6, r4, lsl #2]
-     *           ldr r6, =btn_compteur ; ... ; str r0, [r6, r4, lsl #2]
-     */
+    cmp     r0, #2                      //  id > 2
+    bhi     button_pressed_non          //  if oui alors  return 0
+    mov     r4, r0                      // r4 = id (conservé à travers l'appel)
+    bl      button_raw                  // étape 1 : r0 = niveau brut normalise
+    mov     r5, r0                      //  r5 = niveau brut
 
+    // ---- étape 2 : identique au niveau validé -> remettre compteur à 0 ----
+    ldr     r6, =btn_valide             //  adresse du tableau des niveaux valides
+    ldr     r2, [r6, r4, lsl #2]        //    r2 = btn_valide[id]
+    cmp     r5, r2                      //niveau brut == niveau validé ?
+    bne     btn_diff                    //     if cnon,  aller compter l'echantillon
 
-	/*E3- ANTI-REBOND*/
+    ldr     r6, =btn_compteur           //    adresse des compteurs
+    movs    r0, #0                     // retunr zero
+    str     r0, [r6, r4, lsl #2]        //      btn_compteur[id] = 0
+    b       button_pressed_non          //  retour 0 (pas de front)
 
+btn_diff:                               //  étape 3 : niveau différent
+    ldr     r6, =btn_compteur           //  adresse des compteurs
+    ldr     r2, [r6, r4, lsl #2]        //  r2 = btn_compteur[id]
+    adds    r2, r2, #1                  //inc r2 ++
+    str     r2, [r6, r4, lsl #2]        //  btn_compteur[id] = r2
 
-/* PSEUDOCODE
-*Anti_rebond = 30
-Ms = 1
-r0 + appuie VALIDE =  1
-r0+ appuie pas VALIDE = 0
+    ldr     r3, =(ANTIREBOND_MS / PERIODE_SCRUTATION_MS)  //  30/1 = 30
+    cmp     r2, r3                      //  compteur >= seuil
+    blo     button_pressed_non          // if no  pas encore stable
 
+    //  step 4 valider le nouveau niveau
+    ldr     r6, =btn_valide             //  adresse des niveaux valides
+    str     r5, [r6, r4, lsl #2]        //  btn_valide[id] = niveau brut
 
-if(id>2) {return 0)
+    ldr     r6, =btn_compteur           // adresse des compteurs
+    movs    r0, #0                      //  return zero
+    str     r0, [r6, r4, lsl #2]        //  btn_compteur[id] = 0
 
-niveau brut = button_raw(id)
+    mov     r0, r5                      //  retour 1 si appui validé, 0 si relachement
+    pop     {r4, r5, r6, pc}            //  restaurer et revenir
 
-if(niveau brut = niveau Valide) {no Signal change; return 0 }
-
-if(niveau_brut = btn_valide(id)){btn_compteur(id) = 0; retunr 0}
-
-if(niveau_brut != niveau valide) {
-		if( btn_compteur < ANTIREBOND_MS / PERIODE_SCRUTATION_MS : retourner 0) {   }
-
- }
-
-
-*/
-
-@     ldr r6, =btn_valide                /* step 2: comparer avec la valeur validée */
-@     ldr r0, [r6, r4, lsl #2]
-@     cmp r0, r5
-@     bne btn_step3
-
-@     /* niveau inchangé: remettre le compteur à 0 et retourner 0 */
-@     ldr r6, =btn_compteur
-@     movs r0, #0
-@     str r0, [r6, r4, lsl #2]
-@     pop {r4, r5, r6, pc}
-
-
-@ //STEP 3
-@ btn_step3: /*step 3 ==> ELSE : compteur[id] ++  */
-@     ldr r6, =btn_compteur
-@     ldr r0, [r6, r4, lsl #2]
-@     adds r0, r0, #1
-@     str r0, [r6, r4, lsl #2]
-
-
-@ 	/* STEP 4	*/
-@     cmp r0, #30
-@     bge btn_step4
-@     movs r0, #0
-@     pop {r4, r5, r6, pc}
-
-@ //STEP4
-@ btn_step4: /*4. sinon (niveau stable depuis la fenêtre) : btn_valide[id] = niveau ;
-@  *      btn_compteur[id] = 0 ; retourner 1 si niveau == 1 (front d'appui), 0 sinon*/
-@     ldr r6, =btn_valide
-@     str r5, [r6, r4, lsl #2]
-
-
-@     ldr r6, =btn_compteur
-@     movs r0, #0
-@     str r0, [r6, r4, lsl #2]
-
-@     mov r0, r5
-@     pop {r4, r5, r6, pc}
-
-/* ----- Étape 2 à 4 : Logique d'anti-rebond ----- */
-    ldr     r6, =btn_valide
-    ldr     r2, [r6, r4, lsl #2]        /* r2 = btn_valide[id] */
-    cmp     r5, r2                      /* niveau == btn_valide[id] ? */
-    bne     btn_diff                    /* non -> incrémenter le compteur */
-
-    /* Étape 2 : niveau inchangé -> réinitialiser le compteur et retourner 0 */
-    ldr     r6, =btn_compteur
-    movs    r0, #0
-    str     r0, [r6, r4, lsl #2]        /* btn_compteur[id] = 0 */
-    b       button_pressed_non          /* retourne 0 via le gestionnaire de sortie existant */
-
-btn_diff:
-    /* Étape 3 : niveau différent -> incrémenter le compteur */
-    ldr     r6, =btn_compteur
-    ldr     r2, [r6, r4, lsl #2]        /* r2 = btn_compteur[id] */
-    adds    r2, r2, #1                  /* r2++ */
-    str     r2, [r6, r4, lsl #2]        /* stocker btn_compteur[id] */
-
-    /* Comparer avec le seuil (ANTIREBOND_MS / PERIODE_SCRUTATION_MS) */
-    ldr     r3, =(ANTIREBOND_MS / PERIODE_SCRUTATION_MS)
-    cmp     r2, r3
-    blo     button_pressed_non          /* si < seuil, retourne 0 */
-
-    /* Étape 4 : niveau stable -> mettre à jour btn_valide[id] et réinitialiser */
-    ldr     r6, =btn_valide
-    str     r5, [r6, r4, lsl #2]        /* btn_valide[id] = niveau (r5) */
-
-    ldr     r6, =btn_compteur
-    movs    r0, #0
-    str     r0, [r6, r4, lsl #2]        /* btn_compteur[id] = 0 */
-
-    mov     r0, r5                      /* retourne 1 si appui, 0 si relâchement */
-    pop     {r4, r5, r6, pc}            /* sortie directe */
+//e3 fin
 
 button_pressed_non:
     movs    r0, #0                      /* squelette : aucun événement */
