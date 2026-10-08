@@ -88,3 +88,5 @@ registre IDR | PUPD fonctionnels | Voir annexe du rapport et video |
 - Outils d'IA (outil, version, usage) ou « aucun usage » : 
 
 Claude Sonnet 5.5. Prompt: "Explain the given file line per line so that I can understand its functioning better before filling in the 'A COMPLETER' sections. "
+
+Claude Sonnet 5.5. Prompt: "I need to combine the main branch and the 'Ana' branch. The main branch contains all the functional and finished code. The Ana branch contains the most updated version of Journal.md. Do i do a rebase or a merge? give me the line commands and explain what exactly they do. Do not do it for me. "
