@@ -79,8 +79,8 @@ button_raw_invalide:
     .type   button_pressed, %function
 button_pressed:
     push    {r4, r5, r6, lr}
-    cmp     r0, #2                      // C = 1 if r0>=2; else C = 0. 
-    bhi     button_pressed_non          // Branch conditional on C = 1 and Z = 0
+    cmp     r0, #2
+    bhi     button_pressed_non
     mov     r4, r0                      /* r4 = id */
     bl      button_raw
     mov     r5, r0                      /* r5 = niveau brut normalisé */
@@ -89,83 +89,6 @@ button_pressed:
      * Indices : ldr r6, =btn_valide ; ldr r0, [r6, r4, lsl #2]
      *           ldr r6, =btn_compteur ; ... ; str r0, [r6, r4, lsl #2]
      */
-    @ ldr r6, =btn_valide 
-    @ ldr r0, [r6, r4, lsl #2] // Multiply r4x4 () //Store last value of btn_valide for that button id. IE was it active before?
-    @ ldr r6, =btn_compteur // Store value of 
-
-    @ str r0, [r6, r4, lsl #2]
-
-    /* ----- À COMPLÉTER : étapes 2 à 4 ci-dessus -----
-     * Indices : ldr r6, =btn_valide ; ldr r0, [r6, r4, lsl #2]
-     *           ldr r6, =btn_compteur ; ... ; str r0, [r6, r4, lsl #2]
-     */
-
-
-	/*E3- ANTI-REBOND*/
-
-
-/* PSEUDOCODE
-*Anti_rebond = 30
-Ms = 1
-r0 + appuie VALIDE =  1
-r0+ appuie pas VALIDE = 0
-
-
-if(id>2) {return 0)
-
-niveau brut = button_raw(id)
-
-if(niveau brut = niveau Valide) {no Signal change; return 0 }
-
-if(niveau_brut = btn_valide(id)){btn_compteur(id) = 0; retunr 0}
-
-if(niveau_brut != niveau valide) {
-		if( btn_compteur < ANTIREBOND_MS / PERIODE_SCRUTATION_MS : retourner 0) {   }
-
- }
-
-
-*/
-
-@     ldr r6, =btn_valide                /* step 2: comparer avec la valeur validée */
-@     ldr r0, [r6, r4, lsl #2]
-@     cmp r0, r5
-@     bne btn_step3
-
-@     /* niveau inchangé: remettre le compteur à 0 et retourner 0 */
-@     ldr r6, =btn_compteur
-@     movs r0, #0
-@     str r0, [r6, r4, lsl #2]
-@     pop {r4, r5, r6, pc}
-
-
-@ //STEP 3
-@ btn_step3: /*step 3 ==> ELSE : compteur[id] ++  */
-@     ldr r6, =btn_compteur
-@     ldr r0, [r6, r4, lsl #2]
-@     adds r0, r0, #1
-@     str r0, [r6, r4, lsl #2]
-
-
-@ 	/* STEP 4	*/
-@     cmp r0, #30
-@     bge btn_step4
-@     movs r0, #0
-@     pop {r4, r5, r6, pc}
-
-@ //STEP4
-@ btn_step4: /*4. sinon (niveau stable depuis la fenêtre) : btn_valide[id] = niveau ;
-@  *      btn_compteur[id] = 0 ; retourner 1 si niveau == 1 (front d'appui), 0 sinon*/
-@     ldr r6, =btn_valide
-@     str r5, [r6, r4, lsl #2]
-
-
-@     ldr r6, =btn_compteur
-@     movs r0, #0
-@     str r0, [r6, r4, lsl #2]
-
-@     mov r0, r5
-@     pop {r4, r5, r6, pc}
 
 /* ----- Étape 2 à 4 : Logique d'anti-rebond ----- */
     ldr     r6, =btn_valide
@@ -201,6 +124,7 @@ btn_diff:
 
     mov     r0, r5                      /* retourne 1 si appui, 0 si relâchement */
     pop     {r4, r5, r6, pc}            /* sortie directe */
+
 
 button_pressed_non:
     movs    r0, #0                      /* squelette : aucun événement */
