@@ -1,91 +1,85 @@
-# JOURNAL.md — Journal d'équipe, CEG 3536, laboratoire 1 (automne 2026)
+# JOURNAL.md — Journal d'équipe, CEG 3536, laboratoire 2 (automne 2026)
 
 Équipe : `Ana Barragan Martinez`, `Yassine Yandouzi` et `Simon Brown` — Section : `A02` — Dépôt Git : `https://github.com/AnaJBarragan/CompArch2`
 
-## Jalon J1 (au plus tard le vendredi 25 septembre 2026, validé dans Git)
+## Jalon J1 (au plus tard le vendredi 13 Oct 2026, validé dans Git)
 
 ### Exigences de l'équipe
 | Id | Exigence (reformulée par l'équipe) | Critère d'acceptation | Hypothèses |
 |---|---|---|---|
-| E1 | Initialisation du systeme | La DEL rouge s'allume lors d'appuyer sur uC Reset | PA9 High |
-| E2 | Peut cycler entre les etats stop -> go -> stop -> reverse | Chaque etat est map a une couleur de DEL, elles s'allument dans la bonne sequence | Appui sur PC13 = PA9 -> PC7 -> PB7 -> PA9 |
-| E3 | Anti-Rebond | Un long appui du button compte comme un seul appui, plusieurs appuis rapides ne sont pas manques | Watch sur la variable compte un seul appui |
-| E4 | E-Stop par interruption | Les DEL bleue ou verte s'eteint quand appuie | Appui sur PB2 -> EXTI2 Low PB7/PC7  |
-| E5 | DEL E-Stop | Le DEL roughe clignote pour signaler qu'on est arrete d'urgence | PB9 Clignote a 2Hz, aucune entree sure PC13 |
-| E6 | Touch Enable en arret | La DEL rouge passe de clignoter a rouge solide, et le button USER est utilisable a nouveau | Appui sur PB5 = PA9 Solide, PC13 prend des entrees |
-| E7 | Touch Enable en fonctionnement | La DEL allume s'eteint pour un instant tres court | Appui sur PB5 = eteint PA9 brevement |
-| E8 | Calibrer le delay avec l'oscilloscope | *Pas a faire, on n'utilisera pas l'oscilloscope | * |
-| E9 | Priorite E-Stop et Appuis simultanes | Appuyer sur User et Touch En ne genere pas deux DEL allumes, on ne sort pas de l'etat d'arret d'urgence sans Touch En. | Jamais deux DEL (PA9, PB7, PC7) allumes simultanement |
+| E1 | Reinitialization a ARRET | Apres reset ou mise sous tension ARRET en moins de 100 ms. DEL rouge; CCR1 = 0, AI1 = AI2 = 0, STB = 0, buzzer silencieux | PA9 High |
+| E2 | PWM du moteur sur PE9 | 20 kHz +/- 5 %. Rapport cyclique de 0 a 100 %; definition de 0.5% (200 pas par cycle). Erreur max: 2% | PCLK2 = 4 MHz. PSC = 0, ARR = 199 |
+| E3 | Sens du moteur | AVANT: AI1 = 1, AI2 = 0, STB = 1. ARRIERE: AI1 = 0, AI2 = 1, STB = 1. ARRET et URGENCE: tout a 0. Jamais AI1 = AI2 = 1. Sens fige si CCR1 != 0 | Avant = AI1 a 1. Le changement de sens passe par ARRET. |
+| E4 | Touch EN et Rampe | Consigne: 25%,50%,75%,100%. 50% Quand reset. Rampe: 1% par 10 ms donc 0 a 100% en 1s. ARRET par User: CCR1=0 |Un pas de fsm_step = 1 ms | 
+| E5 | | | |
+| E6 | | | |
+| E7 | | | |
+| E8 | | | |
+| E9 | Bips du buzzer dependant de l'etat | Bip de 100 ms +/- 10 % a chaque changement d'etat ou de consigne. Double bip en MARCHE_ARRIERE. Bip continu en urgence. | Buzzer sur PA0 en GPIO |
+| E10 | SysTick: Configuration de l'horloge et interruptions| LOAD = 3999; SysTick_Handler incrémente ticks_ms et positionne tick_1ms; fsm_step est exécutée une fois par tick | Horloge CPU 4MHz, Priorite SysTick = 2 (basse) |
+| E11 | | | |
+| E12 | | | |
+
 
 ### Rôles et rotation
 | Séance | Réalise | Valide (essais, mesures, relecture) |
 |---|---|---|
-| Séance 0 | Creer le git, telecharger le code de demarrage et initializer la board. E1 | T1 Appuyer sur uC Reset |
-| Séance 1 | E2, E3 | T1, T2, T3, T4 |
-| Séance 2 | E4, E5, E6, E7, E9 | T5, T6, T7, T9 |
+| Séance 1 | Ana: Creer le nouveau fichier dans Git, Creer le nouveau projet dans STM32IDE et publier sur Git. Code E1-E4 & E9. Simon: Creer document rapport. Yassine: Validations.  |  |
+| Séance 2 |  |  |
 
 ### Échéancier des laboratoires 1 à 5
 | Laboratoire | Séances | Démonstration | Remise | Responsable du suivi |
 |---|---|---|---|---|
 | 1 | 0 - 15 Septembre, 1 - 22 Septembre, 2 - 29 Septembre | 29 Septembre | 9 octobre 2026 | Tous |
-| 2 | | | | |
+| 2 | 1 - 13 Octobre, 2 - 20 Octobre | 20 Octobre | 9 Novembre | Tous |
 | 3 | | | | |
 | 4 | | | | |
 | 5 | | | | |
 
 ## Journal des séances
 
-### Séance 0 — `15/09/2026 (ecrit le 21/09/2026)` — réalise : `Ana` / valide : `Ana`
-- Objectifs : Se familiariser avec le materiel et le programme, creer le git repo et faire marcher le premier programme pour allumer la DEL rouge. 
-- Fait : Nous avons complete les 3 objectifs, le repo est maintenant cree et nous avons reussi a allumer la DEL rouge. 
-- Décisions : Apres allumer la DEL rouge, nous avons essaye de commencer le Lab 1. 
-- Difficultés et solutions : Apres avoir etabli que nous devions faire E1-E3, nous savions toujours pas comment le faire. Notre solution a ete de bien prendre le temps de lire la documentation avant la prochaine session pour ne pas avoir cette problematique lors de la session planifie du lab 1. 
-- Essais et mesures : N/A
-- Validations Git (auteur, message) : Ana, 'Journal Seance 0'
+### Séance 1 — `13/10/2026` — réalise : `Ana` / valide : `Ana`
+- Objectifs : Finir les calculs de l'horloge, creer le nouveau fichier sur github et le project sur STM32IDE. S'assurer que le projet fonctionne et les fonctionalites du lab1 sont presentes. Commencer Lab2. Completer E1, E2, E3, E4, E9 et E10 au minimum. 
+- Fait : Calculs de l'horloge; projet sur STM32IDE; E1, E2, E3, E4, E9, E10 documentes sur Journal. 
+- Décisions : Nous avons decide de se concentrer sur le developement du code et nous allons faire les verifications T1-T10 et prises d'ecran dans la prochaine seance pour assurer que le code est complet a temps pour la demonstration. Nous avons aussi complete la plupart du code a partir du portable avec le projet (Portable a Ana) donc la plupart des commits de la seance seront faits a partir de ceci. 
+- Difficultés et solutions : Diffidulte a creer un nouveau projet sur STM32IDE, nous avons importe les launch files du lab1 pour regler le probleme. 
+- Essais et mesures : Aucun - Verification dans Seance 2. 
+- Validations Git (auteur, message) : Ana, 'Lab 2 -  Seance 1'
 
-### Séance 1 — `22/09/2026 (ecrit le 22/09/2026)` — réalise : `Ana` / valide : `Ana`
-- Objectifs : Ecrire le code requis pour E1, E2 et E3 et tester leur fonctionnement. 
-- Fait : Le code est ecrit et nous avons pris une video des DEL rouge, bleue et verte. 
-- Décisions : Apres des difficultes avec l'oscilloscope, nous avons decide d'attendre et demander au prof pendant le cours du 23 sept. 
-- Difficultés et solutions : Nous avions rencontre des difficultes a utiliser l'oscilloscope et a mesurer les broches car nous n'y avons pas acces. Les broches sont proteges par une plaque plastique, et aussi on a seulement des crocodile clips dans le lab. 
-- Essais et mesures : Nous n'avons pas pris des mesures, mais nous avons pris des captures d'ecran des valeures a IDR et ODR tel que requis dans le lab
-- Validations Git : Ana, 'Journal Seance 1'
-
-### Séance 2 — `29/09/2026` — réalise : `Ana` / valide : `Ana`
-- Objectifs : Ecrire le code pour E4-E9 (sans compter E8) et le demontrer au TA. Aussi, revoir notre code pour E1-E3 maintenant qu'on comprend mieux. 
-- Fait : Code du E2 et E3 a ete revu et reecrit, E5, 56, 57, 59 sont faits. 
-- Décisions : Nous avons decide de refaire E2 et E3 car on ne comprennait pas trop bien notre ancien code. 
-- Difficultés et solutions : La board que nous utilisions en premier donnait une erreure sur le link du STM32 IDE. Nous avons passe a une autre board. 
-- Essais et mesures : Demonstration au TA
-- Validations Git : Ana, 'Journal Seance 2 (Mise a jour)'
+### Séance 2 — `20/10/2026` — réalise : ` ` / valide : ` `
+- Objectifs :
+- Fait :
+- Décisions :
+- Difficultés et solutions :
+- Essais et mesures :
+- Validations Git :
 
 ## Tableau des essais (T1 à T10)
 | Essai | Date | Résultat observé | Verdict | Preuve (fichier) |
 |---|---|---|---|---|
-| T1 Réinitialisation | 22 Sept | La DEL rouge s'allume lors d'appuyer sur uC Reset apres avoir telecharge le code dans la board | La board est bien initialise | Voir annexe du rapport et video |
-| T2 Cycle User | 22 Sept | Apuyer sur User cycle de rouge -> vert -> rouge -> blueu | Mise a jour des etats de marche et arret es correcte | Voir annexe du rapport et video |
-| T3 Anti-rebond | 22 Sept | Des longs appuis comptent une seule fois | Le anti-rebond est bien implemente | Voir annexe du rapport et video |
-| T4 Niveaux logiques | 29 Oct | PC13, PB2 et PB5 lus dans le registre IDR | PUPD fonctionnels | Voir annexe du rapport et video |
-| T5 E-Stop | 29 Oct | DEL verte et bleue eteintes | Passe a l'etat arret d'urgence correctement | Voir annexe du rapport et video |
-| T6 Clignotement | 29 Oct | DEL rouge clignote en etat arret d'urgence | etat arret d'urgence valide | Voir annexe du rapport et video |
-| T7 Acquittement | 29 Oct | Retour a DEL rouge solide lors de Touch-En | Systeme passe de l'etat arret durgence a arret | Voir annexe du rapport et video |
-| T8 User ignoré en urgence | 29 Oct | Aucune entree sur User ne change pas le DEL | L'etat du systeme ne change pas a marche avant ou arriere sans acquittement | Voir annexe du rapport et video |
-| T9 Touch En hors urgence | 29 Oct | Appuyer Touch-En en etat non arret d'urgence eteint le DEL brevement | touch_en passe a 1 et 0 | Voir annexe du rapport et video |
-| T10 Robustesse | 29 Oct | Appuyer sur e-stop et user rend le systeme en etat d'urgence | E-stop prend priorite | Voir annexe du rapport et video |
+| T1 |  |  |  |  | 
+| T2 |  |  |  |  | 
+| T3 |  |  |  |  | 
+| T4 |  |  |  |  | 
+| T5 |  |  |  |  | 
+| T6 |  |  |  |  | 
+| T7 |  |  |  |  | 
+| T8 |  |  |  |  | 
+| T9 |  |  |  |  | 
+| T10 |  |  |  |  | 
 
-## Routine conservée pour L3-A
-- Routine : `button_pressed`
-- Interface : reçoit l'identifiant du bouton (BTN_USER, BTN_ESTOP ou BTN_TOUCH) dans R0 et retourne 1 lorsqu'un nouvel appui est validé. 
-- Cas d'essai : maintenir le bouton User appuyé pendant plusieurs secondes doit produire un seul événement; après relâchement puis nouvel appui, un nouvel événement doit être produit.
-
-- Routine : `led_set`
-- Interface : reçoit LED_ROUGE, LED_VERTE ou LED_BLEUE dans R0 et allume uniquement la DEL demandée.
-- Cas d'essai : appeler led_set(LED_ROUGE), led_set(LED_VERTE) et led_set(LED_BLEUE) une seule DEL doit être allumée.
+## Calculs de l'Horloge
+- Horloge : MSI 4 MHz (PCLK2 = 4 MHz, SysTick sur HCLK).
+- PWM : N = 4 000 000 / 20 000 = 200 ; PSC = 0 ; ARR = 199 ; f = 20 000 Hz ; pas = 0,5 %.
+- CCR1 : 25 % = 50 ; 50 % = 100 ; 75 % = 150 ; 100 % = 200 (= ARR + 1).
+- SysTick : LOAD = 4 000 000 × 0,001 − 1 = 3999 (0xF9F).
+- Fronts : 2 × 11 × 34 = 748 par tour ; fenêtre 500 ms à 100 % ≈ 2 170 fronts.
 
 ## Déclaration des sources et de l'usage d'outils d'IA générative
-- Sources : Documents de lab fournis dans Brightspace
+- Sources : 
+Documents de lab fournis dans Brightspace
+Code corrige du Lab 1 (fourni)
+Code Complement Lab 2 (fourni)
+
 - Outils d'IA (outil, version, usage) ou « aucun usage » : 
-
-Claude Sonnet 5.5. Prompt: "Explain the given file line per line so that I can understand its functioning better before filling in the 'A COMPLETER' sections. "
-
-Claude Sonnet 5.5. Prompt: "I need to combine the main branch and the 'Ana' branch. The main branch contains all the functional and finished code. The Ana branch contains the most updated version of Journal.md. Do i do a rebase or a merge? give me the line commands and explain what exactly they do. Do not do it for me. "
+Claude Sonnet 5.5. Prompt: 

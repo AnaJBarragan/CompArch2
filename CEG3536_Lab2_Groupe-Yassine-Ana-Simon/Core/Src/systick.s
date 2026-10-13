@@ -47,6 +47,28 @@ tick_1ms:       .space  4   /* 1 à chaque interruption ; consommé par main    
     .type   systick_init, %function
 systick_init:
     /* À COMPLÉTER */
+
+    /* code complete */
+    movs    r1, #(HORLOGE_HZ / 1000000)     /* 4 cycles par microseconde      */
+    mul     r0, r0, r1                      /* r0 = periode_us * 4            */
+    subs    r0, r0, #1                      /* LOAD = N - 1 (3999 à 1 ms)     */
+    ldr     r1, =SYSTICK_LOAD
+    str     r0, [r1]
+    movs    r0, #0
+    ldr     r1, =SYSTICK_VAL
+    str     r0, [r1]                        /* le compteur repart de LOAD     */
+    ldr     r1, =ticks_ms
+    str     r0, [r1]
+    ldr     r1, =tick_1ms
+    str     r0, [r1]
+    movs    r2, #(PRIO_SYSTICK << PRIO_POS) /* 2 << 5 = 0x40                  */
+    ldr     r1, =SCB_SHPR3_SYSTICK
+    strb    r2, [r1]                        /* un octet : PendSV intact       */
+    movs    r2, #(SYSTICK_CTRL_CLKSOURCE | SYSTICK_CTRL_TICKINT | SYSTICK_CTRL_ENABLE)
+    ldr     r1, =SYSTICK_CTRL
+    str     r2, [r1]                        /* démarre : en dernier           */
+    /* Fin de section complete */
+
     bx      lr
     .size   systick_init, .-systick_init
 
@@ -77,5 +99,17 @@ SysTick_Handler:
     .type   delay_ms, %function
 delay_ms:
     /* À COMPLÉTER */
+    
+    /* code complete */
+    ldr     r2, =ticks_ms
+    ldr     r1, [r2]                        /* r1 = ticks_ms au départ        */
+delay_ms_attente:
+    ldr     r2, =ticks_ms
+    ldr     r2, [r2]                        /* r2 = ticks_ms courant          */
+    subs    r2, r2, r1                      /* écoulé, modulo 2^32            */
+    cmp     r2, r0
+    blo     delay_ms_attente                /* non signé : tant que écoulé < ms */
+    /* fin de section a completer */
+
     bx      lr
     .size   delay_ms, .-delay_ms

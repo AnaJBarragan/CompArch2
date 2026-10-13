@@ -100,6 +100,23 @@ buzzer_set_off:
     .type   buzzer_bip, %function
 buzzer_bip:
     /* À COMPLÉTER */
+
+    /* ajoute */
+    cmp     r0, #0
+    beq     buzzer_bip_fin              /* n = 0 : rien                      */
+    subs    r0, r0, #1
+    ldr     r1, =buzzer_bips
+    str     r0, [r1]                    /* bips restants après le premier    */
+    movs    r2, #BIP_MS
+    ldr     r1, =buzzer_restant
+    str     r2, [r1]
+    movs    r2, #1
+    ldr     r1, =buzzer_phase
+    str     r2, [r1]                    /* phase 1 : son                     */
+
+buzzer_bip_fin:
+/* fin ajoute */
+
     bx      lr
     .size   buzzer_bip, .-buzzer_bip
 
@@ -121,6 +138,50 @@ buzzer_step:
     ldr     r0, =buzzer_continu
     ldr     r0, [r0]
     /* À COMPLÉTER : machine à états des bips (r0 = 1 si son continu) */
+    
+/* code complete: */
+    cmp     r0, #0
+    bne     buzzer_step_sortie          /* son continu : r0 != 0 -> son      */
+    ldr     r1, =buzzer_phase
+    ldr     r2, [r1]                    /* r2 = phase                        */
+    cmp     r2, #0
+    beq     buzzer_step_sortie          /* repos : r0 = 0 -> silence         */
+    ldr     r3, =buzzer_restant
+    ldr     r4, [r3]
+    subs    r4, r4, #1
+    str     r4, [r3]
+    bne     buzzer_step_niveau          /* phase pas finie                   */
+    cmp     r2, #1
+    bne     buzzer_step_fin_silence
+    /* fin d'un son : encore un bip ? */
+    ldr     r0, =buzzer_bips
+    ldr     r4, [r0]
+    cmp     r4, #0
+    beq     buzzer_step_repos
+    subs    r4, r4, #1
+    str     r4, [r0]
+    movs    r2, #2                      /* phase 2 : silence                 */
+    str     r2, [r1]
+    movs    r4, #BIP_SILENCE_MS
+    str     r4, [r3]
+    b       buzzer_step_niveau
+buzzer_step_repos:
+    movs    r2, #0                      /* séquence terminée                 */
+    str     r2, [r1]
+    b       buzzer_step_niveau
+buzzer_step_fin_silence:
+    movs    r2, #1                      /* fin du silence : bip suivant      */
+    str     r2, [r1]
+    movs    r4, #BIP_MS
+    str     r4, [r3]
+buzzer_step_niveau:
+    cmp     r2, #1
+    ite     eq
+    moveq   r0, #1                      /* phase 1 : son                     */
+    movne   r0, #0
+buzzer_step_sortie:
+/* fin */
+
     bl      buzzer_set
     pop     {r4, pc}
     .size   buzzer_step, .-buzzer_step

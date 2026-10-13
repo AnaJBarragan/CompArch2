@@ -107,6 +107,40 @@ motor_init:
      *   g) CR1 |= TIM_CR1_CEN            (le compteur tourne à 20 kHz)
      * Vérifier au débogueur (SFRs > TIM1) : CR1 = 0x81, CCMR1 = 0x68,
      * CCER = 0x1, ARR = 0xC7, BDTR = 0x8000 ; puis à l'oscilloscope (T3).   */
+        /* 4. TIM1 en PWM mode 1 sur la voie 1 */
+
+    /* code complete */
+    ldr     r0, =TIM1_BASE
+    movs    r1, #PWM_PSC
+    str     r1, [r0, #TIM_PSC]          /* a) PSC = 0                        */
+    ldr     r1, =PWM_ARR
+    str     r1, [r0, #TIM_ARR]          /*    ARR = 199                      */
+    movs    r1, #0
+    str     r1, [r0, #TIM_CCR1]         /*    CCR1 = 0 : 0 %, moteur immobile */
+    ldr     r1, [r0, #TIM_CCMR1]        /* b) voie 1 : sortie, PWM 1, prérechargement */
+    bic     r1, r1, #TIM_CCMR1_CC1S_MASK
+    ldr     r2, =TIM_CCMR1_OC1M_MASK    /* le masque contient le bit 16      */
+    bic     r1, r1, r2
+    orr     r1, r1, #(TIM_CCMR1_OC1M_PWM1 | TIM_CCMR1_OC1PE)
+    str     r1, [r0, #TIM_CCMR1]
+    ldr     r1, [r0, #TIM_CCER]         /* c) sortie OC1 activée, actif haut */
+    bic     r1, r1, #TIM_CCER_CC1P
+    orr     r1, r1, #TIM_CCER_CC1E
+    str     r1, [r0, #TIM_CCER]
+    ldr     r1, [r0, #TIM_CR1]          /* d) prérechargement de ARR         */
+    orr     r1, r1, #TIM_CR1_ARPE
+    str     r1, [r0, #TIM_CR1]
+    ldr     r1, [r0, #TIM_BDTR]         /* e) MOE : sans lui PE9 reste bas   */
+    orr     r1, r1, #TIM_BDTR_MOE
+    str     r1, [r0, #TIM_BDTR]
+    movs    r1, #TIM_EGR_UG             /* f) charge PSC, ARR, CCR1          */
+    str     r1, [r0, #TIM_EGR]
+    movs    r1, #0
+    str     r1, [r0, #TIM_SR]           /*    efface UIF                     */
+    ldr     r1, [r0, #TIM_CR1]          /* g) le compteur tourne             */
+    orr     r1, r1, #TIM_CR1_CEN
+    str     r1, [r0, #TIM_CR1]
+    /* fin */
 
     bx      lr
     .size   motor_init, .-motor_init
@@ -152,8 +186,48 @@ motor_set_pwm:
 motor_set_dir:
     /* À COMPLÉTER : voir les étapes ci-dessus. Étiquettes suggérées :
      * motor_set_dir_arret, motor_set_dir_arriere, motor_set_dir_ecrire,
-     * motor_set_dir_refus.                                                   */
-    movs    r0, #1                      /* refusé tant que non écrit         */
+     * motor_set_dir_refus. */
+
+    cmp     r0, #MOTOR_ARRET
+    beq     motor_set_dir_arret
+    cmp     r0, #MOTOR_ARRIERE
+    bhi     motor_set_dir_refus         /* dir > 2 : refusé                  */
+
+    /* code complete: */
+    ldr     r1, =TIM1_BASE
+    ldr     r2, [r1, #TIM_CCR1]
+    cmp     r2, #0
+    bne     motor_set_dir_refus         /* PWM non nulle : règle E3          */
+    ldr     r1, =GPIOB_BASE
+    cmp     r0, #MOTOR_AVANT
+    bne     motor_set_dir_arriere
+    ldr     r2, =((1 << MOTOR_AI1_PIN) | (1 << (MOTOR_AI2_PIN + 16)))   /* AI1 = 1, AI2 = 0 */
+    b       motor_set_dir_ecrire
+motor_set_dir_arriere:
+    ldr     r2, =((1 << MOTOR_AI2_PIN) | (1 << (MOTOR_AI1_PIN + 16)))   /* AI1 = 0, AI2 = 1 */
+motor_set_dir_ecrire:
+    str     r2, [r1, #GPIO_BSRR]        /* UNE écriture : jamais AI1 = AI2 = 1 */
+    ldr     r1, =GPIOE_BASE
+    mov     r2, #(1 << MOTOR_STB_PIN)
+    str     r2, [r1, #GPIO_BSRR]        /* STB = 1 : en dernier au départ    */
+    movs    r0, #0
+    bx      lr
+motor_set_dir_arret:
+    ldr     r1, =TIM1_BASE
+    movs    r2, #0
+    str     r2, [r1, #TIM_CCR1]         /* CCR1 = 0                          */
+    ldr     r1, =GPIOE_BASE
+    mov     r2, #(1 << (MOTOR_STB_PIN + 16))
+    str     r2, [r1, #GPIO_BSRR]        /* STB = 0                           */
+    ldr     r1, =GPIOB_BASE
+    mov     r2, #((1 << (MOTOR_AI1_PIN + 16)) | (1 << (MOTOR_AI2_PIN + 16)))
+    str     r2, [r1, #GPIO_BSRR]        /* AI1 = AI2 = 0                     */
+    movs    r0, #0
+    bx      lr
+motor_set_dir_refus:
+/* fin du code complete*/
+
+    movs    r0, #1                      /* refusé tant que non écrit */
     bx      lr
     .size   motor_set_dir, .-motor_set_dir
 
