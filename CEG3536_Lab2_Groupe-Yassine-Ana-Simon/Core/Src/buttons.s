@@ -1,8 +1,8 @@
 /* ---------------------------------------------------------------------------
- * buttons.s — lecture des boutons, anti-rebond, temporisation
+ * buttons.s — lecture des boutons, anti-rebond
  *             (CEG 3536, laboratoire 1) — CORRIGÉ
  *
- * Routines exportées (AAPCS) : button_raw, button_pressed, delay_ms
+ * Routines exportées (AAPCS) : button_raw, button_pressed
  * Variables (.bss)            : btn_valide[3], btn_compteur[3]
  * ------------------------------------------------------------------------- */
 #include "registres.inc"
@@ -103,24 +103,3 @@ button_pressed_non:
     movs    r0, #0
     pop     {r4, r5, r6, pc}
     .size   button_pressed, .-button_pressed
-
-/* void delay_ms(uint32_t ms)
- * Temporisation par boucle calibrée (admise au laboratoire 1, E8).
- * Hypothèse : horloge MSI de 4 MHz après réinitialisation, code en flash.
- * DELAY_BOUCLES_PAR_MS (registres.inc) doit être CALIBRÉE par mesure au point
- * de test et la valeur retenue rapportée. SysTick sera exigé au laboratoire 2.
- * Registres modifiés : r0, r1 (routine feuille).                            */
-    .global delay_ms
-    .type   delay_ms, %function
-delay_ms:
-    cbz     r0, delay_ms_fin
-delay_ms_boucle_ms:
-    ldr     r1, =DELAY_BOUCLES_PAR_MS
-delay_ms_boucle_int:
-    subs    r1, r1, #1
-    bne     delay_ms_boucle_int
-    subs    r0, r0, #1
-    bne     delay_ms_boucle_ms
-delay_ms_fin:
-    bx      lr
-    .size   delay_ms, .-delay_ms
