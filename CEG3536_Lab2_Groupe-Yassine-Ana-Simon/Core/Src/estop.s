@@ -93,6 +93,16 @@ estop_init:
     .global EXTI2_IRQHandler
     .type   EXTI2_IRQHandler, %function
 EXTI2_IRQHandler:
+/* ajoute lab 2 */
+    push    {r4, lr}                    /* bl ci-dessous écrase LR (EXC_RETURN) */
+    bl      motor_stop_now              /* CCR1 = 0, STB = 0, AI1 = AI2 = 0  */
+    movs    r0, #1
+    bl      buzzer_set                  /* son continu immédiat              */
+    ldr     r0, =buzzer_continu
+    movs    r1, #1
+    str     r1, [r0]                    /* maintenu par buzzer_step          */
+/* fin */
+
     ldr     r0, =GPIOC_BASE
     mov     r1, #(1 << (LED_VERTE_PIN + 16))
     str     r1, [r0, #GPIO_BSRR]        /* verte éteinte */
@@ -110,5 +120,6 @@ EXTI2_IRQHandler:
     str     r1, [r0, #EXTI_RPR1]
     str     r1, [r0, #EXTI_FPR1]
     dsb
-    bx      lr
+    pop     {r4, pc}                    /* changed lab 2*/
+    
     .size   EXTI2_IRQHandler, .-EXTI2_IRQHandler

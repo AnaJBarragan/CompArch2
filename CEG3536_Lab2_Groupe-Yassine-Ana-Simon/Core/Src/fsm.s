@@ -174,6 +174,12 @@ fsm_step:
     movs    r0, #ETAT_ARRET_URGENCE
     str     r0, [r6]
     bl      fsm_compte_transition
+    movs    r0, #ETAT_ARRET_URGENCE
+    str     r0, [r6]
+    bl      fsm_compte_transition
+    bl      motor_stop_now              /* E7 : ceinture et bretelles (l'ISR l'a déjà fait) */
+    ldr     r0, =clignote_compteur      /* demi-période rouge allumée d'abord */
+
     ldr     r0, =clignote_compteur      /* demi-période rouge allumée d'abord */
     movs    r1, #0
     str     r1, [r0]
@@ -210,6 +216,9 @@ fsm_step_lecture:
     bl      button_raw
     cmp     r0, #0
     bne     fsm_step_maj                /* E-Stop maintenu : acquittement refusé */
+    ldr     r0, =buzzer_continu
+    movs    r1, #0
+    str     r1, [r0]                    /* son continu coupé (E8)         */
     movs    r0, #ETAT_ARRET
     str     r0, [r6]                    /* acquittement : retour en ARRÊT */
     bl      fsm_compte_transition
@@ -269,6 +278,7 @@ fsm_step_touch:
     /* ---- D. sorties ---- */
 fsm_step_maj:
     bl      fsm_maj_sorties
+    bl      fsm_vitesse
     bl      buzzer_step
     pop     {r4, r5, r6, pc}
     .size   fsm_step, .-fsm_step
@@ -349,12 +359,36 @@ fsm_sorties_consigne:
 
 
 fsm_sorties_estop:
-    /* (E7 : rEaffirmer l'Etat safe si E-Stop  ici) */
+    /* (E7 : E-stop) */
+    ldr     r0, =estop_flag
+    ldr     r0, [r0]
+    cmp     r0, #0
+    beq     fsm_sorties_del
+    bl      motor_stop_now              /* E-Stop pendant le pas : état sûr réaffirmé */
+
 
 fsm_sorties_del:
     bl      fsm_maj_del
     pop     {r4, r5, r6, pc}
     .size   fsm_maj_sorties, .-fsm_maj_sorties
+
+    .type   fsm_vitesse, %function
+fsm_vitesse:
+    push    {r4, lr}
+    ldr     r4, =fenetre_compteur
+    ldr     r0, [r4]
+    adds    r0, r0, #1
+    str     r0, [r4]
+    ldr     r1, =FENETRE_VITESSE_MS
+    cmp     r0, r1
+    blo     fsm_vitesse_fin
+    movs    r0, #0
+    str     r0, [r4]                    /* fenêtre suivante                  */
+    movs    r0, #0                      /* pas d'adresse : sens_mesure suffit */
+    bl      encoder_read
+fsm_vitesse_fin:
+    pop     {r4, pc}
+    .size   fsm_vitesse, .-fsm_vitesse
 /* fin */
 
 fsm_compte_transition:

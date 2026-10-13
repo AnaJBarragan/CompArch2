@@ -121,7 +121,24 @@ encoder_init:
     .type   EXTI0_IRQHandler, %function
 EXTI0_IRQHandler:
     /* 1. et 2. À COMPLÉTER (E5) */
-
+ /* code complete */
+    ldr     r0, =GPIOB_BASE
+    ldr     r1, [r0, #GPIO_IDR]         /* UNE SEULE lecture de IDR          */
+    lsr     r2, r1, #ENC_A_PIN
+    lsr     r1, r1, #ENC_B_PIN
+    eor     r1, r1, r2
+    and     r1, r1, #1                  /* 0 : A = B ; 1 : A != B            */
+    .if ENC_SENS_INVERSE
+    eor     r1, r1, #1                  /* aligne le signe sur la marche avant */
+    .endif
+    ldr     r0, =enc_count
+    ldr     r2, [r0]
+    cmp     r1, #0
+    ite     eq
+    addeq   r2, r2, #1                  /* A = B  : +1                       */
+    subne   r2, r2, #1                  /* A != B : -1                       */
+    str     r2, [r0]
+/* fin */
     /* 3. requête effacée */
     ldr     r0, =EXTI_BASE
     mov     r1, #EXTI_LIGNE0
@@ -146,11 +163,40 @@ EXTI0_IRQHandler:
     .type   encoder_read, %function
 encoder_read:
     /* À COMPLÉTER : le squelette ne mesure rien et retourne 0 */
+    @ cmp     r0, #0
+    @ it      ne
+    @ movne   r1, #SENS_IMMOBILE
+    @ it      ne
+    @ strne   r1, [r0]
+    @ movs    r0, #0
+    @ bx      lr
+    @ .size   encoder_read, .-encoder_read
+
+/* code complete */
+    ldr     r1, =enc_count
+    ldr     r1, [r1]                    /* UNE instruction : lecture atomique */
+    ldr     r2, =enc_repere
+    ldr     r3, [r2]                    /* repère précédent                  */
+    str     r1, [r2]                    /* nouveau repère                    */
+    subs    r1, r1, r3                  /* variation signée, flags N et Z    */
+    beq     encoder_read_immobile
+    bmi     encoder_read_arriere
+    movs    r3, #SENS_AVANT             /* variation > 0                     */
+    b       encoder_read_ecrire
+encoder_read_arriere:
+    rsbs    r1, r1, #0                  /* valeur absolue                    */
+    movs    r3, #SENS_ARRIERE
+    b       encoder_read_ecrire
+encoder_read_immobile:
+    movs    r3, #SENS_IMMOBILE
+encoder_read_ecrire:
     cmp     r0, #0
     it      ne
-    movne   r1, #SENS_IMMOBILE
-    it      ne
-    strne   r1, [r0]
-    movs    r0, #0
+    strne   r3, [r0]                    /* *sens si une adresse est fournie  */
+    ldr     r2, =sens_mesure
+    str     r3, [r2]
+    ldr     r2, =vitesse_fronts
+    str     r1, [r2]
+    mov     r0, r1                      /* retour : |variation|              */
     bx      lr
-    .size   encoder_read, .-encoder_read
+    /* fin */
