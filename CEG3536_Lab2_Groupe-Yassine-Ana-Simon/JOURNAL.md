@@ -57,16 +57,16 @@
 ## Tableau des essais (T1 à T10)
 | Essai | Date | Résultat observé | Verdict | Preuve (fichier) |
 |---|---|---|---|---|
-| T1 |  |  |  |  | 
-| T2 |  |  |  |  | 
-| T3 |  |  |  |  | 
-| T4 |  |  |  |  | 
-| T5 |  |  |  |  | 
-| T6 |  |  |  |  | 
-| T7 |  |  |  |  | 
+| T1 |15 octobre 2026  |  | L'essai fonctionne, le système démarre correctement à ARRÊT   |  | 
+| T2 | 15 octobre 2026 |  | L'essai est conforme à l'exigence et fonctionne comme attendu. |  | 
+| T3 |15 octobre 2026  |  | L'essai est conforme à l'exigence et fonctionne comme attendu. |  | 
+| T4 |15 octobre 2026  |  |L'essai est conforme à l'exigence et fonctionne comme attendu.  |  | 
+| T5 |15 octobre 2026  |  |L'essai est conforme à l'exigence et fonctionne comme attendu.  |  | 
+| T6 |15 octobre 2026  |  |L'essai est conforme à l'exigence et fonctionne comme attendu.  |  | 
+| T7 |15 octobre 2026  |  |L'essai est conforme à l'exigence et fonctionne comme attendu.  |  | 
 | T8 |  |  |  |  | 
-| T9 |  |  |  |  | 
-| T10 |  |  |  |  | 
+| T9 | 15 octobre 2026 |  | L'essai est conforme à l'exigence et fonctionne comme attendu. |  | 
+| T10 | 15 octobre 2026 |  |  L'essai est conforme à l'exigence et fonctionne comme attendu.|  | 
 
 ## Calculs de l'Horloge
 - Horloge : MSI 4 MHz (PCLK2 = 4 MHz, SysTick sur HCLK).
