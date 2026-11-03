@@ -68,7 +68,7 @@
 | T9 | 15 octobre 2026 |Bip de 99ms   | L'essai est conforme à l'exigence et fonctionne comme attendu. | Voir le fichier LAB2CEG3536-essai(t1-t10) dans le dêpot | 
 | T10 | 15 octobre 2026 |Période Systhick de 1ms  |  L'essai est conforme à l'exigence et fonctionne comme attendu.| Voir le fichier LAB2CEG3536-essai(t1-t10) dans le dêpot| 
 
-6.Routine conservée pour L3-A: 
+## 6.Routine conservée pour L3-A: 
 Nom : Motor_Set_pwm 
 Interface : Reçoit le rapport cyclique demandé (0 à 100%) dans R0 et retourne la valeur écrite dans IM1_CCR1 ; toute valeur supérieure à 100 % est saturée à 100 %. 
 Cas d’essai: On donne à la routine différentes consignes (0, 25, 50, 75 et 100 %) et on vérifie que CCR1 sort 	la bonne valeur à chaque fois (0, 50, 100, 150, 200). Si on donne plus de 100 % , la routine 	doit se limiter à 100 % (ne peut dépasser 100). 
