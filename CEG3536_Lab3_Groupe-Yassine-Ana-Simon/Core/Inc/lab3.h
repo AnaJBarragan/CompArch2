@@ -26,7 +26,13 @@ uint32_t enc_fronts_vers_rpm_q16(uint32_t fronts);
 #define TELEM_PERIODE_MS    200u    /* télémétrie à 5 Hz (E10)                  */
 #define TELEM_BAUDS         115200u
 #define ADC_N_VOIES         2u      /* IN1 = potentiomètre, IN2 = température   */
-#define ADC_N_MOY           16u     /* échantillons par voie dans le tampon DMA */
+#define ADC_N_MOY           16u     /* version 1 : échantillons par voie        */
+/* Version 2 (changement d'exigence, énoncé 4.6) : tampon DMA plus profond
+ * pour lisser la température sur 64 échantillons ; le potentiomètre garde
+ * une moyenne de 16 échantillons pour rester réactif.                      */
+#define ADC_N_PAR_VOIE      64u     /* échantillons par voie dans le tampon DMA */
+#define POT_N_MOY           16u     /* moyenne du potentiomètre                 */
+#define TEMP_N_MOY          64u     /* moyenne de la température                */
 #define ADC_VREF_MV         3300u
 #define POT_ZONE_MORTE_PCT  3       /* E5 : < 3 % -> 0, > 97 % -> 100           */
 #define CONSIGNE_HYSTERESIS 2       /* E5 : la consigne ne change que de > 2 pts */

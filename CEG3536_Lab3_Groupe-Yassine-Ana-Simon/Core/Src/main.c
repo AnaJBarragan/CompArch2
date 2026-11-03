@@ -21,8 +21,8 @@
 #include "fsm.h"
 #include "bench_l3a.h"
 
-/* tampon DMA : ADC_N_MOY échantillons par voie, entrelacés IN1, IN2, ... */
-static volatile uint16_t tampon_adc[ADC_N_VOIES * ADC_N_MOY];
+/* tampon DMA : ADC_N_PAR_VOIE échantillons par voie, entrelacés IN1, IN2, ... */
+static volatile uint16_t tampon_adc[ADC_N_VOIES * ADC_N_PAR_VOIE];
 static acq_t acq_pot;      /* potentiomètre : 0..100 %                        */
 static acq_t acq_temp;     /* température : dixièmes de degré Celsius         */
 
@@ -66,13 +66,14 @@ int main(void)
     /* couche C */
     dwt_init();
     evq_init();
-    adc_dma_init(tampon_adc, ADC_N_MOY);
-    /* potentiomètre : % = mv x 100 / 3300 (version 1 : sans filtre)        */
-    acq_init(&acq_pot, &tampon_adc[0], ADC_N_VOIES, ADC_N_MOY, 100, (int32_t)ADC_VREF_MV, 0);
+    adc_dma_init(tampon_adc, ADC_N_PAR_VOIE);
+    /* potentiomètre : % = mv x 100 / 3300 ; version 2 : zone morte, hystérésis */
+    acq_init(&acq_pot, &tampon_adc[0], ADC_N_VOIES, POT_N_MOY, 100, (int32_t)ADC_VREF_MV, 0);
+    acq_config_filtre(&acq_pot, CONSIGNE_HYSTERESIS, POT_ZONE_MORTE_PCT, 0, 100);
     /* température (dixièmes de °C) : t10 = mv x (-10000) / 10900 + C
      * avec C = TEMP_C10_REF + round(TEMP_MV_REF x 10000 / 10900) (relation linéaire
      * étalonnée, E6) ; TEMP_MV_REF et TEMP_C10_REF relevés à l'étalonnage.   */
-    acq_init(&acq_temp, &tampon_adc[1], ADC_N_VOIES, ADC_N_MOY,
+    acq_init(&acq_temp, &tampon_adc[1], ADC_N_VOIES, TEMP_N_MOY,
              -10000, -TEMP_PENTE_UV_PAR_C,
              TEMP_C10_REF + (TEMP_MV_REF * 10000 - TEMP_PENTE_UV_PAR_C / 2)
                             / (-TEMP_PENTE_UV_PAR_C));      /* arrondi, = 1930 */

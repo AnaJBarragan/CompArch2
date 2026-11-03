@@ -64,13 +64,35 @@ uint32_t acq_mv(const acq_t *a)
     return (acq_brut(a) * ACQ_VREF_MV + ACQ_PLEINE_ECHELLE / 2) / ACQ_PLEINE_ECHELLE;
 }
 
-/* Version 1 : relation linéaire propre à l'instance,
- * v = mv x gain_num / gain_den (arrondi) + decalage, entiers 32 bits signés.
- * Les filtres de la version 2 (zone morte, hystérésis) ne sont pas encore
- * appliqués : acq_config_filtre mémorise ses paramètres sans effet.        */
+/* Version 2 : relation linéaire, puis filtres configurés par
+ * acq_config_filtre (sans effet si les paramètres sont nuls) :
+ *  1. zone morte : v < v_min + zone_morte -> v_min ;
+ *                  v > v_max - zone_morte -> v_max ;
+ *  2. hystérésis : la valeur retournée ne change que si l'écart avec la
+ *     dernière valeur retournée dépasse hysteresis.
+ * La zone morte passe avant l'hystérésis : les extrémités (0 et 100 %)
+ * restent atteignables, car le saut vers v_min ou v_max dépasse alors
+ * l'hystérésis.                                                         */
 int32_t acq_valeur(acq_t *a)
 {
     int32_t v = div_arrondie((int32_t)acq_mv(a) * a->gain_num, a->gain_den) + a->decalage;
+
+    if (a->zone_morte > 0) {
+        if (v < a->v_min + a->zone_morte) {
+            v = a->v_min;
+        } else if (v > a->v_max - a->zone_morte) {
+            v = a->v_max;
+        }
+    }
+    if (a->hysteresis > 0 && a->initialisee) {
+        int32_t ecart = v - a->derniere;
+        if (ecart < 0) {
+            ecart = -ecart;
+        }
+        if (ecart <= a->hysteresis) {
+            return a->derniere;            /* variation due au bruit : ignorée */
+        }
+    }
     a->derniere = v;
     a->initialisee = 1u;
     return v;
