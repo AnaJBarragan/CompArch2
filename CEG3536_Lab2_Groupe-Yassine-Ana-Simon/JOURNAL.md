@@ -25,7 +25,7 @@
 | Séance | Réalise | Valide (essais, mesures, relecture) |
 |---|---|---|
 | Séance 1 | Ana: Creer le nouveau fichier dans Git, Creer le nouveau projet dans STM32IDE et publier sur Git. Code E1-E4 & E9. Simon: Creer document rapport. Yassine: Validations.  |  |
-| Séance 2 |  |  |
+| Séance 2 | Ana: finition du programme dans STM32, Simon: Validation des résultats et rapport de laboratoire, Yassine: Validation des résultats |  |
 
 ### Échéancier des laboratoires 1 à 5
 | Laboratoire | Séances | Démonstration | Remise | Responsable du suivi |
@@ -46,7 +46,7 @@
 - Essais et mesures : Aucun - Verification dans Seance 2. 
 - Validations Git (auteur, message) : Ana, 'Lab 2 -  Seance 1'
 
-### Séance 2 — `20/10/2026` — réalise : ` ` / valide : ` `
+### Séance 2 — `20/10/2026` — réalise : `Yassine ` / valide : `Yassine `
 - Objectifs : Finir les essaie (t1 à t10), effectuer la démonstration au TA et début du rapport de laboratoire.
 - Fait : Démonstration au TA et prise de mesure pour T1 à T10
 - Décisions : Nous avons décider de nous concentrer sur la prise de mesure lors de nos essaie et de la démonstration
