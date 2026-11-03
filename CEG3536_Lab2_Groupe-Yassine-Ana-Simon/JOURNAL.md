@@ -47,12 +47,12 @@
 - Validations Git (auteur, message) : Ana, 'Lab 2 -  Seance 1'
 
 ### Séance 2 — `20/10/2026` — réalise : ` ` / valide : ` `
-- Objectifs :
-- Fait :
-- Décisions :
-- Difficultés et solutions :
-- Essais et mesures :
-- Validations Git :
+- Objectifs : Finir les essaie (t1 à t10), effectuer la démonstration au TA et début du rapport de laboratoire.
+- Fait : Démonstration au TA et prise de mesure pour T1 à T10
+- Décisions : Nous avons décider de nous concentrer sur la prise de mesure lors de nos essaie et de la démonstration
+- Difficultés et solutions : Nous avons eu de la difficulté avec la précision les prise de mesure de temps (ex: E_Stop). En effet, les intervales de temps sont très petite donc la précisions ce devait d'être conforme aux attentes.
+- Essais et mesures : Les essais T1 à T10 on été effectués conformement aux attentes.
+- Validations Git : Yassine, lab2 - seance 1
 
 ## Tableau des essais (T1 à T10)
 | Essai | Date | Résultat observé | Verdict | Preuve (fichier) |
