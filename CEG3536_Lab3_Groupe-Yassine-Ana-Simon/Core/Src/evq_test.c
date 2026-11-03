@@ -5,6 +5,9 @@
  * Cas : 1 vide ; 2 un élément ; 3 ordre FIFO ; 4 plein ; 5 débordement compté ;
  *       6 enroulement de l'index ; 7 vidage complet ; 8 compteur total ;
  *       9 pop sur pointeur nul.
+ * Cas ajoutés par l'équipe : 10 enroulement répété (3 tours complets, champs
+ *       conservés) ; 11 evq_init remet les compteurs à zéro après un
+ *       débordement ; 12 alternance push/pop sur 100 événements.
  * ------------------------------------------------------------------------- */
 #include "evq.h"
 #include "evq_test.h"
@@ -72,6 +75,43 @@ uint32_t evq_autotest(void)
     /* 9. pop avec pointeur nul : refusé sans effet */
     evq_push(EV_TEST, 5u, 0u);
     echecs += cas_ok(8u, !evq_pop((evq_event_t *)0) && evq_count() == 1u);
+
+    /* 10. enroulement répété : 3 tours complets, type, valeur et horodatage
+     *     conservés à chaque passage de l'indice par la fin du tableau        */
+    {
+        int ok = 1;
+        evq_init();
+        for (uint32_t tour = 0u; tour < 3u; tour++) {
+            for (uint32_t i = 0u; i < EVQ_CAPACITE; i++) {
+                ok = ok && evq_push(EV_VITESSE, tour * 1000u + i, i + 1u);
+            }
+            for (uint32_t i = 0u; i < EVQ_CAPACITE; i++) {
+                ok = ok && evq_pop(&e) && e.type == EV_VITESSE
+                        && e.valeur == tour * 1000u + i && e.t_ms == i + 1u;
+            }
+        }
+        echecs += cas_ok(9u, ok && evq_count() == 0u && evq_debordements() == 0u
+                             && evq_total() == 3u * EVQ_CAPACITE);
+    }
+
+    /* 11. evq_init après un débordement : compteurs à zéro, file vide */
+    {
+        for (uint32_t i = 0u; i <= EVQ_CAPACITE; i++) (void)evq_push(EV_TEST, i, 0u);
+        int deborde = evq_debordements() == 1u;
+        evq_init();
+        echecs += cas_ok(10u, deborde && evq_count() == 0u && evq_debordements() == 0u
+                              && evq_total() == 0u && !evq_pop(&e));
+    }
+
+    /* 12. alternance push/pop sur 100 événements : jamais plus d'un élément */
+    {
+        int ok = 1;
+        for (uint32_t i = 0u; i < 100u; i++) {
+            ok = ok && evq_push(EV_CONSIGNE, i, i) && evq_count() == 1u
+                    && evq_pop(&e) && e.valeur == i && evq_count() == 0u;
+        }
+        echecs += cas_ok(11u, ok && evq_total() == 100u);
+    }
 
     evq_init();
     return echecs;

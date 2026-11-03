@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-#define EVQ_TEST_N_CAS 9u
+#define EVQ_TEST_N_CAS 12u   /* 9 fournis + 3 ajoutés par l'équipe */
 
 uint32_t evq_autotest(void);               /* nombre de cas en échec (0 = succès) */
 extern uint32_t evq_test_resultats[EVQ_TEST_N_CAS];   /* 1 = réussi, 0 = échec */
