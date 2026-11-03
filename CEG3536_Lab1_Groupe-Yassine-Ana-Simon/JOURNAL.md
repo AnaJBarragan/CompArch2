@@ -65,8 +65,7 @@
 | T1 Réinitialisation | 22 Sept | La DEL rouge s'allume lors d'appuyer sur uC Reset apres avoir telecharge le code dans la board | La board est bien initialise | Voir annexe du rapport et video |
 | T2 Cycle User | 22 Sept | Apuyer sur User cycle de rouge -> vert -> rouge -> blueu | Mise a jour des etats de marche et arret es correcte | Voir annexe du rapport et video |
 | T3 Anti-rebond | 22 Sept | Des longs appuis comptent une seule fois | Le anti-rebond est bien implemente | Voir annexe du rapport et video |
-| T4 Niveaux logiques | 29 Oct | PC13, PB2 et PB5 lus dans le
-registre IDR | PUPD fonctionnels | Voir annexe du rapport et video |
+| T4 Niveaux logiques | 29 Oct | PC13, PB2 et PB5 lus dans le registre IDR | PUPD fonctionnels | Voir annexe du rapport et video |
 | T5 E-Stop | 29 Oct | DEL verte et bleue eteintes | Passe a l'etat arret d'urgence correctement | Voir annexe du rapport et video |
 | T6 Clignotement | 29 Oct | DEL rouge clignote en etat arret d'urgence | etat arret d'urgence valide | Voir annexe du rapport et video |
 | T7 Acquittement | 29 Oct | Retour a DEL rouge solide lors de Touch-En | Systeme passe de l'etat arret durgence a arret | Voir annexe du rapport et video |
