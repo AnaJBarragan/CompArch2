@@ -1,0 +1,12 @@
+Debug/
+Release/
+build/
+*.elf
+*.bin
+*.map
+*.o
+*.su
+*.list
+.metadata/
+Videos/
+lab2ceg3536-essai(t1-t10).docx
