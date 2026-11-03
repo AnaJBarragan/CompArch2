@@ -57,16 +57,16 @@
 ## Tableau des essais (T1 à T10)
 | Essai | Date | Résultat observé | Verdict | Preuve (fichier) |
 |---|---|---|---|---|
-| T1 |15 octobre 2026  |  | L'essai fonctionne, le système démarre correctement à ARRÊT   |  | 
-| T2 | 15 octobre 2026 |  | L'essai est conforme à l'exigence et fonctionne comme attendu. |  | 
-| T3 |15 octobre 2026  |  | L'essai est conforme à l'exigence et fonctionne comme attendu. |  | 
-| T4 |15 octobre 2026  |  |L'essai est conforme à l'exigence et fonctionne comme attendu.  |  | 
-| T5 |15 octobre 2026  |  |L'essai est conforme à l'exigence et fonctionne comme attendu.  |  | 
-| T6 |15 octobre 2026  |  |L'essai est conforme à l'exigence et fonctionne comme attendu.  |  | 
-| T7 |15 octobre 2026  |  |L'essai est conforme à l'exigence et fonctionne comme attendu.  |  | 
-| T8 |  |  |  |  | 
-| T9 | 15 octobre 2026 |  | L'essai est conforme à l'exigence et fonctionne comme attendu. |  | 
-| T10 | 15 octobre 2026 |  |  L'essai est conforme à l'exigence et fonctionne comme attendu.|  | 
+| T1 |15 octobre 2026  |DEL rouge allumé seule, CCR1=0, STB=0 et le moteur est immobile  | L'essai fonctionne, le système démarre correctement à ARRÊT   |Voir le fichier LAB2CEG3536-essai(t1-t10) dans le dêpot| 
+| T2 | 15 octobre 2026 |La séquence rouge-vert-rouge-bleu fonctionne conformément aux exigences  | L'essai est conforme à l'exigence et fonctionne comme attendu. | Voir le fichier LAB2CEG3536-essai(t1-t10) dans le dêpot | 
+| T3 |15 octobre 2026  |Rapport cyclique sont conforme (25%, 50% et 100%) et PWM=20kHz| L'essai est conforme à l'exigence et fonctionne comme attendu. | Voir le fichier LAB2CEG3536-essai(t1-t10) dans le dêpot | 
+| T4 |15 octobre 2026  |pmw_pct monte de 0 à 100 en 1 seconde, conformément aux attentes |L'essai est conforme à l'exigence et fonctionne comme attendu.  | Voir le fichier LAB2CEG3536-essai(t1-t10) dans le dêpot | 
+| T5 |15 octobre 2026  |enc_count monte en AVANT et descend en ARRIÈRE avec environs 4400front/s avec une consigne à 100%.   |L'essai est conforme à l'exigence et fonctionne comme attendu.  | Voir le fichier LAB2CEG3536-essai(t1-t10) dans le dêpot | 
+| T6 |15 octobre 2026  |La vitesse est croissante avec 170,273 et 367tour/min pour 25%, 50% et 100% |L'essai est conforme à l'exigence et fonctionne comme attendu.  | Voir le fichier LAB2CEG3536-essai(t1-t10) dans le dêpot | 
+| T7 |15 octobre 2026  | STB ET PWM sont coupés, estop_flag=1 et le buzzer est activé.  |L'essai est conforme à l'exigence et fonctionne comme attendu.  | Voir le fichier LAB2CEG3536-essai(t1-t10) dans le dêpot | 
+| T8 |15 octobre 2026  |User est ignoré, l'acquittement est refusé |L'essai est conforme à l'exigence et fonctionne comme attendu.  | Voir le fichier LAB2CEG3536-essai(t1-t10) dans le dêpot | 
+| T9 | 15 octobre 2026 |Bip de 99ms   | L'essai est conforme à l'exigence et fonctionne comme attendu. | Voir le fichier LAB2CEG3536-essai(t1-t10) dans le dêpot | 
+| T10 | 15 octobre 2026 |Période Systhick de 1ms  |  L'essai est conforme à l'exigence et fonctionne comme attendu.| Voir le fichier LAB2CEG3536-essai(t1-t10) dans le dêpot| 
 
 ## Calculs de l'Horloge
 - Horloge : MSI 4 MHz (PCLK2 = 4 MHz, SysTick sur HCLK).
