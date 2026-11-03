@@ -1,11 +1,11 @@
 /* ---------------------------------------------------------------------------
  * fsm.c — machine à états du véhicule en C (CEG 3536, laboratoire 3, E8)
- *         — SQUELETTE À COMPLÉTER (remplace fsm.s du laboratoire 2)
+ *         (remplace fsm.s du laboratoire 2)
  *
  * États et transitions du laboratoire 2, à conserver :
  *   EV_USER   : ARRÊT -> AVANT / ARRIÈRE (alternance), AVANT / ARRIÈRE -> ARRÊT ;
  *               ignoré en ARRÊT_URGENCE
- *   EV_ESTOP  : tout état -> ARRÊT_URGENCE (propulsion déjà coupée par l'ISR) [FOURNI]
+ *   EV_ESTOP  : tout état -> ARRÊT_URGENCE (propulsion déjà coupée par l'ISR)
  *   EV_TOUCH  : en urgence, acquittement si button_raw(BTN_ESTOP) == 0 ;
  *               sinon bascule touch_enabled + bip court
  *   EV_CONSIGNE (valeur = %) : mémorisée dans consigne_pot ; appliquée à
@@ -34,7 +34,7 @@ static const uint8_t etat_vers_del[4]  = { LED_ROUGE, LED_VERTE, LED_BLEUE, LED_
 static const uint8_t etat_vers_dir[4]  = { MOTOR_ARRET, MOTOR_AVANT, MOTOR_ARRIERE, MOTOR_ARRET };
 static const uint8_t etat_vers_bips[4] = { 1u, 1u, 2u, 0u };
 
-/* Entrée dans un état hors urgence [FOURNI] : etat, transitions, rampe à 0,
+/* Entrée dans un état hors urgence : etat, transitions, rampe à 0,
  * direction (acceptée car CCR1 = 0), consigne prise au départ, bips.       */
 static void entree_etat(uint32_t nouvel_etat)
 {
@@ -70,7 +70,7 @@ void fsm_init(void)
 void fsm_traiter(const evq_event_t *e)
 {
     switch (e->type) {
-    case EV_ESTOP:                              /* [FOURNI] : état sûr          */
+    case EV_ESTOP:                              /* E9 : état sûr (déjà posé par l'ISR) */
         motor_stop_now();
         pwm_pct = 0u;
         consigne_pct = 0u;
@@ -83,7 +83,7 @@ void fsm_traiter(const evq_event_t *e)
         }
         break;
 
-    case EV_USER:                               /* [FOURNI] : défilement (E8) */
+    case EV_USER:                               /* E8 : défilement des états          */
         if (etat == ETAT_ARRET) {
             entree_etat(prochain_sens ? ETAT_MARCHE_ARRIERE : ETAT_MARCHE_AVANT);
             prochain_sens ^= 1u;
@@ -93,61 +93,38 @@ void fsm_traiter(const evq_event_t *e)
         /* ARRÊT_URGENCE : User ignoré */
         break;
 
-
-
-
-
-
-
     case EV_TOUCH:
-
-        /* À COMPLÉTER (E9, E5) : acquittement en urgence si E-Stop relâché
-         * (buzzer_continu = 0, entree_etat(ETAT_ARRET)) ; sinon
-         * touch_enabled ^= 1 et buzzer_bip(1).       */
-    	if (etat == ETAT_ARRET_URGENCE) {
-    	               if (button_raw(BTN_ESTOP) == 0u) {  /* E-Stop appuie relacher?         */
-    	                   buzzer_continu = 0u;            /*cut sound                 */
-    	                   entree_etat(ETAT_ARRET);        /*acquitement = retour ARRET etat = 1)         */
-    	               }
-
-    	               /* sinon E-Stop still pressed : ignore */
-    					}
-    				else {                                /* URGENCE=  false                        */
-    	               touch_enabled ^= 1u;                /*TouchEn enable  */
-    	               buzzer_bip(1u);                     /*small buzzer confirmation bip          */
-    					}
-
-
-
-
+        /* E9, E5 : en urgence, Touch En acquitte seulement si l'E-Stop est
+         * relâché ; hors urgence, il bascule touch_enabled (laboratoire 1). */
+        if (etat == ETAT_ARRET_URGENCE) {
+            if (button_raw(BTN_ESTOP) == 0u) {      /* E-Stop relâché ?      */
+                buzzer_continu = 0u;                /* coupe le son continu  */
+                entree_etat(ETAT_ARRET);            /* acquittement -> ARRÊT */
+            }
+            /* sinon E-Stop encore enfoncé : appui ignoré */
+        } else {
+            touch_enabled ^= 1u;                    /* bascule touch_enabled */
+            buzzer_bip(1u);                         /* bip court de confirmation */
+        }
         break;
 
     case EV_CONSIGNE:
-
-        /* À COMPLÉTER (E5) : consigne_pot = min(valeur, 100) ; en marche,
-         * consigne_pct = consigne_pot.
-         *                                  */
-    	consigne_pot = e->valeur;               /* save position of 'pot' */
-    	           if (consigne_pot > 100u) {consigne_pot = 100u;}     /* consigne >100 , 100%      */
-    	           if (etat == ETAT_MARCHE_AVANT || etat ==ETAT_MARCHE_ARRIERE) {consigne_pct = consigne_pot; }  /* appliquée seulement en marche avant ou arriere */
-    	           /* en ARRÊT ou URGENCE : le pot est sans effet, consigne_pct reste 0 */
-
+        /* E5 : la position du potentiomètre est toujours mémorisée, mais
+         * n'est appliquée qu'en marche ; en ARRÊT et en urgence, elle sera
+         * prise au prochain départ (entree_etat).                          */
+        consigne_pot = e->valeur;                   /* position du pot. (%)  */
+        if (consigne_pot > 100u) {
+            consigne_pot = 100u;                    /* saturation à 100 %    */
+        }
+        if (etat == ETAT_MARCHE_AVANT || etat == ETAT_MARCHE_ARRIERE) {
+            consigne_pct = consigne_pot;            /* appliquée en marche   */
+        }
         break;
 
-
-
-
-
     case EV_VITESSE:
-        /* À COMPLÉTER (E3) : expose.vitesse_rpm_q16 = enc_fronts_vers_rpm_q16(
-         * e->valeur) ; expose.sens = sens_mesure.  */
-
-    	 expose.vitesse_rpm_q16 = enc_fronts_vers_rpm_q16(e->valeur); /* fronts -> tour/min  */
-    	 expose.sens = sens_mesure;          /* copy sens mesuré (SENS_x) */
-
-
-
-
+        /* E3 : fin de fenêtre ; valeur = fronts comptés pendant 250 ms */
+        expose.vitesse_rpm_q16 = enc_fronts_vers_rpm_q16(e->valeur);
+        expose.sens = sens_mesure;                  /* SENS_x de la fenêtre  */
         break;
 
     default:
@@ -155,28 +132,25 @@ void fsm_traiter(const evq_event_t *e)
     }
 }
 
-/* À COMPLÉTER (E5) : en marche seulement, toutes les RAMPE_PAS_MS, pwm_pct
- * se rapproche de consigne_pct d'un point puis motor_set_pwm(pwm_pct).      */
+/* E5 : rampe du laboratoire 2. En marche seulement, toutes les
+ * RAMPE_PAS_MS, pwm_pct se rapproche de consigne_pct d'un point, puis
+ * motor_set_pwm(pwm_pct) l'applique (seul point d'écriture de CCR1).      */
 static void rampe(void)
 {
-
-	if (etat != ETAT_MARCHE_AVANT && etat != ETAT_MARCHE_ARRIERE) {return;}  /* la rampe n'existe qu'en marche */
-
-	       rampe_compteur++;                       /* un pas (1ms) ++       */
-	       if (rampe_compteur < RAMPE_PAS_MS) {return;   } /* if under 10ms, do nothing*/
-	       rampe_compteur = 0u;                    /* After 10ms, put back to 0 */
-
-	       if (pwm_pct < consigne_pct) {           /* acceleration           */
-	           pwm_pct++;                          /* rapport cyclique ++  */
-	           motor_set_pwm(pwm_pct);             /* call engine    */
-	       }
-	       else if (pwm_pct > consigne_pct) {    /* ralentissement             */
-	           pwm_pct--;                          /*rapport cyclique -- */
-	           motor_set_pwm(pwm_pct);             /* call engine    */
-	       }
-
-
-
+    if (etat != ETAT_MARCHE_AVANT && etat != ETAT_MARCHE_ARRIERE) {
+        return;                                 /* pas de rampe hors marche */
+    }
+    if (++rampe_compteur < RAMPE_PAS_MS) {
+        return;                                 /* moins de 10 ms écoulées  */
+    }
+    rampe_compteur = 0u;
+    if (pwm_pct < consigne_pct) {
+        pwm_pct++;                              /* accélération             */
+        (void)motor_set_pwm(pwm_pct);
+    } else if (pwm_pct > consigne_pct) {
+        pwm_pct--;                              /* ralentissement           */
+        (void)motor_set_pwm(pwm_pct);
+    }
 }
 
 void fsm_sorties(void)

@@ -31,15 +31,19 @@ uint32_t button_raw(uint32_t id);
 uint32_t button_pressed(uint32_t id);
 void     delay_ms(uint32_t ms);
 void     estop_init(void);
+/* Obsolètes depuis le laboratoire 3 : fsm.s est retiré du projet.
+ * fsm_init est maintenant fournie par fsm.c (prototype dans fsm.h) ;
+ * fsm_step n'existe plus (remplacée par fsm_traiter et fsm_sorties).
 void     fsm_init(void);
 void     fsm_step(void);
+*/
 
 /* Variables partagées (définies en .bss dans les fichiers .s) */
 extern volatile uint32_t etat;
 extern volatile uint32_t estop_flag;
 extern volatile uint32_t touch_enabled;
 extern volatile uint32_t compteur_transitions;
-extern volatile uint32_t blink_cycles;      /* T6 : cycles DWT entre deux basculements */
+/* extern volatile uint32_t blink_cycles;   obsolète : était défini dans fsm.s */
 extern volatile uint32_t btn_valide[3];     /* niveau validé par bouton (T3)          */
 extern volatile uint32_t btn_compteur[3];   /* échantillons différents consécutifs    */
 

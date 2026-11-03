@@ -19,6 +19,7 @@ void telem_entete(void);                /* ligne H,... (E1)                     
 void telem_trame(const etat_vehicule_t *v, int32_t temp_c_x10,
                  uint32_t nb_evenements, uint32_t debordements);   /* ligne T,... */
 uint32_t telem_pertes(void);            /* caractères refusés (file pleine)       */
+void telem_evenement(const char *nom, uint32_t t_ms);  /* ligne E,<t_ms>,<nom> (E9) */
 
 /* utilitaires de formatage entier (pas de printf sur la cible) */
 char *telem_fmt_u32(char *p, uint32_t v);

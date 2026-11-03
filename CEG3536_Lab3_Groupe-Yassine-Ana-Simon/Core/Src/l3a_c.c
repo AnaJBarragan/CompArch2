@@ -1,23 +1,26 @@
 /* ---------------------------------------------------------------------------
  * l3a_c.c — version C de la routine assembleur conservée pour L3-A
- *           (CEG 3536, laboratoire 3) — SQUELETTE À COMPLÉTER
+ *           (CEG 3536, laboratoire 3)
  *
- * Composante L3-A (section 4.5 de l'énoncé) : réécrire en C, avec exactement
- * le même prototype et le même comportement, la routine assembleur conservée
- * du laboratoire 1 ou 2 (button_pressed, led_set, motor_set_pwm ou
- * encoder_read, au choix de l'équipe), sans modifier la version assembleur.
- * Le squelette ci-dessous vise motor_set_pwm (motor.s, laboratoire 2) ;
- * adapter le prototype, bench_l3a.h et les cas du banc si une autre routine
- * est choisie. Comparer valeur de retour, effets de bord et cycles DWT avec
- * bench_l3a.c (commande série b), puis le désassemblage à -O0 et -O2.
- * Tant que la routine n'est pas écrite, le banc signale des écarts.
+ * Routine choisie : motor_set_pwm (motor.s, laboratoire 2), inchangée.
+ * Même prototype et même comportement :
+ *   - pct > 100 est ramené à 100 (motor.s : cmp r0, #100 / it hi / movhi)
+ *   - CCR1 = pct x PWM_PLEINE / 100, avec PWM_PLEINE = ARR + 1 = 200
+ *     (4 MHz / 20 kHz, registres_lab2.inc)
+ *   - retour : la valeur écrite dans CCR1
+ * Comparée par bench_l3a.c (commande série b) : retour, CCR1 et cycles DWT.
  * ------------------------------------------------------------------------- */
 #include "stm32l552xx.h"
 #include "bench_l3a.h"
 
+#define PWM_PLEINE_C 200u        /* = PWM_PLEINE de registres_lab2.inc      */
+
 uint32_t motor_set_pwm_c(uint32_t pct)
 {
-    /* À COMPLÉTER : même comportement que motor_set_pwm (motor.s, lab. 2). */
-    (void)pct;
-    return 0u;
+    if (pct > 100u) {
+        pct = 100u;                              /* saturation à 100 %      */
+    }
+    uint32_t ccr = pct * PWM_PLEINE_C / 100u;    /* rapport cyclique -> CCR1 */
+    TIM1->CCR1 = ccr;                            /* effet de bord           */
+    return ccr;                                  /* valeur écrite (R0)      */
 }

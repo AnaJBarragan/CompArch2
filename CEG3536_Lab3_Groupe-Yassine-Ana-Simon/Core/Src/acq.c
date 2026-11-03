@@ -1,6 +1,5 @@
 /* ---------------------------------------------------------------------------
  * acq.c — objet d'acquisition d'une voie analogique (CEG 3536, lab. 3, L3-C)
- *         — SQUELETTE À COMPLÉTER
  * Aucun registre : les échantillons viennent d'un tampon mémoire rempli par
  * le DMA. Toutes les opérations en entiers 32 bits.
  * Version 1 : acq_init, acq_brut, acq_mv, acq_valeur (relation linéaire).
@@ -39,10 +38,25 @@ void acq_config_filtre(acq_t *a, int32_t hysteresis, int32_t zone_morte,
     a->initialisee = 0u;      /* la prochaine valeur est prise telle quelle   */
 }
 
-/* À COMPLÉTER (E4) : moyenne arrondie des n_moy échantillons src[i * pas]. */
+/* Moyenne arrondie des n_moy échantillons de la voie : src[0], src[pas],
+ * src[2 x pas], ... Le DMA écrit le tampon pendant la lecture ; chaque
+ * lecture de 16 bits est atomique, donc chaque échantillon lu est valide. */
 uint32_t acq_brut(const acq_t *a)
 {
-    return a->src[0];                 /* squelette : dernier échantillon seul */
+    uint32_t somme = 0u;
+    for (uint32_t i = 0u; i < a->n_moy; i++) {
+        somme += a->src[i * a->pas];
+    }
+    return (somme + a->n_moy / 2u) / a->n_moy;   /* arrondi au plus proche */
+}
+
+/* Division entière arrondie au plus proche (et non tronquée vers zéro),
+ * comme pct = (brut x 100 + 2047) / 4095 dans l'énoncé (4.8) : sans
+ * arrondi, 97,7 % deviendrait 97 et la zone morte haute ne serait jamais
+ * atteinte. Valable pour les deux signes de n et d.                        */
+static int32_t div_arrondie(int32_t n, int32_t d)
+{
+    return ((n < 0) != (d < 0)) ? (n - d / 2) / d : (n + d / 2) / d;
 }
 
 uint32_t acq_mv(const acq_t *a)
@@ -50,14 +64,13 @@ uint32_t acq_mv(const acq_t *a)
     return (acq_brut(a) * ACQ_VREF_MV + ACQ_PLEINE_ECHELLE / 2) / ACQ_PLEINE_ECHELLE;
 }
 
-/* À COMPLÉTER (E5, E6) : v = mv x gain_num / gain_den + decalage ;
- * version 2 : si zone_morte > 0, v < v_min + zone_morte -> v_min et
- * v > v_max - zone_morte -> v_max ; si hysteresis > 0 et initialisee,
- * retourner derniere tant que |v - derniere| <= hysteresis ; sinon
- * derniere = v, initialisee = 1.                                            */
+/* Version 1 : relation linéaire propre à l'instance,
+ * v = mv x gain_num / gain_den (arrondi) + decalage, entiers 32 bits signés.
+ * Les filtres de la version 2 (zone morte, hystérésis) ne sont pas encore
+ * appliqués : acq_config_filtre mémorise ses paramètres sans effet.        */
 int32_t acq_valeur(acq_t *a)
 {
-    int32_t v = ((int32_t)acq_mv(a) * a->gain_num) / a->gain_den + a->decalage;
+    int32_t v = div_arrondie((int32_t)acq_mv(a) * a->gain_num, a->gain_den) + a->decalage;
     a->derniere = v;
     a->initialisee = 1u;
     return v;

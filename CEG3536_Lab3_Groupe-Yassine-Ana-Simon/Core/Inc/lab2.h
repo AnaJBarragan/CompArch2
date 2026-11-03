@@ -44,12 +44,12 @@ extern volatile uint32_t tick_1ms;         /* 1 à chaque interruption ; consomm
 void     buzzer_init(void);                /* PA0 en sortie, silence                    */
 void     buzzer_set(uint32_t on);          /* 0 silence, 1 son (R0-R3 seulement)        */
 void     buzzer_bip(uint32_t n);           /* n bips de BIP_MS, non bloquant            */
-void     buzzer_step(void);                /* à appeler toutes les 1 ms (fsm_step)      */
+void     buzzer_step(void);                /* à appeler toutes les 1 ms (fsm_sorties)   */
 
 extern volatile uint32_t buzzer_continu;   /* 1 = son continu forcé (ARRÊT_URGENCE)     */
 
-/* ---- Machine à états (fsm.s) : variables ajoutées au laboratoire 2 ----- */
-extern volatile uint32_t consigne_pct;     /* 25, 50, 75 ou 100 %                       */
+/* ---- Machine à états : variables définies dans fsm.c depuis le lab. 3 -- */
+extern volatile uint32_t consigne_pct;     /* 0..100 % (potentiomètre, lab. 3)          */
 extern volatile uint32_t pwm_pct;          /* rapport cyclique appliqué (rampe)         */
 
 #endif /* LAB2_H */

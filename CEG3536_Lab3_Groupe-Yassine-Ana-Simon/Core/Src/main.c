@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------------
  * main.c — programme principal en C (CEG 3536, laboratoire 3)
- *          — SQUELETTE À COMPLÉTER (remplace main.s : le retirer du projet)
+ *          (remplace main.s du laboratoire 2)
  *
  * Initialise la couche assembleur (laboratoires 1 et 2), puis les pilotes C
  * (ADC/DMA, LPUART1, DWT), et exécute une boucle cadencée par tick_1ms (E1) :
@@ -67,15 +67,15 @@ int main(void)
     dwt_init();
     evq_init();
     adc_dma_init(tampon_adc, ADC_N_MOY);
-    /* potentiomètre : % = mv x 100 / 3300 ; version 2 : zone morte, hystérésis */
+    /* potentiomètre : % = mv x 100 / 3300 (version 1 : sans filtre)        */
     acq_init(&acq_pot, &tampon_adc[0], ADC_N_VOIES, ADC_N_MOY, 100, (int32_t)ADC_VREF_MV, 0);
-    acq_config_filtre(&acq_pot, CONSIGNE_HYSTERESIS, POT_ZONE_MORTE_PCT, 0, 100);
     /* température (dixièmes de °C) : t10 = mv x (-10000) / 10900 + C
-     * avec C = TEMP_C10_REF + TEMP_MV_REF x 10000 / 10900 (relation linéaire
-     * étalonnée, E6) — À VÉRIFIER avec les constantes de lab3.h relevées.    */
+     * avec C = TEMP_C10_REF + round(TEMP_MV_REF x 10000 / 10900) (relation linéaire
+     * étalonnée, E6) ; TEMP_MV_REF et TEMP_C10_REF relevés à l'étalonnage.   */
     acq_init(&acq_temp, &tampon_adc[1], ADC_N_VOIES, ADC_N_MOY,
              -10000, -TEMP_PENTE_UV_PAR_C,
-             TEMP_C10_REF + (TEMP_MV_REF * 10000) / (-TEMP_PENTE_UV_PAR_C));
+             TEMP_C10_REF + (TEMP_MV_REF * 10000 - TEMP_PENTE_UV_PAR_C / 2)
+                            / (-TEMP_PENTE_UV_PAR_C));      /* arrondi, = 1930 */
     telem_init(TELEM_BAUDS);
     fsm_init();
     telem_entete();
@@ -96,19 +96,27 @@ int main(void)
             motor_stop_now();                           /* redondant avec l'ISR */
             evq_push(EV_ESTOP, 0u, t);
         }
-        /* À COMPLÉTER (E6, E3) : toutes les FENETRE_VITESSE_MS, fronts =
-         * encoder_read(&sens_mesure) puis evq_push(EV_VITESSE, fronts, t).   */
-        (void)fenetre;
-        /* À COMPLÉTER (E5) : c = acq_valeur(&acq_pot) ; si c != derniere_consigne,
-         * mémoriser et evq_push(EV_CONSIGNE, c, t).                           */
-        (void)derniere_consigne;
+        /* E3 : fin de fenêtre de l'encodeur toutes les 250 ms. encoder_read
+         * (encoder.s) retourne |fronts| depuis la lecture précédente et écrit
+         * le sens mesuré dans sens_mesure.                                   */
+        if (++fenetre >= FENETRE_VITESSE_MS) {
+            fenetre = 0u;
+            uint32_t fronts = encoder_read(&sens_mesure);
+            evq_push(EV_VITESSE, fronts, t);
+        }
+        /* E5 : un événement seulement quand la consigne lue change          */
+        int32_t c = acq_valeur(&acq_pot);
+        if (c != derniere_consigne) {
+            derniere_consigne = c;
+            evq_push(EV_CONSIGNE, (uint32_t)c, t);
+        }
         if (++periode_telem >= TELEM_PERIODE_MS) {
             periode_telem = 0u;
             evq_push(EV_TELEM, 0u, t);
         }
         adc_dma_step();
 
-        /* --- commandes série facultatives [FOURNI] --- */
+        /* --- commandes série facultatives --- */
         int rx = telem_rx();
         if (rx == 'z') {
             evq_init();
@@ -140,6 +148,9 @@ int main(void)
                 telem_trame(fsm_etat(), acq_valeur(&acq_temp), evq_total(), evq_debordements());
             } else {
                 fsm_traiter(&e);
+                if (e.type == EV_ESTOP) {
+                    telem_evenement("ESTOP", e.t_ms);   /* E9 : consigné    */
+                }
             }
         }
         fsm_sorties();
