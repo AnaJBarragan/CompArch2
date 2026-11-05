@@ -11,14 +11,14 @@
 | E2 | PWM du moteur sur PE9 | 20 kHz +/- 5 %. Rapport cyclique de 0 a 100 %; definition de 0.5% (200 pas par cycle). Erreur max: 2% | PCLK2 = 4 MHz. PSC = 0, ARR = 199 |
 | E3 | Sens du moteur | AVANT: AI1 = 1, AI2 = 0, STB = 1. ARRIERE: AI1 = 0, AI2 = 1, STB = 1. ARRET et URGENCE: tout a 0. Jamais AI1 = AI2 = 1. Sens fige si CCR1 != 0 | Avant = AI1 a 1. Le changement de sens passe par ARRET. |
 | E4 | Touch EN et Rampe | Consigne: 25%,50%,75%,100%. 50% Quand reset. Rampe: 1% par 10 ms donc 0 a 100% en 1s. ARRET par User: CCR1=0 |Un pas de fsm_step = 1 ms | 
-| E5 | | | |
-| E6 | | | |
-| E7 | | | |
-| E8 | | | |
+| E5 |Lecture de l’encodeur et Interruption| deux fronts E_A déclenchent EXTI0. Priorité:   SysTick < EXTI0 < E-Stop. ISR: Lit E_A et E_B dans IDR, trouve le sens si EA=EB ou EA!=EB, incrémente ou décrémente enc_count, efface RPR1/FPR1 et se termine. Aucun front se perds à pleine vitesse (environ 4400 fronts par seconde). L’ISR dure moins de 15 micro secondes.| |
+| E6 |Vitesse et sens | FENETRE_VITESSE_MS = 500ms, main copie la variation de enc_count dans vitesse_fronts et sens_mesure, mise à jour du repère. Tr/min = fronts * 120/748 pour une fenêtre de 500 ms. Compare le sens mesuré à commandé.| |
+| E7 |E-Stop Interruption PWM|EXTI2_IRQHandler: CCR1 = 0, STB = 0 et AI1=AI2=0, DEL bleue et vertes éteint. Allume DEL Rouge. Buzzer à 1, et positionne drapeau estop. Efface requête d’interruption et se termine. Gestion de transition d’état complet maintenant gérer par fsm_step. Délai entre front sur PB2 et PWM sur PE9 < 1 ms. | |
+| E8 |Arret d’urgence|    État ARRÊT_URGENCE : (DEL Rouge clignote à 2 Hz (+-10%) buzzer continue à faire du son sans arrêté. STB reste à 0. User et Touch En ignorés. Touch En touché + E-Stop relâché => État = ARRÊT), État ARRÊT : (Buzzer arrête de sonnée, DEL Rouge fixe. Consigne conservée. Moteur redémarre qu’après un nouvel appui sur btn User.) | |
 | E9 | Bips du buzzer dependant de l'etat | Bip de 100 ms +/- 10 % a chaque changement d'etat ou de consigne. Double bip en MARCHE_ARRIERE. Bip continu en urgence. | Buzzer sur PA0 en GPIO |
 | E10 | SysTick: Configuration de l'horloge et interruptions| LOAD = 3999; SysTick_Handler incrémente ticks_ms et positionne tick_1ms; fsm_step est exécutée une fois par tick | Horloge CPU 4MHz, Priorite SysTick = 2 (basse) |
-| E11 | | | |
-| E12 | | | |
+| E11 |Mesures au débogueur|     Captures du débogueur de fréquence et rapport cyclique de PWM qui est à 25, 50, 75 et 100% (Calcués des registres PSC, ARR et CCR1).  Niveaux AI1, AI2 et STB dans chaque du système. Évolution de la variable enc_count pour marche_avant et marche_arrière. Délai entre E-Stop et mise à 0 de PWM. Durée de bip mesurée en ticks_ms | |
+| E12 |Robustesse| E-Stop pendant une rampe, Touch En pendant une rampe, User pendant une rampe, appuis de boutons en même temps, E-Stop pendant l’ISR de l’encodeur. Jamais de AI1=AI2=1. Et jamais de changement de sens à CCR1 != 0.  Ne jamais sortir de ARRÊT_URGENCE sans acquittement. | |
 
 
 ### Rôles et rotation
