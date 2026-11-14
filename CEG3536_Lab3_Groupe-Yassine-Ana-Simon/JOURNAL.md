@@ -72,11 +72,11 @@ Analyse interne / externe (plage, résolution, bruit) :
 
 ## Composante L3-A : comparaison assembleur / C
 
-Routine comparée : `<motor_set_pwm | button_pressed | led_set | encoder_read>`
+Routine comparée : `<motor_set_pwm `
 
 | Cas | Entrée | Résultat assembleur | Résultat C | Effet de bord (registre / variable) | Écart |
 |---|---|---|---|---|---|
-| 1 | | | | | |
+| 1 | 100 | 200 | 200 | CCR1= 200 |0 |
 
 | Version | Cycles DWT (moyenne) | Taille (octets) | Registres utilisés | Observations (prologue, volatile) |
 |---|---|---|---|---|
@@ -96,11 +96,11 @@ Routine comparée : `<motor_set_pwm | button_pressed | led_set | encoder_read>`
 
 | Élément | Preuve (fichier) |
 |---|---|
-| Désassemblage -O0 annoté | |
+| Désassemblage -O0 annoté |
 | Désassemblage -O2 annoté | |
-| Trois instructions et leur encodage Thumb | |
+| Trois instructions et leur encodage Thumb ||
 | Captures du débogueur (R0–R3, SP, variable volatile) | |
-| Cycles DWT -O0 / -O2 et transformation analysée | |
+| Cycles DWT -O0 / -O2 et transformation analysée ||
 
 ## Tableau des essais (T1 à T10)
 
