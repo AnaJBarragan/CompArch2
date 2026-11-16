@@ -51,24 +51,20 @@ Analyse interne / externe (plage, résolution, bruit) :
 ## Journal des séances
 
 ### Séance 1 — `<date>` — réalise : `<nom>` / valide : `<nom>`
-- Objectifs :
-- Fait :
-- Décisions (découpage des modules, format des trames, routine L3-A choisie) :
-- Difficultés et solutions :
-- Mesures :
-- Validations Git :
-
-### Période d'étude — travail sur hôte
-- Fait (evq, test_evq, cas ajoutés, L3-B / L3-C rédigés) :
-- Validations Git :
+- Objectifs :  Finir les calculs de l'horloge, creer le nouveau fichier sur github et le project sur STM32IDE. S'assurer que le projet fonctionne et les fonctionalites du lab1 sont presentes. Commencer Lab3. Completer E1, E2, E3, E4, E9 et E10 au minimum. 
+- Fait : Calculs de l'horloge; projet sur STM32IDE; E1, E2, E3, E4, E9, E10 documentes sur Journal.  
+- Décisions (découpage des modules, format des trames, routine L3-A choisie) : : Nous avons décidé de garder le projet du laboratoire 2 comme base et de retirer main.s et fsm.s, remplacés par main.c et fsm.c. Pour le découpage, on a séparé le code en modules : evq.c pour la file d'événements, acq.c pour l'acquisition, adc_dma.c pour l'ADC et le DMA, telem.c pour la télémétrie, et fsm.c pour la machine à états. On a aussi choisi le format des trames CSV avec les dix colonnes demandées, terminées par \r\n, et une ligne d'en-tête H,... au démarrage. Pour la routine L3-A, on a décidé de comparer motor_set_pwm avec sa version en C, parce qu'elle est courte et facile à vérifier.
+- Difficultés et solutions : Difficulté à créer un nouveau projet sur STM32IDE, nous avons importé les launch files du lab1 pour régler le problème. 
+- Mesures : Aucun - Vérification dans Seance 2.  
+- Validations Git : Ana, 'Lab 3 - Séance 1'
 
 ### Séance 2 — `<date>` — réalise : `<nom>` / valide : `<nom>`
-- Objectifs :
-- Fait :
-- Décisions :
-- Difficultés et solutions :
-- Mesures (température, cycles DWT, désassemblage) :
-- Validations Git :
+- Objectifs : : Finir les essaie (t1 à t10), effectuer la démonstration au TA et début du rapport de laboratoire.
+- Fait : Essais t1-t10
+- Décisions : Nous avons décidé de nous concentrer sur la prise de mesure lors de nos essaie et de la démonstration
+- Difficultés et solutions : Nous avons eu de la difficulté avec la précision les prise de mesure de temps (ex: E_Stop). En effet, les intervalles de temps sont très petits donc la précisions ce devait d'être conforme aux attentes.
+- Mesures (température, cycles DWT, désassemblage) : Les essais T1 à T10 on été effectués conformément aux attentes. 
+- Validations Git :Yassine, lab3 - séance 2
 
 ## Composante L3-A : comparaison assembleur / C
 
