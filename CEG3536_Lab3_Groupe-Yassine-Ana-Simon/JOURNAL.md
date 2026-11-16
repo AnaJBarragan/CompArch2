@@ -30,13 +30,13 @@ Différences observées entre hôtes (tailles des types, options, avertissements
 
 | Grandeur | Formule | Valeur | Vérifiée par |
 |---|---|---|---|
-| `RPM_Q16_K` | round(240 × 65 536 / 748) | | T3 |
-| Erreur relative de la constante | (k − 240 × 65 536 / 748) / (240 × 65 536 / 748) | | T3 |
-| fronts maximal sans débordement | 2³² / k | | T3 |
-| `LPUART1_BRR` | 256 × 4 000 000 / 115 200 | | T9 |
-| Débit ADC par voie | 4 MHz / (2 × (640,5 + 12,5)) | | T4 |
-| Durée d'un tour du tampon DMA | 16 / débit par voie | | T4 |
-| Résolution de la température | 3 300 mV / 4 095 / 10,9 mV/°C | | T6 |
+| `RPM_Q16_K` | round(240 × 65 536 / 748) |21028 | T3 |
+| Erreur relative de la constante | (k − 240 × 65 536 / 748) / (240 × 65 536 / 748) |≈0,0019% | T3 |
+| fronts maximal sans débordement | 2³² / k | 204249| T3 |
+| `LPUART1_BRR` | 256 × 4 000 000 / 115 200 |0x22B9 | T9 |
+| Débit ADC par voie | 4 MHz / (2 × (640,5 + 12,5)) | 3,06 kHz| T4 |
+| Durée d'un tour du tampon DMA | 16 / débit par voie | 5,21ms| T4 |
+| Résolution de la température | 3 300 mV / 4 095 / 10,9 mV/°C |≈0,07°C | T6 |
 
 ## Étalonnage de la température (E6)
 
