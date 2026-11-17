@@ -6,15 +6,11 @@
 
 | Plateforme | Compilateur et version | Commande | Résultat (cas réussis / échecs) | Date et validation Git |
 |---|---|---|---|---|
-| Windows | | `make` dans `hote/` | | |
-| Linux | | | | |
-| STM32 (cible) | arm-none-eabi-gcc | commande série `q` | | |
+| Windows | | `make` dans `hote/` |9 cas réussis, 0  échecs |16 novembre 2026 |
+| Linux | | `make` dans `hote/|9 cas réussis, 0  échecs |16 novembre 2026 |
+| STM32 (cible) | arm-none-eabi-gcc | commande série `q` |9 cas réussis, 0  échecs |16 novembre 2026 |
 
-Cas ajoutés par l'équipe (au-delà des 9 fournis) :
 
-| Cas | Description | Résultat |
-|---|---|---|
-| 10 | | |
 
 Différences observées entre hôtes (tailles des types, options, avertissements) :
 
