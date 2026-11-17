@@ -1,6 +1,6 @@
 # JOURNAL.md — Journal d'équipe, CEG 3536, laboratoire 3 (automne 2026)
 
-Équipe : `<NomA>` et `<NomB>` — Section : `A01 / A02` — Dépôt Git : `<adresse>`
+Équipe : `Ana Barragan Martinez`, `Yassine Yandouzi` et `Simon Brown` — Section : `A02` — Dépôt Git : `https://github.com/AnaJBarragan/CompArch2`
 
 ## Jalon J2 — module d'événements testé sur hôte
 
@@ -110,4 +110,4 @@ Routine comparée : `<motor_set_pwm `
 
 ## Déclaration des sources et de l'usage d'outils d'IA générative
 - Sources (complément, corrigé du laboratoire 2 le cas échéant, CMSIS, manuel) :
-- Outils d'IA (outil, version, usage) ou « aucun usage » :
+- Outils d'IA (outil, version, usage) ou « aucun usage » : Claude: Explique moi la structure du laboratoire. Explique moi comment fonctionne le débogueur et les étapes afin de bien mesurer les essais.

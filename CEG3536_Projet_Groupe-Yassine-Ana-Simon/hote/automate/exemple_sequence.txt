@@ -1,0 +1,11 @@
+# Suite d'entrees de l'exemple « ventilateur » : un nom d'entree par ligne.
+# Les lignes vides et ce qui suit un diese sont ignores.
+BOUTON          # ARRET -> MARCHE
+ACQUIT          # sans effet en MARCHE
+SURCHAUFFE      # MARCHE -> ALARME
+SURCHAUFFE      # reste en ALARME
+ACQUIT          # ALARME -> ARRET
+BOUTON          # ARRET -> MARCHE
+BOUTON          # MARCHE -> ARRET
+SURCHAUFFE      # ARRET -> ALARME
+ACQUIT          # ALARME -> ARRET

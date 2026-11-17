@@ -1,0 +1,23 @@
+﻿Exigence;Intitulé;Partie;Essai(s);Composante;Fichiers concernés;Résultat (satisfaite / partielle / non satisfaite);Valeur mesurée;Écart et analyse;Preuve (fichier);Date de la preuve;Réalisé par;Validé par
+E1;Bus I²C;I;T1;;;;;;;;;
+E2;Extenseurs : huit DEL et huit commutateurs;I;T2;;;;;;;;;
+E3;LCD et rétroéclairage RVB;I;T3;;;;;;;;;
+E4;TouchPad et garde Touch En;I;T4;L4-A (CLO 6);;;;;;;;
+E5;Commandes du TouchPad;I;T5;;;;;;;;;
+E6;PIR par interruption;I;T6;;;;;;;;;
+E7;Capteur environnemental par SPI;I;T7;;;;;;;;;
+E8;Mode autonome et événements routiers simulés;I;T8;;;;;;;;;
+E9;Machine à états étendue et priorités;I;T8;;;;;;;;;
+E10;Routines assembleur et télémétrie contrôlée;I;T9;;;;;;;;;
+E11;Temps réel et non-régression;I;T10;;;;;;;;;
+E12;Robustesse et défaut de communication;I;T10;;;;;;;;;
+E13;Sections critiques en assembleur;II;T11;;;;;;;;;
+E14;File circulaire d’événements;II;T11;L5-A (CLO 2);;;;;;;;
+E15;Automate formel vérifié et C généré;II;T12;L5-B (CLO 5);;;;;;;;
+E16;Distance et trajet scénarisé;II;T13;;;;;;;;;
+E17;Régulation de vitesse;II;T14;;;;;;;;;
+E18;Surveillance des encodeurs et état DÉFAUT;II;T15;;;;;;;;;
+E19;Protection thermique à deux seuils;II;T16;;;;;;;;;
+E20;Mode essai;II;T16;;;;;;;;;
+E21;Télémétrie étendue et preuves;II;T17;L5-C;;;;;;;;
+E22;Initialisation, état sûr et non-régression;II;T18;;;;;;;;;
