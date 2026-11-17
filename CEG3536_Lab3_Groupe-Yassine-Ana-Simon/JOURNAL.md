@@ -6,8 +6,8 @@
 
 | Plateforme | Compilateur et version | Commande | Résultat (cas réussis / échecs) | Date et validation Git |
 |---|---|---|---|---|
-| Windows | | `make` dans `hote/` |9 cas réussis, 0  échecs |16 novembre 2026 |
-| Linux | | `make` dans `hote/|9 cas réussis, 0  échecs |16 novembre 2026 |
+| Windows |gcc Chocolatay v2.5.1| `make` dans `hote/` |9 cas réussis, 0  échecs |16 novembre 2026 |
+| Linux |gcc 13.3.0 (Ubuntu)| `make` dans `hote/|9 cas réussis, 0  échecs |16 novembre 2026 |
 | STM32 (cible) | arm-none-eabi-gcc | commande série `q` |9 cas réussis, 0  échecs |16 novembre 2026 |
 
 
