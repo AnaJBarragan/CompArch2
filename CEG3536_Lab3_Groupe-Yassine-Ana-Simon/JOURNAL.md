@@ -41,9 +41,9 @@ Différences observées entre hôtes (tailles des types, options, avertissements
 
 | Mesure | Température de référence (°C) | `temp_mv` lu | `TEMP_MV_REF` / `TEMP_C10_REF` retenus | Position de S2 |
 |---|---|---|---|---|
-| Ambiante |24°C | 1800mV| aucun| Int(gauche)|
+| Ambiante |25°C | 1800mV| aucun| Int(gauche)|
 | Capteur tenu entre deux doigts (30 s) | 32°C|1770mV |aucun |Int (gauche) |
-| Conditionnement externe (pont OUT–IN ou circuit) |1820mV | |aucun |Ext (droite) |
+| Conditionnement externe (pont OUT–IN ou circuit) |25°C|1820mV aucun |Ext (droite) |
 
 Analyse interne / externe (plage, résolution, bruit) :
 
