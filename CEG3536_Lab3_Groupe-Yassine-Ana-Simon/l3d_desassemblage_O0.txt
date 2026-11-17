@@ -1,0 +1,45 @@
+
+C:/Users/yando/AppData/Local/Temp/l3a/l3a_O0.o:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+00000000 <motor_set_pwm_c>:
+#include "stm32l552xx.h"
+#include "bench_l3a.h"
+
+uint32_t motor_set_pwm_c(uint32_t pct)
+{
+   0:	b480      	push	{r7}
+   2:	b085      	sub	sp, #20
+   4:	af00      	add	r7, sp, #0
+   6:	6078      	str	r0, [r7, #4]
+    if (pct > 100u) pct = 100u;
+   8:	687b      	ldr	r3, [r7, #4]
+   a:	2b64      	cmp	r3, #100	@ 0x64
+   c:	d901      	bls.n	12 <motor_set_pwm_c+0x12>
+   e:	2364      	movs	r3, #100	@ 0x64
+  10:	607b      	str	r3, [r7, #4]
+    uint32_t ccr = (pct * 200u) / 100u;
+  12:	687b      	ldr	r3, [r7, #4]
+  14:	22c8      	movs	r2, #200	@ 0xc8
+  16:	fb02 f303 	mul.w	r3, r2, r3
+  1a:	4a07      	ldr	r2, [pc, #28]	@ (38 <motor_set_pwm_c+0x38>)
+  1c:	fba2 2303 	umull	r2, r3, r2, r3
+  20:	095b      	lsrs	r3, r3, #5
+  22:	60fb      	str	r3, [r7, #12]
+    TIM1->CCR1 = ccr;
+  24:	4a05      	ldr	r2, [pc, #20]	@ (3c <motor_set_pwm_c+0x3c>)
+  26:	68fb      	ldr	r3, [r7, #12]
+  28:	6353      	str	r3, [r2, #52]	@ 0x34
+    return ccr;
+  2a:	68fb      	ldr	r3, [r7, #12]
+}
+  2c:	4618      	mov	r0, r3
+  2e:	3714      	adds	r7, #20
+  30:	46bd      	mov	sp, r7
+  32:	bc80      	pop	{r7}
+  34:	4770      	bx	lr
+  36:	bf00      	nop
+  38:	51eb851f 	.word	0x51eb851f
+  3c:	40012c00 	.word	0x40012c00
