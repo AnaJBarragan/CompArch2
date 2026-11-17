@@ -87,8 +87,8 @@ Routine comparée : `<motor_set_pwm `
 
 | Élément | Preuve (fichier) |
 |---|---|
-| Désassemblage -O0 annoté |
-| Désassemblage -O2 annoté | |
+| Désassemblage -O0 annoté |L3d_desassemblage_00.txt |
+| Désassemblage -O2 annoté |L3d_desassemblage_02.txt |
 | Trois instructions et leur encodage Thumb ||
 | Captures du débogueur (R0–R3, SP, variable volatile) | |
 | Cycles DWT -O0 / -O2 et transformation analysée ||
