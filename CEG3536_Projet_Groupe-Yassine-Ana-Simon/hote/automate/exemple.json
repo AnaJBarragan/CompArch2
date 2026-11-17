@@ -1,0 +1,38 @@
+{
+  "nom": "ventilateur",
+  "description": "Exemple de prise en main (tutoriel) : un ventilateur avec alarme de surchauffe. Cette table contient UNE erreur volontaire, que le verificateur signale avec un contre-exemple. Corriger la table, verifier de nouveau, puis generer.",
+
+  "entrees": ["SURCHAUFFE", "ACQUIT", "BOUTON"],
+  "sorties": ["moteur", "alarme"],
+  "initial": "ARRET",
+
+  "etats": {
+    "ARRET":  { "moteur": 0, "alarme": 0 },
+    "MARCHE": { "moteur": 1, "alarme": 0 },
+    "ALARME": { "moteur": 0, "alarme": 1 }
+  },
+
+  "transitions": [
+    { "de": "*",      "sur": "SURCHAUFFE", "vers": "ALARME" },
+    { "de": "ARRET",  "sur": "BOUTON",     "vers": "MARCHE" },
+    { "de": "MARCHE", "sur": "BOUTON",     "vers": "ARRET"  },
+    { "de": "ALARME", "sur": "BOUTON",     "vers": "MARCHE" },
+    { "de": "ALARME", "sur": "ACQUIT",     "vers": "ARRET"  },
+    { "de": ["ARRET", "MARCHE"], "sur": "ACQUIT", "vers": "=" }
+  ],
+
+  "invariants": [
+    { "nom": "moteur a l'arret hors de MARCHE",
+      "type": "sortie", "etats": ["ARRET", "ALARME"], "sortie": "moteur", "valeur": 0 },
+    { "nom": "alarme active implique moteur a l'arret",
+      "type": "sortie", "si": { "alarme": 1 }, "alors": { "moteur": 0 } },
+    { "nom": "aucune reprise sans acquittement",
+      "type": "interdit", "de": ["ALARME"], "vers": ["MARCHE"] },
+    { "nom": "la surchauffe mene toujours a ALARME",
+      "type": "toujours", "sur": "SURCHAUFFE", "vers": "ALARME" },
+    { "nom": "aucun etat piege : ARRET reste atteignable",
+      "type": "retour", "vers": "ARRET" },
+    { "nom": "tous les etats sont accessibles",
+      "type": "accessible" }
+  ]
+}
