@@ -73,9 +73,9 @@ Cas ajoutés à `tableau_test.c` (au-delà des 6 fournis) :
 
 ## Partie I — Journal des séances
 
-### Séance 1 — `<date>` — réalise : `<nom>` / valide : `<nom>`
-- Objectifs :
-- Fait :
+### Séance 1 — `17 novembre 2026` — réalise : `Ana, Simon, Yassine` / valide : `Ana, Simon, Yassine`
+- Objectifs :Commencer le code pour la partie 1, début du journal.md et commencer le rapport de laboratoire
+- Fait :         , avancement dans le rapport de laboratoire et le journal
 - Décisions (découpage, répartition du bus, format des lignes) :
 - Difficultés et solutions :
 - Mesures :
