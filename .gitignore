@@ -1,0 +1,22 @@
+# Course PDFs: never versioned
+Documentation/
+
+# macOS
+.DS_Store
+
+# STM32CubeIDE / command-line build outputs
+.metadata/
+Debug/
+Release/
+build/
+*.o
+*.d
+*.elf
+*.bin
+*.map
+*.su
+*.list
+
+# host test executables (J2)
+hote/test_evq
+hote/test_evq.exe

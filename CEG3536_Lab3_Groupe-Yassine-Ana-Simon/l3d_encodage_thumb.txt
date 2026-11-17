@@ -1,0 +1,41 @@
+L3-D — Trois instructions et leur encodage Thumb
+Routine : motor_set_pwm_c (version C), compilee a -O2.
+Encodage Thumb (ARMv8-M, Cortex-M33).
+
+1. Tableau des trois instructions
+  cmp  r0, #100          2864        16 bits
+  lsls r0, r0, #1        0040        16 bits
+  str  r0, [r3, #52]     6358        16 bits
+
+
+2. Explication des champs — cmp r0, #100 (encodage 2864)
+
+Format Thumb 16 bits "CMP immediat" :
+
+  15 14 13 12 11 | 10 9 8 | 7 6 5 4 3 2 1 0
+   0  0  1  0  1 |  Rn    |  imm8
+
+  - bits [15:11] = 00101      -> operation CMP (immediat)
+  - bits [10:8]  = 000        -> Rn = r0 (registre compare)
+  - bits [7:0]   = 01100100   -> imm8 = 100 (valeur immediate)
+
+  Verification: 0x2800 (opcode) + 0x000 (Rn) + 0x64 (imm8) = 0x2864 
+
+
+3. Champs des deux autres instructions
+
+  - lsls r0, r0, #1 = 0040
+      bits [15:11] = 00000 (LSL immediat)
+      bits [10:6]  = 00001 (imm5 = decalage de 1)
+      bits [5:3]   = 000   (Rm = r0)
+      bits [2:0]   = 000   (Rd = r0)
+  - str r0, [r3, #52] = 6358
+      bits [15:11] = 01100 (STR immediat, mot)
+      bits [10:6]  = 01101 (imm5 = 13, car 52 / 4)
+      bits [5:3]   = 011   (Rn = r3)
+      bits [2:0]   = 000   (Rt = r0)
+
+
+reference:
+Arm Ltd., Armv8-M Architecture Reference Manual, DDI 0553,section « Thumb instruction set encoding » (tables d'encodage 16
+   et 32 bits)
