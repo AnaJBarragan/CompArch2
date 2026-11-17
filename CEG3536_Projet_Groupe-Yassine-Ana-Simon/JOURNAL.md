@@ -1,6 +1,6 @@
 # JOURNAL.md — Journal d'équipe, CEG 3536, projet final (automne 2026)
 
-Équipe : `<NomA>` et `<NomB>` — Section : `A01 / A02` — Dépôt Git : `<adresse>`
+Équipe : `Ana` et `Simon` et `Yassine` — Section : ` A02` — Dépôt Git : `<adresse>`
 — Variante L4-A attribuée : `<0 à 3>` — Journal du laboratoire 3 : `JOURNAL_Lab3.md`
 
 # Partie I
@@ -9,8 +9,8 @@
 
 | Séance | Réalise | Valide | Pilote I²C écrit par chacun | Pilote SPI ou routine assembleur de chacun |
 |---|---|---|---|---|
-| Séance 1 | | | | |
-| Entre les séances | | | | |
+| Séance 1 |Ana:début du programme pour la partie 1 Simon:Début du rapport de laboratoire Yassine: Début du journal.md  | | | |
+| Entre les séances |Yassine |Les test de la première parti du laboratoire on été effectué soit t1-t10 |aucun |aucun |
 | Séance 2 | | | | |
 
 ## Partie I — Calculs préalables
