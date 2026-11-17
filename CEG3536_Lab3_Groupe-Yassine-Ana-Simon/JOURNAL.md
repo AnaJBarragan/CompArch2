@@ -43,7 +43,7 @@ Différences observées entre hôtes (tailles des types, options, avertissements
 |---|---|---|---|---|
 | Ambiante |25°C | 1800mV| aucun| Int(gauche)|
 | Capteur tenu entre deux doigts (30 s) | 32°C|1770mV |aucun |Int (gauche) |
-| Conditionnement externe (pont OUT–IN ou circuit) |25°C|1820mV aucun |Ext (droite) |
+| Conditionnement externe (pont OUT–IN ou circuit) |25°C|1820mV| aucun |Ext (droite) |
 
 Analyse interne / externe (plage, résolution, bruit) :
 
