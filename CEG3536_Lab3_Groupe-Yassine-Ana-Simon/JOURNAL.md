@@ -22,9 +22,8 @@ Différences observées entre hôtes (tailles des types, options, avertissements
 
 | Séance | Réalise | Valide | Module C écrit par chacun | Routine assembleur écrite ou modifiée par chacun |
 |---|---|---|---|---|
-| Séance 1 | | | | |
-| Période d'étude | | | | |
-| Séance 2 | | | | |
+| Séance 1 |Ana, Simon, Yassine|Ana, Simon, Yassine |main, fsm, evq,acq, adc_dma,telem   |vitesse.s |
+| Séance 2 | Ana, Simon, Yassine| Ana, Simon, Yassine| aucun module ecrit, seulement les test de validations|aucun |
 
 ## Calculs préalables
 
@@ -102,16 +101,16 @@ Routine comparée : `<motor_set_pwm `
 
 | Essai | Date | Résultat observé | Verdict | Preuve (fichier) |
 |---|---|---|---|---|
-| T1 Initialisation en C | | | | |
-| T2 Appel C → assembleur | | | | |
-| T3 Virgule fixe | | | | |
-| T4 ADC et DMA | | | | |
-| T5 Consigne | | | | |
-| T6 Température | | | | |
-| T7 File d'événements | | | | |
-| T8 E-Stop | | | | |
-| T9 Télémétrie | | | | |
-| T10 Comparaison et traces | | | | |
+| T1 Initialisation en C | 16 novembre 2026| | | |
+| T2 Appel C → assembleur |16 novembre 2026 | | | |
+| T3 Virgule fixe | 16 novembre 2026| | | |
+| T4 ADC et DMA |16 novembre 2026 | | | |
+| T5 Consigne |16 novembre 2026 | | | |
+| T6 Température |16 novembre 2026 | | | |
+| T7 File d'événements |16 novembre 2026 | | | |
+| T8 E-Stop | 16 novembre 2026| | | |
+| T9 Télémétrie | 16 novembre 2026| | | |
+| T10 Comparaison et traces |16 novembre 2026 | | | |
 
 ## Déclaration des sources et de l'usage d'outils d'IA générative
 - Sources (complément, corrigé du laboratoire 2 le cas échéant, CMSIS, manuel) :
