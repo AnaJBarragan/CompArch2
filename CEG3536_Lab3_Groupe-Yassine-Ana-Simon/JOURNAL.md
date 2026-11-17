@@ -89,7 +89,7 @@ Routine comparée : `<motor_set_pwm `
 |---|---|
 | Désassemblage -O0 annoté |L3d_desassemblage_00.txt |
 | Désassemblage -O2 annoté |L3d_desassemblage_02.txt |
-| Trois instructions et leur encodage Thumb |l3_encodage_thumb|
+| Trois instructions et leur encodage Thumb |l3_encodage_thumb.txt|
 | Captures du débogueur (R0–R3, SP, variable volatile) |voir table d'essais (T2) |
 | Cycles DWT -O0 / -O2 et transformation analysée |Voir table d'essais (T10)|
 
