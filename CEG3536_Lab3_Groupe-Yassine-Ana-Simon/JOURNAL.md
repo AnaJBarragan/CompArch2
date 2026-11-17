@@ -1,6 +1,6 @@
 # JOURNAL.md — Journal d'équipe, CEG 3536, laboratoire 3 (automne 2026)
 
-Équipe : `<NomA>` et `<NomB>` — Section : `A01 / A02` — Dépôt Git : `<adresse>`
+Équipe : `Ana Barragan Martinez`, `Yassine Yandouzi` et `Simon Brown` — Section : `A02` — Dépôt Git : `https://github.com/AnaJBarragan/CompArch2`
 
 ## Jalon J2 — module d'événements testé sur hôte
 
