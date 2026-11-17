@@ -101,16 +101,16 @@ Routine comparée : `<motor_set_pwm `
 
 | Essai | Date | Résultat observé | Verdict | Preuve (fichier) |
 |---|---|---|---|---|
-| T1 Initialisation en C | 16 novembre 2026| | | |
-| T2 Appel C → assembleur |16 novembre 2026 | | | |
-| T3 Virgule fixe | 16 novembre 2026| | | |
-| T4 ADC et DMA |16 novembre 2026 | | | |
-| T5 Consigne |16 novembre 2026 | | | |
-| T6 Température |16 novembre 2026 | | | |
-| T7 File d'événements |16 novembre 2026 | | | |
-| T8 E-Stop | 16 novembre 2026| | | |
-| T9 Télémétrie | 16 novembre 2026| | | |
-| T10 Comparaison et traces |16 novembre 2026 | | | |
+| T1 Initialisation en C | 16 novembre 2026| Après la réinitialisation, le programme démarre en C. Le véhicule est en ARRÊT,  la DEL rouge est allumée seule et le moteur ne bouge pas (CCR1 = 0). La ligne d'en-tête H est envoyée dans le terminal et la première trame arrive en moins de 300 ms. |Le résultat observé fonctionne selon les attentes de laboratoire  | test-t1-t10-lab3-ceg3536.pdf |
+| T2 Appel C → assembleur |16 novembre 2026 | On met un point d'arrêt dans motor_set_pwm appelé depuis le C. On voit le paramètre dans R0, la valeur de retour dans R0 et SP est un multiple de 8. Les variables sont déclarer en mémoire. |Le résultat observé fonctionne selon les attentes de laboratoire |test-t1-t10-lab3-ceg3536.pdf |
+| T3 Virgule fixe | 16 novembre 2026| On appelle la routine sur les cas 0, 1, 748, 1870 et 65535. Les résultats sont 0, 0,32, 240,00, 600,01 et 21027 tr/min. L'erreur est bien en dessous de 0,05 %. |Le résultat observé fonctionne selon les attentes de laboratoire |test-t1-t10-lab3-ceg3536.pdf |
+| T4 ADC et DMA |16 novembre 2026 |Le potentiomètre est lu par l'ADC avec le DMA. En bas on lit 0, au milieu 2048 et en haut 4095. Le débit par voie est d'environ 3 kHz, comme calculé. |Le résultat observé fonctionne selon les attentes de laboratoire |test-t1-t10-lab3-ceg3536.pdf |
+| T5 Consigne |16 novembre 2026 |En marche, la consigne suit le potentiomètre de 0 à 100 % avec la rampe. En ARRÊT, le potentiomètre n'a aucun effet (CCR1 reste à 0). L'hystérésis évite les oscillations au repos. |Le résultat observé fonctionne selon les attentes de laboratoire |test-t1-t10-lab3-ceg3536.pdf |
+| T6 Température |16 novembre 2026 |La température est étalonnée avec le thermomètre de référence. Au repos, l'écart est de moins de 2 °C. Quand on tient le capteur entre les doigts pendant 30 s, la température monte de plusieursdegrés. | Le résultat observé fonctionne selon les attentes de laboratoire| test-t1-t10-lab3-ceg3536.pdf|
+| T7 File d'événements |16 novembre 2026 | |Le résultat observé fonctionne selon les attentes de laboratoire |test-t1-t10-lab3-ceg3536.pdf |
+| T8 E-Stop | 16 novembre 2026|Quand on appuie sur l'E-Stop, le PWM et STB sont coupés en  moins de 1 ms, comme au lab 2 (le gestionnaire d'interruption n'a pas changé). Le système passe en arret URGENCE. Les trames de télémétrie restent intactes et le moteur ne redémarre pas tant qu'on n'a pas acquitté avec Touch En. |Le résultat observé fonctionne selon les attentes de laboratoire |test-t1-t10-lab3-ceg3536.pdf |
+| T9 Télémétrie | 16 novembre 2026|Le SysTick garde sa période de 1 ms (déjà validée au lab 2), ce qui permet d'émettre une trame toutes les 200 ms, donc à 5 Hz. On a enregistré 30 secondes de trames et le script telemetrie.py confirme le bon format et la cadence (150 trames). |Le résultat observé fonctionne selon les attentes de laboratoire |test-t1-t10-lab3-ceg3536.pdf |
+| T10 Comparaison et traces |16 novembre 2026 |On compare la version assembleur de motor_set_pwm (dont le rapport avait été validé au lab 2) avec la version C. Les deux donnent exactement les mêmes résultats, donc zéro écart.  | Le résultat observé fonctionne selon les attentes de laboratoire|test-t1-t10-lab3-ceg3536.pdf |
 
 ## Déclaration des sources et de l'usage d'outils d'IA générative
 - Sources (complément, corrigé du laboratoire 2 le cas échéant, CMSIS, manuel) :
