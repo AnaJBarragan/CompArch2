@@ -71,9 +71,9 @@ Routine comparée : `<motor_set_pwm `
 
 | Version | Cycles DWT (moyenne) | Taille (octets) | Registres utilisés | Observations (prologue, volatile) |
 |---|---|---|---|---|
-| Assembleur | | | | |
-| C, -O0 | | | | |
-| C, -O2 | | | | |
+| Assembleur |environs 15 cycles | 24 octets|r0,r1,r2 |Aucun prologue, rien n'est volatile |
+| C, -O0 |environs 30 cycles | 64 octets|r0,r2,r3,r7 |Prologue pour push/sub, str est conservée (volatile) |
+| C, -O2 |environs 6 cycles |20 octets |r0,r3 |Aucun prologue, str est conservée (volatile) |
 
 ## Composante L3-C : objet d'acquisition
 
