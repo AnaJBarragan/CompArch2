@@ -110,4 +110,4 @@ Routine comparée : `<motor_set_pwm `
 
 ## Déclaration des sources et de l'usage d'outils d'IA générative
 - Sources (complément, corrigé du laboratoire 2 le cas échéant, CMSIS, manuel) :
-- Outils d'IA (outil, version, usage) ou « aucun usage » :
+- Outils d'IA (outil, version, usage) ou « aucun usage » : Claude: Explique moi la structure du laboratoire. Explique moi comment fonctionne le débogueur et les étapes afin de bien mesurer les essais.
