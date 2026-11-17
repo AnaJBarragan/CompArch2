@@ -77,11 +77,24 @@ Routine comparée : `<motor_set_pwm `
 
 ## Composante L3-C : objet d'acquisition
 
-- Version 1 (validation Git) :
-- Version 2 (validation Git) et ce qui a changé :
-- Essai d'indépendance des deux instances :
-- Comparaison avec la version impérative (annexe) :
-- Limites :
+- Version 1 (validation Git) : voir git commit "Lab 3 V1: vitesse.s, adc_dma, acq v1, telem, fsm, main, l3a_c" (V1 est à acq.c et main.c)
+- Version 2 (validation Git) et ce qui a changé : voir git commit "All Exigeances working and demo shown to TA. E6 Temperature and E11 Windows and Linux not completed, but TA will verify with Prof if they are really required."
+												Les fichiers affecté sont acq.c puit main.c, Ce qui a changé c'est qu'on a des paramètres d'extra pour initialisé
+												un filtre dans le acq_init puis on a acq_config_filtre pour set les paramètres de filtre de acq_t.
+- Essai d'indépendance des deux instances : Test instance 1 (Potentiomètre): Voir journalPotentiometreBouge0a100.csv 
+											pour mesures, bouger potentiomètre
+											et aucun changement à la température a arrivé. 
+											Temp reste à 25.3 degré celsius alors que le potentiomètre est 
+											allé de 0 à 100 puis retour à 0.
+											Test instance 2: (Capteur température) Voir journalTempSensorSeulementLaptopexhaustblasttest.csv.
+											Pour tester ceci, j'ai activé le super exhaust mode de mon laptop car mon laptop est chaud, et je l'ai mis
+											proche du capteur de température pour 15 à 20 secondes, la température qui ne bougeait pas de 25.3 degré avant
+											ce test, a atteint un maximum de 25.7 degré celsius alors on a réussi à faire monté la température.
+											Puis en regardant dans le fichier csv pour cette instance, vous allez remarqué que la vitesse/potentiomètre n'augmente
+											pas durant le test et lors du changement de la température alors les deux instances sont biens indépendant. 
+- Comparaison avec la version impérative (annexe) : On a pas fait de version impérative. On a directement fait une façon modulaire. On crée une instance de acq_t 
+puis on éxecute les changements via des fonctions appelé qui vont faire les changement dans fichier acq.c
+- Limites : Aucune limite trouvé, personnellement on trouve que la méthode modulaire au lieu d'impérative est beaucoup plus éfficace d'un niveau d'écriture et maintenabilité.
 
 ## Composante L3-D : traces
 
@@ -109,5 +122,5 @@ Routine comparée : `<motor_set_pwm `
 | T10 Comparaison et traces |16 novembre 2026 |On compare la version assembleur de motor_set_pwm (dont le rapport avait été validé au lab 2) avec la version C. Les deux donnent exactement les mêmes résultats, donc zéro écart.  | Le résultat observé fonctionne selon les attentes de laboratoire|test-t1-t10-lab3-ceg3536.pdf |
 
 ## Déclaration des sources et de l'usage d'outils d'IA générative
-- Sources (complément, corrigé du laboratoire 2 le cas échéant, CMSIS, manuel) :
+- Sources (complément, corrigé du laboratoire 2 le cas échéant, CMSIS, manuel) :RM0438 (Voir le rapport pour quelle page puis pourquoi dans les tableaux)
 - Outils d'IA (outil, version, usage) ou « aucun usage » : Claude: Explique moi la structure du laboratoire. Explique moi comment fonctionne le débogueur et les étapes afin de bien mesurer les essais.
