@@ -23,8 +23,7 @@
 | `TIMINGR` retenu |PRESC=0, SCLDEL=4, SDADEL=2, SCLH=0x0F, SCLL=0x13 |0x00420F13 | T1 |
 | Durée d'une écriture de deux octets de données | 27 bits / fréquence SCL |270µs | T1 (DWT) |
 | Débit SPI | PCLK2 / 2^(BR + 1) |1MHz | T7 |
-| Pire cas de réécriture du LCD | 32 caractères × (position + caractère) × 1 tick |64
- ticks | T3 |
+| Pire cas de réécriture du LCD | 32 caractères × (position + caractère) × 1 tick |64 ticks | T3 |
 | Transactions I²C par seconde au repos | | | T10 |
 
 ## Partie I — Relevés des modules
