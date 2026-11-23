@@ -127,14 +127,37 @@ Variante : `<n>` — validation Git de la version défectueuse : — de la versi
 
 | État | Événement (par priorité décroissante) | Condition | État suivant | Sorties (moteur, DEL, avertisseur, LCD) |
 |---|---|---|---|---|
-| ARRÊT |En premier l'E-Stop, ensuite un défaut, ensuite le PIR, ensuite le feu rouge
-(SW1), ensuite le bouton User, ensuite le TouchPad et en dernier la consigne du potentiomètre. | L'E-Stop est toujours prioritaire. Le défaut arrive quand un module ne répond plus, le PIR quand il détecte un mouvement et le feu rouge quand SW1 est enfoncé. |L'E-Stop mène à l'ARRÊT_URGENCE. Le défaut, le PIR ou le feu rouge mènent à l'ARRÊT_ÉVÉNEMENT avec la bonne cause. Le bouton User fait démarrer en MARCHE_AVANT la première fois et en MARCHE_ARRIÈRE la fois suivante, en alternance. Le reste garde l'état ARRÊT. |  Le moteur est arrêté, la DEL rouge est allumée fixe et il y a un bip au moment de démarrer.|
-| MARCHE_AVANT | | | | |
-| MARCHE_ARRIÈRE | | | | |
-| ARRÊT_URGENCE | | | | |
-| ARRÊT_ÉVÉNEMENT | | | | |
+ **ARRÊT** — C'est l'état de départ, le moteur est arrêté et la DEL rouge est allumée
+ fixe. En premier, l'E-Stop est toujours prioritaire et il nous envoie en ARRÊT_URGENCE.
+ Ensuite, un défaut (un module qui ne répond plus), le PIR qui détecte un mouvement ou le
+ feu rouge (SW1) nous envoient en ARRÊT_ÉVÉNEMENT avec la bonne cause. Le bouton User fait
+ démarrer le véhicule : en MARCHE_AVANT la première fois, puis en MARCHE_ARRIÈRE la fois
+ suivante, en alternance. Le TouchPad et la consigne du potentiomètre ne changent pas
+ l'état, ils mettent juste à jour des valeurs. Il y a un bip au moment de démarrer.
+**MARCHE_AVANT** — Le moteur tourne en avant avec la rampe et la DEL verte est allumée.
+ L'E-Stop est toujours prioritaire et nous envoie en ARRÊT_URGENCE. Un défaut, le PIR
+ (obstacle) ou le feu rouge (SW1) nous envoient en ARRÊT_ÉVÉNEMENT avec la bonne cause. Le
+ bouton User nous ramène à l'ARRÊT. Le reste (consigne, vitesse, TouchPad) ne change pas
+ l'état, ça met seulement à jour les valeurs.
+**MARCHE_ARRIÈRE** — C'est exactement comme MARCHE_AVANT, mais le moteur tourne en
+ arrière et la DEL bleue est allumée.
+**ARRÊT_URGENCE** — Le moteur est coupé, la DEL rouge clignote à 2 Hz et le buzzer sonne
+ en continu. Le seul événement utile est le TouchPad pour acquitter, et seulement si le
+ bouton E-Stop est relâché. Si on acquitte, on revient à l'ARRÊT. Le bouton User et le PIR
+ sont ignorés.
+**ARRÊT_ÉVÉNEMENT** — Le moteur est arrêté et la DEL allumée dépend de la cause (R1 pour
+ le feu, R2 pour l'obstacle, R3 pour le défaut), le message sur l'écran LCD aussi. L'E-Stop
+ nous envoie en ARRÊT_URGENCE. Si la cause disparaît (le feu repasse au vert avec SW1
+ relâché, ou l'obstacle disparaît avec le PIR qui retombe), on repart en MARCHE_AVANT en
+ mode autonome, ou on revient à l'ARRÊT en mode manuel. Pour un défaut, on acquitte avec le
+ TouchPad et on revient à l'ARRÊT.
 
-Priorités des interruptions (valeur, justification) : E-Stop — encodeur — SysTick — PIR — THI —
+**Priorités des interruptions** — L'E-Stop a la priorité 0 parce que c'est la sécurité,
+ il doit couper le moteur tout de suite. L'encodeur a la priorité 1 pour ne pas perdre de
+ fronts (environ 4400 fronts par seconde). Le SysTick a la priorité 2 parce que c'est la
+ base de temps du programme. Le PIR a aussi la priorité 2 parce que c'est un arrêt de
+ sécurité, mais il est filtré sur 50 ms. Le THI a la priorité 3 parce que c'est juste une
+ demande du TouchPad.
 
 ## Partie I — Tableau des essais (T1 à T10)
 
