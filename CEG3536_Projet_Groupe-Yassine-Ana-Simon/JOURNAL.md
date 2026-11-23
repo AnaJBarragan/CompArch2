@@ -97,17 +97,17 @@ Cas ajoutés à `tableau_test.c` (au-delà des 6 fournis) :
 
 Variante : `<n>` — validation Git de la version défectueuse : — de la version corrigée :
 
-1. Symptôme (attendu, observé, conditions de reproduction) :
+1. Symptôme (attendu, observé, conditions de reproduction) : Quand on remplace tp_init() et tp_lire() par l4a_tp_init() et l4a_tp_lire() (en mettant L4A_ESSAI à 1 dans main.c), le TouchPad ne fonctionne pas correctement. Selon la variante, soit aucune touche n'est détectée, soit seulement quelques-unes, soit la mauvaise touche est rapportée.
 
 2. Hypothèses, classées avant toute mesure :
 
 | Rang | Hypothèse | Niveau (lignes et broches / adressage et protocole / configuration du composant / interruption et garde) | Ce qu'on observerait si elle était vraie |
 |---|---|---|---|
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
+| 1 |Mauvaise adresse I²C (pas sur 7 bits) | adressage et protocole |i2c_scan ne trouve pas le composant |
+| 2 | Registre 0x5E mal écrit |configuration du composant |seulement quelques touches répondent |
+| 3 |Octets d'état lus dans le mauvais ordre |lignes et broches (lecture) |la mauvaise touche est rapportée |
 
-3. Mesures :
+3. Mesures:
 
 | Hypothèse visée | Mesure (registre, balayage, relecture, compteur) | Résultat | Preuve (fichier) |
 |---|---|---|---|
