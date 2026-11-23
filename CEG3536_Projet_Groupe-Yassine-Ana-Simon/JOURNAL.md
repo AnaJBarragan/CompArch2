@@ -127,7 +127,8 @@ Variante : `<n>` — validation Git de la version défectueuse : — de la versi
 
 | État | Événement (par priorité décroissante) | Condition | État suivant | Sorties (moteur, DEL, avertisseur, LCD) |
 |---|---|---|---|---|
-| ARRÊT | | | | |
+| ARRÊT |En premier l'E-Stop, ensuite un défaut, ensuite le PIR, ensuite le feu rouge
+(SW1), ensuite le bouton User, ensuite le TouchPad et en dernier la consigne du potentiomètre. | L'E-Stop est toujours prioritaire. Le défaut arrive quand un module ne répond plus, le PIR quand il détecte un mouvement et le feu rouge quand SW1 est enfoncé. |L'E-Stop mène à l'ARRÊT_URGENCE. Le défaut, le PIR ou le feu rouge mènent à l'ARRÊT_ÉVÉNEMENT avec la bonne cause. Le bouton User fait démarrer en MARCHE_AVANT la première fois et en MARCHE_ARRIÈRE la fois suivante, en alternance. Le reste garde l'état ARRÊT. |  Le moteur est arrêté, la DEL rouge est allumée fixe et il y a un bip au moment de démarrer.|
 | MARCHE_AVANT | | | | |
 | MARCHE_ARRIÈRE | | | | |
 | ARRÊT_URGENCE | | | | |
