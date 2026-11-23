@@ -125,8 +125,6 @@ Variante : `<n>` — validation Git de la version défectueuse : — de la versi
 
 ## Partie I — Table des états et des priorités (en vue du jalon J3)
 
-| État | Événement (par priorité décroissante) | Condition | État suivant | Sorties (moteur, DEL, avertisseur, LCD) |
-|---|---|---|---|---|
  **ARRÊT** — C'est l'état de départ, le moteur est arrêté et la DEL rouge est allumée
  fixe. En premier, l'E-Stop est toujours prioritaire et il nous envoie en ARRÊT_URGENCE.
  Ensuite, un défaut (un module qui ne répond plus), le PIR qui détecte un mouvement ou le
