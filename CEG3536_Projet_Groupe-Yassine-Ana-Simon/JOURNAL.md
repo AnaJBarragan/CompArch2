@@ -17,13 +17,14 @@
 
 | Grandeur | Formule | Valeur | Vérifiée par |
 |---|---|---|---|
-| Pas de l'horloge I²C | (PRESC + 1) / 4 MHz | | T1 |
-| SCL bas / SCL haut | (SCLL + 1) × pas / (SCLH + 1) × pas | | T1 |
-| Fréquence SCL (avec les délais de synchronisation) | | | T1 |
-| `TIMINGR` retenu | | | T1 |
-| Durée d'une écriture de deux octets de données | 27 bits / fréquence SCL | | T1 (DWT) |
-| Débit SPI | PCLK2 / 2^(BR + 1) | | T7 |
-| Pire cas de réécriture du LCD | 32 caractères × (position + caractère) × 1 tick | | T3 |
+| Pas de l'horloge I²C | (PRESC + 1) / 4 MHz | 250ns| T1 |
+| SCL bas / SCL haut | (SCLL + 1) × pas / (SCLH + 1) × pas |5µs | T1 |
+| Fréquence SCL (avec les délais de synchronisation) |1/ (SCL bas + SCL haut) |100 kHz | T1 |
+| `TIMINGR` retenu |PRESC=0, SCLDEL=4, SDADEL=2, SCLH=0x0F, SCLL=0x13 |0x00420F13 | T1 |
+| Durée d'une écriture de deux octets de données | 27 bits / fréquence SCL |270µs | T1 (DWT) |
+| Débit SPI | PCLK2 / 2^(BR + 1) |1MHz | T7 |
+| Pire cas de réécriture du LCD | 32 caractères × (position + caractère) × 1 tick |64
+ ticks | T3 |
 | Transactions I²C par seconde au repos | | | T10 |
 
 ## Partie I — Relevés des modules
@@ -167,13 +168,13 @@ Priorités des interruptions (valeur, justification) : E-Stop — encodeur — S
 
 | Grandeur | Formule | Valeur | Vérifiée par |
 |---|---|---|---|
-| Fronts par fenêtre à 100 tr/min | 100 × 748 / 600 | | T14 |
-| Résolution de la vitesse à 100 tr/min | 1 front / fronts par fenêtre | | T14 |
-| Constante Q16.16 de la fenêtre de 100 ms | 600 × 65 536 / 748, arrondie | | banc du lab. 3 |
-| Fronts du trajet de référence | 105 × 748 | | T13 |
-| Durée prévue du trajet de référence | somme des tours / (tr/min / 60) | | T13 |
-| Commande initiale du régulateur à 150 tr/min | 150 × 100 / 340 | | T14 |
-| Durée de masquage admise | 200 cycles / 4 MHz | | T11 |
+| Fronts par fenêtre à 100 tr/min | 100 × 748 / 600 |≈124,7 fronts | T14 |
+| Résolution de la vitesse à 100 tr/min | 1 front / fronts par fenêtre |≈0,8% | T14 |
+| Constante Q16.16 de la fenêtre de 100 ms | 600 × 65 536 / 748, arrondie |52 569 | banc du lab. 3 |
+| Fronts du trajet de référence | 105 × 748 |78 540 fronts | T13 |
+| Durée prévue du trajet de référence | somme des tours / (tr/min / 60) |≈35,6s | T13 |
+| Commande initiale du régulateur à 150 tr/min | 150 × 100 / 340 |44% | T14 |
+| Durée de masquage admise | 200 cycles / 4 MHz |50 µs | T11 |
 | Occupation de la file au pire cas prévu | | | T11 |
 
 ## Partie II — Automate (L5-B)
