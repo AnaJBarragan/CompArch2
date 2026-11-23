@@ -132,17 +132,21 @@ Variante : `<n>` — validation Git de la version défectueuse : — de la versi
  démarrer le véhicule : en MARCHE_AVANT la première fois, puis en MARCHE_ARRIÈRE la fois
  suivante, en alternance. Le TouchPad et la consigne du potentiomètre ne changent pas
  l'état, ils mettent juste à jour des valeurs. Il y a un bip au moment de démarrer.
+ 
 **MARCHE_AVANT** — Le moteur tourne en avant avec la rampe et la DEL verte est allumée.
  L'E-Stop est toujours prioritaire et nous envoie en ARRÊT_URGENCE. Un défaut, le PIR
  (obstacle) ou le feu rouge (SW1) nous envoient en ARRÊT_ÉVÉNEMENT avec la bonne cause. Le
  bouton User nous ramène à l'ARRÊT. Le reste (consigne, vitesse, TouchPad) ne change pas
  l'état, ça met seulement à jour les valeurs.
+ 
 **MARCHE_ARRIÈRE** — C'est exactement comme MARCHE_AVANT, mais le moteur tourne en
  arrière et la DEL bleue est allumée.
+ 
 **ARRÊT_URGENCE** — Le moteur est coupé, la DEL rouge clignote à 2 Hz et le buzzer sonne
  en continu. Le seul événement utile est le TouchPad pour acquitter, et seulement si le
  bouton E-Stop est relâché. Si on acquitte, on revient à l'ARRÊT. Le bouton User et le PIR
  sont ignorés.
+ 
 **ARRÊT_ÉVÉNEMENT** — Le moteur est arrêté et la DEL allumée dépend de la cause (R1 pour
  le feu, R2 pour l'obstacle, R3 pour le défaut), le message sur l'écran LCD aussi. L'E-Stop
  nous envoie en ARRÊT_URGENCE. Si la cause disparaît (le feu repasse au vert avec SW1
