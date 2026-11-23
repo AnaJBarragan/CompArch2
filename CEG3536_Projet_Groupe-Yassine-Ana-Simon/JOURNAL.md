@@ -9,9 +9,9 @@
 
 | Séance | Réalise | Valide | Pilote I²C écrit par chacun | Pilote SPI ou routine assembleur de chacun |
 |---|---|---|---|---|
-| Séance 1 |Ana:début du programme pour la partie 1 Simon:Début du rapport de laboratoire Yassine: Début du journal.md  | | | |
+| Séance 1 |Ana:début du programme pour la partie 1 Simon:Début du rapport de laboratoire Yassine: Début du journal.md  |tous |- | -|
 | Entre les séances |Yassine |Les test de la première parti du laboratoire on été effectué soit t1-t10 |aucun |aucun |
-| Séance 2 | | | | |
+| Séance 2 |Tous |Tous |i2c.c, ioexp.c, lcd.c, touchpad.c |spi.c, env.c, somme.s, exti_l4.s |
 
 ## Partie I — Calculs préalables
 
