@@ -75,11 +75,11 @@ Cas ajoutés à `tableau_test.c` (au-delà des 6 fournis) :
 
 ### Séance 1 — `17 novembre 2026` — réalise : `Ana, Simon, Yassine` / valide : `Ana, Simon, Yassine`
 - Objectifs :Commencer le code pour la partie 1, début du journal.md et commencer le rapport de laboratoire
-- Fait :         , avancement dans le rapport de laboratoire et le journal
+- Fait :  Code pour la partie 1, avancement dans le rapport de laboratoire et le journal
 - Décisions (découpage, répartition du bus, format des lignes) :
-- Difficultés et solutions :
-- Mesures :
-- Validations Git :
+- Difficultés et solutions :  On a eu de la difficulté à importer le projet dans STM32CubeIDE. On a réglé le problème en important les launch files d'un laboratoire précédent.
+- Mesures : Aucune mesure cette séance
+- Validations Git :  Ana, "Initial commit for project folder from the Brightspace Complement zip"
 
 ### Entre les séances — travail sur hôte
 - Fait (tableau.c, test_tableau, fsm.c, lecture de l4a_defaut.c) :
