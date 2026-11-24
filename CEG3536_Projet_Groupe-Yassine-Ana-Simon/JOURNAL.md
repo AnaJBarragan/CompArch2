@@ -51,15 +51,22 @@ Table des touches (électrode → touche), relevée au débogueur :
 
 | Plateforme | Compilateur et version | `test_evq` (réussis / échecs) | `test_tableau` (réussis / échecs) | Date et validation Git |
 |---|---|---|---|---|
-| Windows | | | | |
-| Linux | | | | |
-| STM32 (cible) | arm-none-eabi-gcc | commande `q` : | commande `f` : | |
+| Windows |gcc 16.2.0 (MinGW-w64)|9 / 0 |6 / 0 |24 novembre 2026 |
+| Linux | 13.3.0 (ubuntu)| 9/0| 6/0|24 novembre 2026 |
+| STM32 (cible) | arm-none-eabi-gcc | commande `q` :9/0 | commande `f` :6/0 | 24 novembre 2026|
 
 Cas ajoutés à `tableau_test.c` (au-delà des 6 fournis) :
 
 | Cas | Description | Résultat |
 |---|---|---|
-| 7 | | |
+| 7 | MARCHE_ARRIÈRE en mode MANUEL | réussi |
+| 8 |ARRÊT_ÉVÉNEMENT, cause DEFAUT | réussi |
+| 9 | ARRÊT, cause FIN| réussi |
+| 10 |PAGE_VERROU |  réussi|
+| 11 |Mesure environnementale non valide | réussi |
+| 12 |Température négative  | réussi |
+| 13 | Vitesse à 4 chiffres | réussi |
+
 
 ## Partie I — Banc de `trame_xor8` (T9)
 
