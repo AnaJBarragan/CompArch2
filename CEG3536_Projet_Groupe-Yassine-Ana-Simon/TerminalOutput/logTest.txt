@@ -1,0 +1,40 @@
+➜  ~ cd ~/Documents/Software/CEG3536/CEG3536_Projet_Groupe-Yassine-Ana-Simon/hote && make evq tableau
+cc -std=gnu11 -Wall -Wextra -O0 -g -I../Core/Inc -o test_evq test_evq.c ../Core/Src/evq.c ../Core/Src/evq_test.c crit_hote.c
+./test_evq
+evq : capacite 32, sizeof(evq_event_t) = 12, int = 32 bits, long = 64 bits
+  cas 1 : reussi
+  cas 2 : reussi
+  cas 3 : reussi
+  cas 4 : reussi
+  cas 5 : reussi
+  cas 6 : reussi
+  cas 7 : reussi
+  cas 8 : reussi
+  cas 9 : reussi
+  cas 10 : reussi
+10 cas, 0 echec(s) : OK
+cc -std=gnu11 -Wall -Wextra -O0 -g -I../Core/Inc -o test_tableau test_tableau.c ../Core/Src/tableau.c ../Core/Src/tableau_test.c
+./test_tableau
+tableau : sizeof(etat_vehicule_t) = 60, sizeof(env_mesure_t) = 20
+  cas 1 : reussi
+  cas 2 : reussi
+  cas 3 : reussi
+  cas 4 : reussi
+  cas 5 : reussi
+  cas 6 : reussi
+  cas 7 : reussi
+  cas 8 : reussi
+  cas 9 : reussi
+  cas 10 : reussi
+  cas 11 : reussi
+  cas 12 : reussi
+  cas 13 : reussi
+apercu (entre barres : les 16 colonnes de l'afficheur)
+  conduite               |AUT AV MARCHE   |
+                         |C060% V 245.3 P9|
+  capteurs               |T 23.4C  H 45.2%|
+                         |P1003.2hPa A24.1|
+  verrou                 |VERROU          |
+                         |C060% V 245.3 P9|
+  image des DEL : 0x06
+13 cas, 0 echec(s) : OK
