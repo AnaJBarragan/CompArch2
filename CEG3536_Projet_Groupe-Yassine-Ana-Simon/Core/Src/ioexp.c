@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------------
  * ioexp.c — objet « extenseur d'entrées-sorties » (CEG 3536, laboratoire 4,
- *           E2) — SQUELETTE À COMPLÉTER
+ *           E2) — complété par l'équipe
  *
  * Rappels (énoncé, 4.7) :
  *   - DEL : bit à 0 = DEL allumée ; écrire 0xFF pour tout éteindre. L'image
@@ -30,19 +30,45 @@ void ioexp_init(ioexp_t *x, uint8_t adr7)
 
 bool ioexp_ecrire(ioexp_t *x, uint8_t valeur)
 {
-    /* À COMPLÉTER :
-     *   - si sortie_connue et valeur == sortie : retourner true, sans transaction ;
-     *   - sinon ecritures++, i2c_ecrire d'un octet ;
-     *   - succès : sortie = valeur, sortie_connue = 1, echecs = 0, true ;
-     *   - échec : echecs++, false (sortie_connue inchangé : nouvel essai plus tard). */
-    (void)x; (void)valeur;
-    return false;
+    uint8_t d = valeur;
+
+    if (x->sortie_connue && valeur == x->sortie) {
+        return true;                    /* déjà en place : aucune transaction */
+    }
+    x->ecritures++;
+    if (i2c_ecrire(x->adr7, &d, 1u) != I2C_OK) {
+        x->echecs++;                    /* sortie_connue inchangé : à refaire */
+        return false;
+    }
+    x->sortie = valeur;
+    x->sortie_connue = 1u;
+    x->echecs = 0u;
+    return true;
 }
 
 bool ioexp_lire(ioexp_t *x, uint8_t *valeur)
 {
-    /* À COMPLÉTER : i2c_lire d'un octet ; succès : entree et *valeur mis à
-     * jour, echecs = 0 ; échec : echecs++, false.                             */
-    (void)x; (void)valeur;
-    return false;
+    uint8_t d;
+
+    if (i2c_lire(x->adr7, &d, 1u) != I2C_OK) {
+        x->echecs++;
+        return false;                   /* *valeur inchangé                   */
+    }
+    x->entree = d;
+    *valeur = d;
+    x->echecs = 0u;
+    return true;
+}
+
+/* Ajouts de l'équipe : le répartiteur du bus (main.c) doit savoir s'il y a
+ * quelque chose à écrire AVANT de donner le tick à cet extenseur, sans lire
+ * les champs privés de la structure.                                        */
+bool ioexp_differe(const ioexp_t *x, uint8_t valeur)
+{
+    return !x->sortie_connue || valeur != x->sortie;
+}
+
+uint32_t ioexp_echecs(const ioexp_t *x)
+{
+    return x->echecs;
 }

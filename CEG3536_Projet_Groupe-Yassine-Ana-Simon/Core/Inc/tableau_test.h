@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 
-#define TABLEAU_TEST_N_CAS 6u       /* à augmenter avec les cas de l'équipe */
+#define TABLEAU_TEST_N_CAS 13u      /* 6 fournis + 7 de l'équipe           */
 
 uint32_t tableau_autotest(void);    /* nombre de cas en échec (0 = succès)  */
 extern uint32_t tableau_test_resultats[TABLEAU_TEST_N_CAS];   /* 1 = réussi */

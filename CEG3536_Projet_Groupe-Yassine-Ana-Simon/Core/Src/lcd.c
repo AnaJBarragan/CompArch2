@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------------
  * lcd.c — afficheur 16 x 2 (I2C_ADR_LCD) et rétroéclairage RVB (I2C_ADR_RVB)
- *         (CEG 3536, laboratoire 4, E3) — SQUELETTE À COMPLÉTER
+ *         (CEG 3536, laboratoire 4, E3) — complété par l'équipe
  *
  * Repères (énoncé, 4.7 ; valeurs à confirmer dans la fiche du AiP31068L) :
  *   - attendre LCD_DEMARRAGE_MS après la mise sous tension ;
@@ -44,7 +44,10 @@ typedef enum {
 static lcd_phase_t phase;
 static uint32_t    t_phase;         /* ticks_ms à l'entrée dans la phase       */
 static uint32_t    curseur;         /* ligne x 16 + colonne, ou CURSEUR_INCONNU */
-static uint32_t    echecs;
+static uint32_t    echecs;          /* erreurs consécutives du pilote 0x3E    */
+static uint32_t    t_essai;         /* ticks_ms du dernier échec               */
+static uint32_t    recherche;       /* où reprendre la recherche (0 à 31)      */
+static uint32_t    rvb_echecs;      /* erreurs du rétroéclairage (0x2D), à part */
 
 /* [FOURNI] force la réécriture complète (après l'initialisation ou une panne) */
 static void image_invalider(void)
@@ -71,6 +74,8 @@ void lcd_init(void)
     phase = LCD_ATTENTE;
     t_phase = ticks_ms;
     echecs = 0u;
+    rvb_echecs = 0u;
+    recherche = 0u;
 }
 
 /* [FOURNI] */
@@ -131,22 +136,113 @@ uint32_t lcd_echecs(void)
     return echecs;
 }
 
+/* Une transaction vers le pilote des caractères : {contrôle, octet}.
+ * controle = 0x80 (commande) ou 0x40 (caractère). Tient le compte des échecs
+ * consécutifs ; quand le module répond de nouveau après une panne (trois
+ * échecs ou plus), toute l'image est marquée à réécrire.                    */
+static bool lcd_envoyer(uint8_t controle, uint8_t octet)
+{
+    uint8_t d[2] = { controle, octet };
+
+    if (i2c_ecrire(I2C_ADR_LCD, d, 2u) != I2C_OK) {
+        echecs++;
+        t_essai = ticks_ms;
+        return false;
+    }
+    if (echecs >= I2C_ERREURS_DEFAUT) {
+        image_invalider();              /* retour après une panne (E12)       */
+    }
+    echecs = 0u;
+    return true;
+}
+
+/* Séquence d'initialisation : une commande par appel. */
+static void lcd_init_step(void)
+{
+    switch (phase) {
+    case LCD_ATTENTE:                   /* délai de mise sous tension         */
+        if ((ticks_ms - t_phase) >= LCD_DEMARRAGE_MS) {
+            phase = LCD_FONCTION;
+        }
+        break;
+    case LCD_FONCTION:                  /* 2 lignes, caractères 5 x 8         */
+        if (lcd_envoyer(0x80u, 0x28u)) {
+            phase = LCD_ALLUMAGE;
+        }
+        break;
+    case LCD_ALLUMAGE:                  /* afficheur allumé, sans curseur     */
+        if (lcd_envoyer(0x80u, 0x0Cu)) {
+            phase = LCD_EFFACEMENT;
+        }
+        break;
+    case LCD_EFFACEMENT:                /* effacement : ~1,5 ms d'exécution   */
+        if (lcd_envoyer(0x80u, 0x01u)) {
+            phase = LCD_MODE;
+            t_phase = ticks_ms;
+        }
+        break;
+    case LCD_MODE:                      /* curseur +1 après chaque caractère  */
+        if ((ticks_ms - t_phase) <= LCD_EFFACEMENT_MS) {
+            break;                      /* > 2 ms écoulées (pas de 1 ms)      */
+        }
+        if (lcd_envoyer(0x80u, 0x06u)) {
+            phase = LCD_PRET;
+            image_invalider();          /* l'afficheur est vide : tout écrire */
+        }
+        break;
+    default:
+        break;
+    }
+}
+
 void lcd_step(void)
 {
-    /* À COMPLÉTER — une seule transaction par appel :
-     *  1. phase != LCD_PRET : dérouler la séquence d'initialisation, une
-     *     commande par appel, en respectant les délais (ticks_ms - t_phase) ;
-     *  2. sinon, une composante de couleur à envoyer (rvb_connu, rvb_montre) :
-     *     l'envoyer à I2C_ADR_RVB ;
-     *  3. sinon, chercher le premier caractère où montre != voulu :
-     *       - si curseur n'est pas à cette position : envoyer la position
-     *         (et la mémoriser dans curseur) ;
-     *       - sinon envoyer le caractère, mettre montre à jour, curseur++
-     *         (curseur devient inconnu en fin de ligne) ;
-     *  4. sur un succès : echecs = 0 ; sur un échec : echecs++, et ne rien
-     *     marquer comme envoyé. Quand le module répond de nouveau après une
-     *     panne : image_invalider().
-     * Indice : mémoriser où la recherche s'est arrêtée évite de reparcourir
-     * les 32 caractères à chaque tick.                                         */
-    (void)t_phase;
+    /* module muet : un seul essai par I2C_REESSAI_MS, pour ne pas occuper
+     * le bus avec des transactions vouées à l'échec                         */
+    if (echecs >= I2C_ERREURS_DEFAUT && (ticks_ms - t_essai) < I2C_REESSAI_MS) {
+        return;
+    }
+
+    /* 1. initialisation */
+    if (phase != LCD_PRET) {
+        lcd_init_step();
+        return;
+    }
+
+    /* 2. rétroéclairage : une composante par appel ({registre, valeur}) */
+    for (uint32_t i = 0u; i < 3u; i++) {
+        if (!rvb_connu[i] || rvb_montre[i] != rvb_voulu[i]) {
+            uint8_t d[2] = { (uint8_t)(i + 1u), rvb_voulu[i] };  /* 0x01 R, 0x02 V, 0x03 B */
+            if (i2c_ecrire(I2C_ADR_RVB, d, 2u) == I2C_OK) {
+                rvb_montre[i] = rvb_voulu[i];
+                rvb_connu[i] = 1u;
+                rvb_echecs = 0u;
+            } else {
+                rvb_echecs++;
+            }
+            return;
+        }
+    }
+
+    /* 3. premier caractère différent, à partir de la dernière position */
+    for (uint32_t k = 0u; k < LCD_LIGNES * LCD_COLONNES; k++) {
+        uint32_t pos = (recherche + k) % (LCD_LIGNES * LCD_COLONNES);
+        uint32_t l = pos / LCD_COLONNES, c = pos % LCD_COLONNES;
+
+        if (montre[l][c] == voulu[l][c]) {
+            continue;
+        }
+        recherche = pos;
+        if (curseur != pos) {
+            /* position : 0x80 | adresse DDRAM (ligne 1 à 0x00, ligne 2 à 0x40) */
+            if (lcd_envoyer(0x80u, (uint8_t)(0x80u | (c + 0x40u * l)))) {
+                curseur = pos;
+            }
+        } else if (lcd_envoyer(0x40u, voulu[l][c])) {
+            montre[l][c] = voulu[l][c];
+            /* le curseur avance seul, mais pas de la colonne 15 à la ligne 2 */
+            curseur = (c + 1u < LCD_COLONNES) ? pos + 1u : CURSEUR_INCONNU;
+        }
+        return;                         /* une seule transaction par appel    */
+    }
 }

@@ -111,6 +111,25 @@ typedef struct {
     uint32_t valide;        /* 0 tant qu'aucune mesure n'a abouti              */
 } env_mesure_t;
 
+/* ---- Ajouts de l'équipe -------------------------------------------------- */
+/* Valeur de EV_DEFAUT (module muet ou rétabli) : octet bas = adresse sur 7 bits
+ * du module, pour la télémétrie ; la machine à états ne lit que ces bits.    */
+#define DEFAUT_RETABLI          0x8000u /* le module répond de nouveau         */
+#define DEFAUT_TP               0x4000u /* le module est le TouchPad (E12 :
+                                           Touch En acquitte alors)           */
+#define I2C_REESSAI_MS          100u    /* module muet : un essai par 100 ms   */
+#define TP_SURV_MS              1000u   /* lecture de surveillance du TouchPad */
+#define TABLEAU_PERIODE_MS      50u     /* mise à jour du tableau (>= 2 Hz)    */
+#define ENV_SCRUTATION_MS       5u      /* appel de env_step                   */
+#define LCD_EFFACEMENT_MS       2u      /* attente après la commande 0x01      */
+
+/* Pilote du TouchPad utilisé : 0 = celui de l'équipe (tp_init, tp_lire) ;
+ * 1 = pilote défectueux de L4-A (l4a_tp_init, l4a_tp_lire), le temps de
+ * l'investigation seulement.                                                */
+#ifndef L4A_ESSAI
+#define L4A_ESSAI 0
+#endif
+
 /* ---- Composante L4-A : variante attribuée à l'équipe (0 à 3) ------------ */
 #ifndef L4A_VARIANTE
 #define L4A_VARIANTE 0

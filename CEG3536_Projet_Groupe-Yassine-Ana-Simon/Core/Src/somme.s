@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------------
  * somme.s — somme de contrôle des trames de télémétrie
- *           (CEG 3536, laboratoire 4, E10) — SQUELETTE À COMPLÉTER
+ *           (CEG 3536, laboratoire 4, E10) — complété par l'équipe
  *
  * Routine exportée (AAPCS) : trame_xor8 (prototype dans lab4.h)
  *
@@ -32,7 +32,14 @@
     .global trame_xor8
     .type   trame_xor8, %function
 trame_xor8:
-    /* À COMPLÉTER */
-    movs    r0, #0
+    movs    r2, #0                      /* r2 = somme (accumulateur)         */
+    cbz     r1, trame_xor8_fin          /* n = 0 : aucune lecture            */
+trame_xor8_boucle:
+    ldrb    r3, [r0], #1                /* r3 = *octets++ (post-incrément)   */
+    eors    r2, r2, r3                  /* somme ^= octet                    */
+    subs    r1, r1, #1                  /* n-- ; Z = 1 quand n atteint 0     */
+    bne     trame_xor8_boucle
+trame_xor8_fin:
+    mov     r0, r2                      /* retour : 8 bits utiles, reste à 0 */
     bx      lr
     .size   trame_xor8, .-trame_xor8

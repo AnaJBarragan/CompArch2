@@ -13,5 +13,7 @@ void spi_init(void);
  * emis nul : des octets 0x00 sont émis ; recus nul : les octets reçus sont
  * jetés. Durée : environ 8 µs par octet à 1 MHz.                              */
 void spi_echange(const uint8_t *emis, uint8_t *recus, uint32_t n);
+/* ajout de l'équipe : échanges abandonnés sur échéance (attente bornée)     */
+uint32_t spi_erreurs(void);
 
 #endif /* SPI_H */

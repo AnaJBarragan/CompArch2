@@ -73,6 +73,23 @@ uint32_t evq_autotest(void)
     evq_push(EV_TEST, 5u, 0u);
     echecs += cas_ok(8u, !evq_pop((evq_event_t *)0) && evq_count() == 1u);
 
+    /* 10. (équipe, E11) nouveaux types de la partie I : type, valeur et
+     *     horodatage conservés, ordre d'arrivée respecté                    */
+    {
+        int ok = 1;
+        evq_init();
+        ok = ok && evq_push(EV_TOUCHE, 10u, 100u) && evq_push(EV_PIR, 1234u, 101u)
+                && evq_push(EV_COMMUT, 8u, 102u) && evq_push(EV_ENV, 452u, 103u)
+                && evq_push(EV_DEFAUT, 0x3Eu, 104u);
+        ok = ok && evq_pop(&e) && e.type == EV_TOUCHE && e.valeur == 10u && e.t_ms == 100u;
+        ok = ok && evq_pop(&e) && e.type == EV_PIR && e.valeur == 1234u;
+        ok = ok && evq_pop(&e) && e.type == EV_COMMUT && e.valeur == 8u;
+        ok = ok && evq_pop(&e) && e.type == EV_ENV && e.valeur == 452u;
+        ok = ok && evq_pop(&e) && e.type == EV_DEFAUT && e.valeur == 0x3Eu && e.t_ms == 104u;
+        echecs += cas_ok(9u, ok && evq_count() == 0u && (uint32_t)EV_TOUCHE == 8u
+                             && (uint32_t)EV_DEFAUT == 12u);
+    }
+
     evq_init();
     return echecs;
 }

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------------
  * tableau_pres.c — présentation du tableau de bord (CEG 3536, laboratoire 4,
- *                  E3, E4, E8) — SQUELETTE À COMPLÉTER
+ *                  E3, E4, E8) — complété par l'équipe
  * Relie l'état du véhicule (fsm_etat) au LCD, au rétroéclairage et aux huit
  * DEL. Ne lance AUCUNE transaction : lcd_ligne et lcd_couleur ne font que
  * mémoriser la demande, et l'image des DEL est remise au répartiteur du bus
@@ -75,10 +75,23 @@ void tableau_step(void)
     /* [FOURNI] DEL */
     image_del = tableau_del(v);
 
-    /* À COMPLÉTER — rétroéclairage (E3) : la couleur de la DEL active de la
-     * Nucleo (rouge, vert ou bleu selon v->etat, comme dans fsm_sorties), et
-     * un clignotement à 2 Hz en ARRÊT_URGENCE et en ARRÊT_ÉVÉNEMENT (allumé
-     * puis éteint par demi-périodes de CLIGNOTEMENT_DEMI_MS, à partir de
-     * ticks_ms). lcd_couleur n'envoie rien si la couleur ne change pas.       */
-    lcd_couleur(RVB_FORT, RVB_ETEINT, RVB_ETEINT);
+    /* Rétroéclairage (E3) : couleur de la DEL active de la Nucleo (même
+     * correspondance que fsm_sorties : vert en MARCHE_AVANT, bleu en
+     * MARCHE_ARRIÈRE, rouge sinon) ; clignotement à 2 Hz en ARRÊT_URGENCE et
+     * en ARRÊT_ÉVÉNEMENT : allumé pendant les demi-périodes paires de
+     * CLIGNOTEMENT_DEMI_MS, éteint pendant les impaires. lcd_couleur ne fait
+     * que mémoriser : lcd_step n'envoie que les composantes qui changent.    */
+    {
+        uint32_t clignote = (v->etat == ETAT_ARRET_URGENCE || v->etat == ETAT_ARRET_EVENEMENT);
+        uint32_t allume = !clignote || ((ticks_ms / CLIGNOTEMENT_DEMI_MS) & 1u) == 0u;
+        uint8_t  fort = allume ? RVB_FORT : RVB_ETEINT;
+
+        if (v->etat == ETAT_MARCHE_AVANT) {
+            lcd_couleur(RVB_ETEINT, fort, RVB_ETEINT);
+        } else if (v->etat == ETAT_MARCHE_ARRIERE) {
+            lcd_couleur(RVB_ETEINT, RVB_ETEINT, fort);
+        } else {
+            lcd_couleur(fort, RVB_ETEINT, RVB_ETEINT);
+        }
+    }
 }

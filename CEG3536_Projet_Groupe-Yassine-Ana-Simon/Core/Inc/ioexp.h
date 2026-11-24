@@ -33,4 +33,10 @@ bool ioexp_ecrire(ioexp_t *x, uint8_t valeur);
 /* Lit les huit broches. Retourne false en cas d'échec (*valeur inchangé).     */
 bool ioexp_lire(ioexp_t *x, uint8_t *valeur);
 
+/* Ajouts de l'équipe (accès en lecture, sans toucher aux champs ailleurs) :
+ * vrai si ioexp_ecrire(x, valeur) lancerait une transaction ;              */
+bool     ioexp_differe(const ioexp_t *x, uint8_t valeur);
+/* erreurs consécutives (3 = module muet, cause DÉFAUT, E12).               */
+uint32_t ioexp_echecs(const ioexp_t *x);
+
 #endif /* IOEXP_H */

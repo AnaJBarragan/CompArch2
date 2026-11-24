@@ -33,6 +33,9 @@ i2c_statut_t i2c_ecrire_lire(uint8_t adr7, const uint8_t *e, uint32_t ne,
  * acquittent (au plus max) et retourne leur nombre. À appeler avant la boucle
  * principale (112 transactions).                                              */
 uint32_t     i2c_scan(uint8_t *adresses, uint32_t max);
+/* ajout de l'équipe : sonde une seule adresse, sans compter d'erreur (balayage
+ * étalé de la commande « i », une adresse par tick)                         */
+bool         i2c_sonder(uint8_t adr7);
 
 uint32_t     i2c_erreurs(void);         /* opérations en échec depuis i2c_init */
 uint32_t     i2c_transactions(void);    /* opérations lancées (T2 : aucune écriture inutile) */

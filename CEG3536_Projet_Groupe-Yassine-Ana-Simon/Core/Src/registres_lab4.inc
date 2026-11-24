@@ -25,8 +25,13 @@
     .equ THI_PIN,               6           /* PB6, interruption du TouchPad */
     .equ PIR_PIN,               9           /* PB9, capteur de mouvement     */
 
-/* Front actif de THI : À RELEVER au débogueur (guide, p. 44 : la ligne
- * signale chaque toucher ou relâchement). 1 = front montant, 0 = descendant. */
+/* Front actif de THI. Le guide (p. 45) annonce une impulsion haute, mais sur
+ * la carte, avec le front montant, les touches n'étaient vues que par la
+ * lecture de surveillance de 1 s (lignes « E,…,8,… » toutes à …046 ms) :
+ * la sortie IRQ du MPR121 est active basse, elle descend à chaque changement
+ * et reste basse jusqu'à la lecture de l'état -> front DESCENDANT.
+ * Relevé du 17 nov. 2026 ; à confirmer : GPIOB->IDR bit 6 = 1 au repos.
+ * 1 = front montant, 0 = descendant.                                        */
     .equ THI_FRONT_MONTANT,     0
 
 /* ---- Filtrage du PIR (E6) ---------------------------------------------- */
