@@ -189,12 +189,12 @@ Variante : `<n>` — validation Git de la version défectueuse : — de la versi
 
 | Période | Réalise | Valide | Module sans matériel de chacun | Routine assembleur ou intégration de chacun |
 |---|---|---|---|---|
-| Entre les séances 1 et 2 (prise en main de l'outil) | | | | |
-| Séance 2 (24 / 27 nov.) | | | | |
+| Entre les séances 1 et 2 (prise en main de l'outil) |Tous | Tous|-|-|
+| Séance 2 (24 / 27 nov.) |Ana, Simon, Yassine |Tous |trajet.c (Ana), regul.c (Yassine), surv.c/essaie.c (Simon) |crit.s (Ana), evq.c (Yassine), fsm.c (Simon) |
 | Jalon J3 (27 nov.) | | | | |
-| Entre les séances 2 et 3 | | | | |
-| Séance 3 (1er / 4 déc.) | | | | |
-| Démonstration finale (4 / 8 déc.) | | | | |
+| Entre les séances 2 et 3 |Tous |Tous |essaie (t10-t18) |aucun |
+| Séance 3 (1er / 4 déc.) |Tous |Tous |- |- |
+| Démonstration finale (4 / 8 déc.) |Tous | Tous| -|- |
 
 ## Partie II — Calculs préalables
 
@@ -207,19 +207,22 @@ Variante : `<n>` — validation Git de la version défectueuse : — de la versi
 | Durée prévue du trajet de référence | somme des tours / (tr/min / 60) |≈35,6s | T13 |
 | Commande initiale du régulateur à 150 tr/min | 150 × 100 / 340 |44% | T14 |
 | Durée de masquage admise | 200 cycles / 4 MHz |50 µs | T11 |
-| Occupation de la file au pire cas prévu | | | T11 |
+| Occupation de la file au pire cas prévu |rafale `e`:40 événements |32 | T11 |
 
 ## Partie II — Automate (L5-B)
 
 | Date | Version de la table (somme) | Résultat du vérificateur | Erreurs et contre-exemples | Correction |
 |---|---|---|---|---|
-| | | | | |
+|1 decembre 2026 |correct | |Aucun |- |
 
 Invariants imposés et ajoutés par l'équipe :
 
 | Invariant | Type | Pourquoi | Résultat |
 |---|---|---|---|
-| | | | |
+| 'moteur autorisé' faux dans INIT, PRÊT, ARRÊT_ÉVÉNEMENT, ARRÊT_URGENCE |sortie |sécurité : aucun état d'arrêt/défaut n'actionne la propulsion | -|
+|Aucune transition d'un arrêt/défaut vers MANUEL ou AUTONOME|interdit|la reprise passe toujours par PRÊT, après acquittement|---|
+| E-Stop mène à ARRÊT_URGENCE depuis tous les états| toujours|l'arrêt d'urgence est prioritaire partout|---|
+|---|---|---|---|
 
 Version fautive conservée : fichier `…`, validation Git `…`, contre-exemple :
 
@@ -232,7 +235,17 @@ Correspondance entre les événements de la file et les entrées du modèle
 
 | Événement, garde | Entrée du modèle |
 |---|---|
-| | |
+|EV_ESTOP  |E-STOP  |
+| EV_USER | BOUTON |
+| EV_TOUCHE (Fn) | ACQUIT |
+| EV_TOUCHE (Next/Back), en PRÊT | MODE |
+| EV_PIR / EV_COMMUT SW2 | OBSTACLE |
+| EV_COMMUT SW1 | FEU ROUGE |
+| EV_COMMUT SW3 / humidité > seuil | LIMITATION |
+| EV_COMMUT SW4 / trajet_fini() | FIN |
+| EV_COMMUT SW5 / module muet / surv_code() | DEFAUT |
+| EV_THERMIQUE (SURV_THERM_ARRET) | THERMIQUE |
+| EV_ESSAI | ESSAI |
 
 Comparaison des traces (au moins trois séquences) :
 
