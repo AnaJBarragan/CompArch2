@@ -93,11 +93,11 @@ Cas ajoutés à `tableau_test.c` (au-delà des 6 fournis) :
 - Validations Git :
 
 ### Séance 2 — `24 novembre 2026` — réalise : `Ana, Simon, Yassine` / valide : `Ana, Simon, Yassine`
-- Objectifs :
-- Fait :
-- Décisions :
-- Difficultés et solutions :
-- Mesures (capteur, PIR, télémétrie, L4-A) :
+- Objectifs :Démonstration de la partie I, devant l'assistant, commencer la partie II, continuer le journal d'équipe,  commencer le rapport de laboratoire, planifier la vidéo de présentation.
+- Fait :Démonstration de la partie I devant le TA, Journal d'équipe mis à jour, Début du rapport de laboratoire
+- Décisions : Poursuite sur le code de départ fourni (complément du projet) plutôt que substitution du code du laboratoire 3 
+- Difficultés et solutions: Aucun compilateur C sur l'hôte Windows (Yassine)(gcc absent). Solution: installation de MSYS2/MinGW-w64 (gcc 16.2.0)
+- Mesures (capteur, PIR, télémétrie, L4-A): Investigation du défaut TouchPad/I²C menée — symptôme, hypothèses classées, mesures au débogueur (`i2c_scan`, `GPIOF->IDR`, `I2C2->ISR`, relecture de `0x5E`, `thi_flag`)
 - Validations Git :
 
 ## Partie I — Composante L4-A : diagnostic d'un défaut TouchPad/I²C
