@@ -222,7 +222,9 @@ Invariants imposés et ajoutés par l'équipe :
 | 'moteur autorisé' faux dans INIT, PRÊT, ARRÊT_ÉVÉNEMENT, ARRÊT_URGENCE |sortie |sécurité : aucun état d'arrêt/défaut n'actionne la propulsion | -|
 |Aucune transition d'un arrêt/défaut vers MANUEL ou AUTONOME|interdit|la reprise passe toujours par PRÊT, après acquittement|---|
 | E-Stop mène à ARRÊT_URGENCE depuis tous les états| toujours|l'arrêt d'urgence est prioritaire partout|---|
-|---|---|---|---|
+|Un changement de sens ne se fait que via EN|interdit|règle du laboratoire 2 (CCR1 = 0 avant de changer de sens)|---|
+|Entrées traitées par priorité|---|un seul événement retenu quand plusieurs sont simultanés|---|
+|Depuis tout état accessible, PRÊT reste atteignable|retour|le véhicule ne reste jamais bloqué|---|
 
 Version fautive conservée : fichier `…`, validation Git `…`, contre-exemple :
 
