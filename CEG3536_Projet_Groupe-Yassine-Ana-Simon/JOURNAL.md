@@ -92,7 +92,7 @@ Cas ajoutés à `tableau_test.c` (au-delà des 6 fournis) :
 - Fait (tableau.c, test_tableau, fsm.c, lecture de l4a_defaut.c) :
 - Validations Git :
 
-### Séance 2 — `<date>` — réalise : `<nom>` / valide : `<nom>`
+### Séance 2 — `24 novembre 2026` — réalise : `Ana, Simon, Yassine` / valide : `Ana, Simon, Yassine`
 - Objectifs :
 - Fait :
 - Décisions :
