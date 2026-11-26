@@ -5,6 +5,8 @@
  * compilé tel quel sur la cible et sur hôte (hote/test_tableau.c, E11).
  * Les formats sont définis dans tableau.h ; l'autotest (tableau_test.c) en
  * vérifie six cas — les faire passer sur hôte AVANT de brancher l'afficheur.
+ * Partie II : page de trajet, astérisque du mode essai, INIT, DEFAUT n,
+ * THERMIQUE, FILE (cas 14 à 20 de tableau_test.c).
  * ------------------------------------------------------------------------- */
 #include "tableau.h"
 
@@ -72,6 +74,9 @@ static uint32_t placer_3chiffres(char l[17], uint32_t col, uint32_t v)
 
 static const char *texte_etat(const etat_vehicule_t *v)
 {
+    if (v->drapeaux & DRAPEAU_FILE) {               /* débordement récent (E14) */
+        return "FILE";
+    }
     switch (v->etat) {
     case ETAT_ARRET:
         return (v->cause == CAUSE_FIN) ? "FIN" : "ARRET";
@@ -85,8 +90,13 @@ static const char *texte_etat(const etat_vehicule_t *v)
         case CAUSE_OBSTACLE: return "OBSTACLE";
         case CAUSE_FEU:      return "FEU ROUGE";
         case CAUSE_DEFAUT:   return "DEFAUT";
+        case CAUSE_THERMIQUE: return "THERMIQUE";
         default:             return "EVENEMENT";
         }
+    case ETAT_INIT:
+        return "INIT";
+    case ETAT_DEFAUT:
+        return "DEFAUT";                            /* motif ajouté à part      */
     default:
         return "?";
     }
@@ -104,6 +114,48 @@ static void ligne_conduite2(const etat_vehicule_t *v, char l[17])
     placer_fixe1(l, 7u, (int32_t)rpm_x10, 6u);
     l[14] = 'P';
     l[15] = (v->plafond_pct >= 100u) ? 'X' : (char)('0' + v->plafond_pct / 10u);
+}
+
+/* page de trajet (partie II) : "Ss/n D ddd.d/ttt" et "Rrrr Vvvv.v +ee%" */
+static void page_trajet(const etat_vehicule_t *v, char l1[17], char l2[17])
+{
+    uint32_t d = (v->dist_x10 > 9999u) ? 9999u : v->dist_x10;
+    uint32_t rpm_x10 = (uint32_t)(((uint64_t)v->vitesse_rpm_q16 * 10u + 32768u) >> 16);
+    uint32_t r = v->consigne_rpm;
+
+    l1[0] = 'S';
+    l1[1] = (v->segment == 0u) ? '-' : (char)('0' + (v->segment > 9u ? 9u : v->segment));
+    l1[2] = '/';
+    l1[3] = (char)('0' + (v->nb_segments > 9u ? 9u : v->nb_segments));
+    l1[5] = 'D';
+    placer_3chiffres(l1, 7u, d / 10u);
+    l1[10] = '.';
+    l1[11] = (char)('0' + d % 10u);
+    l1[12] = '/';
+    placer_3chiffres(l1, 13u, v->total_tours);
+
+    l2[0] = 'R';
+    l2[5] = 'V';
+    placer_fixe1(l2, 6u, (int32_t)rpm_x10, 5u);
+    l2[15] = '%';
+    if (v->mode == MODE_AUTONOME && r != 0u) {
+        /* erreur = (consigne - vitesse) / consigne, en %, arrondie au plus
+         * proche : num et den en dixièmes de tr/min                         */
+        int32_t num = ((int32_t)r * 10 - (int32_t)rpm_x10) * 100;
+        int32_t den = (int32_t)r * 10;
+        int32_t err = (num >= 0) ? (num + den / 2) / den : (num - den / 2) / den;
+        uint32_t a;
+        if (err > 99)  err = 99;
+        if (err < -99) err = -99;
+        a = (uint32_t)((err < 0) ? -err : err);
+        placer_3chiffres(l2, 1u, r);
+        l2[12] = (err < 0) ? '-' : '+';
+        l2[13] = (char)('0' + a / 10u);
+        l2[14] = (char)('0' + a % 10u);
+    } else {
+        placer(l2, 1u, "---");
+        placer(l2, 12u, "---");
+    }
 }
 
 void tableau_formater(const etat_vehicule_t *v, const env_mesure_t *m,
@@ -139,12 +191,23 @@ void tableau_formater(const etat_vehicule_t *v, const env_mesure_t *m,
         ligne_conduite2(v, l2);
         break;
 
+    case PAGE_TRAJET:
+        page_trajet(v, l1, l2);
+        break;
+
     default:                                        /* PAGE_CONDUITE         */
         /* "MMM SS EEEEEEEEE" */
         placer(l1, 0u, (v->mode == MODE_AUTONOME) ? "AUT" : "MAN");
         placer(l1, 4u, (v->etat == ETAT_MARCHE_AVANT)   ? "AV"
                      : (v->etat == ETAT_MARCHE_ARRIERE) ? "AR" : "--");
+        if (v->mode_essai) {
+            l1[3] = '*';                            /* mode essai (E20)         */
+        }
         placer(l1, 7u, texte_etat(v));
+        if (v->etat == ETAT_DEFAUT && !(v->drapeaux & DRAPEAU_FILE)
+            && v->code_defaut != 0u && v->code_defaut <= 9u) {
+            l1[14] = (char)('0' + v->code_defaut);  /* motif : "DEFAUT 3"       */
+        }
         ligne_conduite2(v, l2);
         break;
     }
@@ -160,7 +223,7 @@ uint8_t tableau_del(const etat_vehicule_t *v)
     if (v->drapeaux & DRAPEAU_FIN)        img |= DEL_Y4;
     if (v->drapeaux & DRAPEAU_FEU)        img |= DEL_R1;
     if (v->drapeaux & DRAPEAU_OBSTACLE)   img |= DEL_R2;
-    if (v->drapeaux & DRAPEAU_DEFAUT)     img |= DEL_R3;
+    if (v->drapeaux & (DRAPEAU_DEFAUT | DRAPEAU_THERMIQUE)) img |= DEL_R3;
     if (v->etat == ETAT_ARRET_URGENCE)    img |= DEL_R4;
     return img;
 }

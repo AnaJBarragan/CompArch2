@@ -60,6 +60,10 @@ typedef struct {
     uint32_t dist_x10;          /* distance parcourue dans le trajet, 0,1 tour  */
     uint32_t code_defaut;       /* DEFAUT_x                                     */
     uint32_t mode_essai;        /* 1 si le mode essai est actif                 */
+    /* --- ajout de l'équipe : page de trajet du LCD (remplis par tableau_pres.c,
+     *     à zéro dans fsm_etat ; ni la télémétrie ni la machine ne s'en servent) */
+    uint32_t nb_segments;       /* nombre de segments du trajet courant         */
+    uint32_t total_tours;       /* distance totale du trajet, en tours          */
 } etat_vehicule_t;
 
 #endif /* LAB3_H */

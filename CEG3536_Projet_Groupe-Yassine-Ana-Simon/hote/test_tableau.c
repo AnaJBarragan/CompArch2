@@ -25,7 +25,8 @@ int main(void)
     uint32_t echecs = tableau_autotest();
     etat_vehicule_t v = { ETAT_MARCHE_AVANT, SENS_IMMOBILE, 60u, 60u, 16075981u, 3u,
                           MODE_AUTONOME, CAUSE_AUCUNE, 90u, DRAPEAU_TOUCH,
-                          0u, 0u, 0u, 0u, 0u };     /* champs de la partie II */
+                          250u, 2u, 125u, 0u, 0u,   /* champs de la partie II */
+                          4u, 105u };               /* page de trajet (équipe) */
     env_mesure_t m = { 234, 452u, 10032u, 241, 1u };
 
     printf("tableau : sizeof(etat_vehicule_t) = %u, sizeof(env_mesure_t) = %u\n",
@@ -38,6 +39,7 @@ int main(void)
     montrer("conduite", &v, &m, PAGE_CONDUITE);
     montrer("capteurs", &v, &m, PAGE_CAPTEURS);
     montrer("verrou", &v, &m, PAGE_VERROU);
+    montrer("trajet", &v, &m, PAGE_TRAJET);
     printf("  image des DEL : 0x%02X\n", (unsigned)tableau_del(&v));
     printf("%u cas, %u echec(s) : %s\n", (unsigned)TABLEAU_TEST_N_CAS, (unsigned)echecs,
            echecs ? "ECHEC" : "OK");

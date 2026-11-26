@@ -83,6 +83,11 @@ extern volatile uint32_t crit_max_cycles;
 /* tr/min (Q16.16) pour une fenêtre de 100 ms : fronts x 600 / 748, soit
  * k = round(600 x 65536 / 748) = 52 569 (21 028 pour les 250 ms du lab. 3). */
 #define RPM_Q16_K_100MS         52569u
+/* Choix de l'équipe : la routine assembleur du laboratoire 3 (constante
+ * 21 028, fenêtre de 250 ms) est gardée telle quelle, et son résultat est
+ * multiplié par 5 / 2 (21 028 x 5 / 2 = 52 570, écart +0,002 %). Le banc de
+ * la routine (commande b) reste valable sans modification.                 */
+#define RPM_Q16_100MS(fronts)   (enc_fronts_vers_rpm_q16(fronts) * 5u / 2u)
 #define REGUL_KP_Q8             26      /* 0,10 point de PWM par tr/min : point de */
 #define REGUL_KI_Q8             26      /* départ, à ajuster sur le banc (E17)     */
 #define REGUL_TOLERANCE_PCT     10u     /* erreur admise 2 s après un changement   */
@@ -120,5 +125,27 @@ extern const segment_t TRAJET_REF[TRAJET_REF_N];    /* défini dans trajet.c    
  * EV_DEFAUT (12) est réutilisé : valeur = adresse I2C (module muet ou rétabli)
  * ou 0x100 + DEFAUT_x pour les défauts de la partie II.                       */
 #define EV_DEFAUT_CODE_BASE     0x100u
+
+/* ---- Ajouts de l'équipe (partie II) -------------------------------------- */
+/* INIT (E22) : durée de la phase de vérification, puis plages jugées
+ * plausibles pour la tension du capteur de température (LMT86 : environ
+ * -20 à +55 °C) et identifiant attendu du capteur environnemental.          */
+#define INIT_DUREE_MS           1000u
+#define INIT_TEMP_MV_MIN        1200u
+#define INIT_TEMP_MV_MAX        2400u
+#define INIT_ENV_ID             0x61u
+#define INIT_N_ADRESSES         5u
+
+/* Trajet parcouru en mode AUTONOME : 0 = TRAJET_REF (démonstration),
+ * 1 = TRAJET_EQUIPE (essais de l'équipe, trajet.h).                         */
+#ifndef TRAJET_EQUIPE_ESSAI
+#define TRAJET_EQUIPE_ESSAI     0
+#endif
+
+/* Numéros des types d'événements utilisés par l'assembleur (estop.s,
+ * exti_l4.s) : doivent rester égaux à EV_ESTOP et EV_PIR de evq.h. Les
+ * mêmes valeurs sont reprises dans registres_lab4.inc (EV_NUM_ESTOP, ...). */
+#define EV_NUM_ESTOP            3u
+#define EV_NUM_PIR              9u
 
 #endif /* PROJET_H */
