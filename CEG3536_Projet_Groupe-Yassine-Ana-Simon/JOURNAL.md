@@ -285,15 +285,15 @@ Gains retenus : Kp = `…`, Ki = `…` — raison :
 
 | Essai | Relevé | Valeur | Preuve (fichier) |
 |---|---|---|---|
-| T13 | Distance aux changements de segment (20, 60, 75) et à la fin (105) | | |
-| T13 | Reprise après un arrêt au feu rouge : distance avant / après | | |
-| T14 | Erreur 2 s après chaque changement de consigne (quatre segments) | | |
-| T14 | Plafond abaissé pendant S2 : commande et vitesse | | |
-| T15 | Délai entre la commande `s` et l'état DÉFAUT | | |
-| T15 | Délai entre la commande `n` et l'état DÉFAUT | | |
-| T16 | Limitation à 42,0 °C ; arrêt à 52,0 °C ; sortie à 25,0 °C | | |
-| T18 | Initialisation : durée de INIT, ressources vérifiées | | |
-| T18 | Démarrage avec un module absent (commande `d`) | | |
+| T13 | Distance aux changements de segment (20, 60, 75) et à la fin (105) | | TEST(t1-t18).pdf|
+| T13 | Reprise après un arrêt au feu rouge : distance avant / après | |TEST(t1-t18).pdf |
+| T14 | Erreur 2 s après chaque changement de consigne (quatre segments) | |TEST(t1-t18).pdf |
+| T14 | Plafond abaissé pendant S2 : commande et vitesse | | TEST(t1-t18).pdf|
+| T15 | Délai entre la commande `s` et l'état DÉFAUT | |TEST(t1-t18).pdf |
+| T15 | Délai entre la commande `n` et l'état DÉFAUT | |TEST(t1-t18).pdf |
+| T16 | Limitation à 42,0 °C ; arrêt à 52,0 °C ; sortie à 25,0 °C | |TEST(t1-t18).pdf |
+| T18 | Initialisation : durée de INIT, ressources vérifiées | |TEST(t1-t18).pdf |
+| T18 | Démarrage avec un module absent (commande `d`) | |TEST(t1-t18).pdf |
 
 ## Partie II — Portage (L5-C)
 
