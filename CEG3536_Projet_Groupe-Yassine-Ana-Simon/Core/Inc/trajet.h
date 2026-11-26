@@ -37,4 +37,8 @@ uint32_t trajet_total_tours(void);
 /* Vrai dès que la distance totale est atteinte.                             */
 bool     trajet_fini(void);
 
+/* Ajout de l'équipe : second trajet pour les essais (énoncé 4.8), 25 tours. */
+#define TRAJET_EQUIPE_N         4u
+extern const segment_t TRAJET_EQUIPE[TRAJET_EQUIPE_N];
+
 #endif /* TRAJET_H */

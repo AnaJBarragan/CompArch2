@@ -121,7 +121,49 @@ int main(void)
     VERIFIER(essai_commande('m') && essai_temp_c10(231) == 231 && essai_fronts(40u) == 40u,
              "nouvelle entree dans le mode : aucune injection residuelle");
 
-    /* À COMPLÉTER : au moins deux cas de l'équipe                            */
+    /* ---- cas de l'équipe ---- */
+    printf("equipe : chaine mode essai -> surveillance (T15, T16)\n");
+    essai_init();
+    surv_init();
+    v.etat = ETAT_MARCHE_AVANT;
+    v.pwm_pct = 60u;
+    (void)essai_commande('m');
+    (void)essai_commande('s');                  /* sens inversé injecté       */
+    for (unsigned i = 0u; i < 6u; i++) {
+        surv_step(&v, essai_sens(SENS_AVANT), essai_fronts(40u), essai_temp_c10(250), DT);
+    }
+    VERIFIER(surv_code() == DEFAUT_SENS, "s en marche avant : DEFAUT_SENS apres 600 ms (T15)");
+    surv_acquitter();
+    (void)essai_commande('s');
+    (void)essai_commande('n');                  /* encodeur muet injecté      */
+    for (unsigned i = 0u; i < 11u; i++) {
+        surv_step(&v, essai_sens(SENS_AVANT), essai_fronts(40u), essai_temp_c10(250), DT);
+    }
+    VERIFIER(surv_code() == DEFAUT_ENCODEUR, "n en marche a 60 % : DEFAUT_ENCODEUR apres 1,1 s (T15)");
+    surv_acquitter();
+    (void)essai_commande('n');
+    (void)essai_commande('1');
+    surv_step(&v, SENS_AVANT, 40u, essai_temp_c10(250), DT);
+    VERIFIER(surv_thermique() == SURV_THERM_LIMITATION, "1 : 42,0 C injectes -> limitation (T16)");
+    (void)essai_commande('2');
+    surv_step(&v, SENS_AVANT, 40u, essai_temp_c10(250), DT);
+    VERIFIER(surv_thermique() == SURV_THERM_ARRET, "2 : 52,0 C injectes -> arret thermique (T16)");
+    (void)essai_commande('m');                  /* sortie pendant l'injection */
+    surv_step(&v, SENS_AVANT, 40u, essai_temp_c10(250), DT);
+    VERIFIER(!essai_actif() && surv_thermique() == SURV_THERM_NORMAL,
+             "sortie du mode pendant l'injection : mesure reelle 25,0 C -> normal (T16)");
+
+    printf("equipe : priorite et memorisation\n");
+    surv_init();
+    v.etat = ETAT_MARCHE_ARRIERE;
+    v.pwm_pct = 80u;
+    fenetres(6u, SENS_AVANT, 40u, 250);         /* sens opposé d'abord        */
+    fenetres(12u, SENS_IMMOBILE, 0u, 250);      /* puis encodeur muet         */
+    VERIFIER(surv_code() == DEFAUT_SENS, "deux defauts successifs : le premier reste memorise");
+    surv_acquitter();
+    v.etat = ETAT_INIT;
+    fenetres(30u, SENS_AVANT, 0u, 250);
+    VERIFIER(surv_code() == DEFAUT_AUCUN, "etat INIT (pas en marche) : aucune surveillance du sens ni des fronts");
 
     return banc_bilan("test_surv");
 }
