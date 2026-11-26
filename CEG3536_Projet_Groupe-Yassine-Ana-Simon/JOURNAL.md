@@ -172,16 +172,16 @@ Variante : `<n>` — validation Git de la version défectueuse : — de la versi
 
 | Essai | Date | Résultat observé | Verdict | Preuve (fichier) |
 |---|---|---|---|---|
-| T1 Bus I²C et balayage | | | | |
-| T2 Extenseurs | | | | |
-| T3 LCD et rétroéclairage | | | | |
-| T4 TouchPad et garde | | | | |
-| T5 Commandes du TouchPad | | | | |
-| T6 PIR | | | | |
-| T7 Capteur environnemental | | | | |
-| T8 Événements et priorités | | | | |
-| T9 Télémétrie contrôlée | | | | |
-| T10 Robustesse et non-régression | | | | |
+| T1 Bus I²C et balayage |26 novembre 2026 |Après le reset, le terminal a affiché la ligne I,5,2D,38,39,3E,5A*09, donc les cinq adresses attendues ont bien été trouvées. La commande w a confirmé le débit entre 90 et 100 kHz, le NACK compté sur l'adresse libre et le bus resté libre après.   |Conforme aux attentes de laboratoire |TEST(t1-t18).pdf |
+| T2 Extenseurs |26 novembre 2026 |Les huit DEL se sont allumées une à une et correspondent bien au tableau de la section 4.6. Vingt appuis sur SW1 ont donné exactement vingt événements dans le terminal, et deux commutateurs ensemble ont donné deux événements distincts  |Conforme aux attentes de laboratoire |TEST(t1-t18).pdf |
+| T3 LCD et rétroéclairage |26 novembre 2026 |Les deux pages sont correctes, la page de conduite et la page des capteurs. Le rétroéclairage suit la couleur de la DEL de la carte, rouge, vert ou bleu, et clignote à 2 Hz en urgence. Aucun scintillement observé.  | Conforme aux attentes de laboratoire|TEST(t1-t18).pdf |
+| T4 TouchPad et garde |26 novembre 2026 |Les douze touches ont donné les bons codes, de 0 à 9, Shift et Next/Back. Quand le TouchPad est verrouillé, ça affiche VERROU et ça ignore les touches. Maintenir une touche ne répète pas et deux touches ensemble sont ignorées.    | Conforme aux attentes de laboratoire|TEST(t1-t18).pdf |
+| T5 Commandes du TouchPad |26 novembre 2026 |En marche, les touches 5, 9 et 0 ont plafonné la consigne à 50, 90 puis 100 pour cent. Next/Back change le mode seulement à l'arrêt et pas en marche. Un bip court se fait entendre à chaque touche acceptée.  | Conforme aux attentes de laboratoire| TEST(t1-t18).pdf|
+| T6 PIR |26 novembre 2026 |En marche avant, passer la main au-dessus du capteur a arrêté le moteur en moins de 100 ms. La DEL R2 s'allume, des bips se font entendre et le message OBSTACLE s'affiche. Pas de reprise possible avant le retour du signal et l'acquittement par Fn.    | Conforme aux attentes de laboratoire|TEST(t1-t18).pdf |
+| T7 Capteur environnemental | 26 novembre 2026| L'identifiant 0x61 a bien été lu. Les trois grandeurs sont plausibles et l'humidité monte partiallement quand on souffle sur le capteur.   |Conforme aux attentes de laboratoire |TEST(t1-t18).pdf |
+| T8 Événements et priorités |26 novembre 2026 |En mode autonome, SW3 donne la limitation à 30 pour cent, SW1 le feu rouge, SW2 et SW1 ensemble l'obstacle qui est prioritaire, et SW4 la fin de trajet sans acquittement. En mode manuel, ces commutateurs ne font rien.    |Conforme aux attentes de laboratoire |TEST(t1-t18).pdf |
+| T9 Télémétrie contrôlée |26 novembre 2026 |Télémétrie contrôlée : La commande x a retourné X,echecs=0 donc les cinq sommes de contrôle sont exactes. Le script a validé environ 150 trames en 30 secondes, toutes valides et aucune tronquée.  |Conforme aux attentes de laboratoire |TEST(t1-t18).pdf |
+| T10 Robustesse et non-régression |26 novembre 2026 |La commande d a simulé le LCD absent pendant 2 secondes, les erreurs ont été comptées et la DEL R3 s'est allumée, puis l'écran s'est rétabli sans réinitialiser. Les autotests Q,echecs=0 et F,echecs=0 passent et ticks_perdus reste à zéro  |Conforme aux attentes de laboratoire | TEST(t1-t18).pdf|
 
 # Partie II
 
