@@ -1,0 +1,46 @@
+automate.py 1.0 — rapport de verification
+table      : automate.json  (automate « vehicule »)
+somme      : F860101E  (empreinte de la table; reprise dans le code genere)
+etats      : 7 (7 accessibles) — initial : INIT
+entrees    : 10, par priorite decroissante : ESTOP, ACQUIT, DEFAUT, THERMIQUE, OBSTACLE, FEU, FIN, USER_MAN, USER_AUT, INIT_OK
+sorties    : moteur, regulation, alarme, voyant
+couples    : 70 (etat accessible, entree) explores; 17 transitions ecrites
+
+TABLE DE TRANSITIONS (ligne = etat, colonne = entree; « . » = rester; « ? » = absente)
+                  ESTOP           ACQUIT          DEFAUT          THERMIQUE       OBSTACLE        FEU             FIN             USER_MAN        USER_AUT        INIT_OK        
+  INIT            ARRET_URGENCE   .               DEFAUT          .               .               .               .               .               .               PRET
+  PRET            ARRET_URGENCE   .               DEFAUT          ARRET_EVENEMENT .               .               .               MANUEL          AUTONOME        .
+  MANUEL          ARRET_URGENCE   .               DEFAUT          ARRET_EVENEMENT ARRET_EVENEMENT ARRET_EVENEMENT .               PRET            PRET            .
+  AUTONOME        ARRET_URGENCE   .               DEFAUT          ARRET_EVENEMENT ARRET_EVENEMENT ARRET_EVENEMENT PRET            PRET            PRET            .
+  ARRET_EVENEMENT ARRET_URGENCE   PRET            DEFAUT          .               .               .               .               .               .               .
+  ARRET_URGENCE   .               PRET            .               .               .               .               .               .               .               .
+  DEFAUT          ARRET_URGENCE   PRET            .               .               .               .               .               .               .               .
+
+SORTIES PAR ETAT
+  INIT            moteur=0  regulation=0  alarme=0  voyant=0
+  PRET            moteur=0  regulation=0  alarme=0  voyant=0
+  MANUEL          moteur=1  regulation=0  alarme=0  voyant=1
+  AUTONOME        moteur=1  regulation=1  alarme=0  voyant=1
+  ARRET_EVENEMENT moteur=0  regulation=0  alarme=1  voyant=0
+  ARRET_URGENCE   moteur=0  regulation=0  alarme=2  voyant=2
+  DEFAUT          moteur=0  regulation=0  alarme=1  voyant=0
+
+CONTROLES
+  determinisme : OK
+  completude   : OK
+  invariant  1 (sortie) : OK     I1 (impose) moteur non autorise dans INIT, PRET, ARRET_EVENEMENT, ARRET_URGENCE et DEFAUT
+  invariant  2 (interdit) : OK     I2 (impose) aucune transition d'un etat d'arret ou de defaut vers MANUEL ou AUTONOME
+  invariant  3 (interdit) : OK     I3 (impose) on ne quitte un arret pour PRET que par un acquittement explicite
+  invariant  4 (toujours) : OK     I4 (impose) E-Stop mene a ARRET_URGENCE depuis tous les etats
+  invariant  5 (interdit) : OK     I5 (impose) changement de sens seulement en passant par PRET : aucune transition directe entre MANUEL et AUTONOME
+  invariant  6 (toujours) : OK     I6 (impose, priorites) un defaut l'emporte sur tout sauf E-Stop
+  invariant  7 (interdit) : OK     I7 (impose, priorites) ARRET_URGENCE n'est jamais remplace par un etat de moindre priorite
+  invariant  8 (interdit) : OK     I8 (impose, priorites) un defaut n'est jamais masque par un arret sur evenement
+  invariant  9 (sortie) : OK     I9 (equipe) alarme d'urgence implique moteur coupe
+  invariant 10 (sortie) : OK     I10 (equipe) la regulation n'est active que moteur autorise
+  invariant 11 (retour) : OK     I11 (equipe) aucun etat piege : PRET reste toujours atteignable
+  invariant 12 (accessible) : OK     I12 (equipe) les sept etats sont accessibles depuis INIT
+
+RESULTAT : OK — 0 erreur(s), 0 avis
+Portee : la verification porte sur ce modele fini. Elle ne prouve ni le materiel, ni les
+delais reels, ni la traduction des evenements en entrees (fsm.c), qui relevent des essais.

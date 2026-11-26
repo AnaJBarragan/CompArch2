@@ -1,0 +1,15 @@
+# Sequence 3 : defauts, E-Stop et priorites
+DEFAUT          # module muet pendant INIT -> DEFAUT (E22)
+USER_MAN        # User ignore en DEFAUT
+ACQUIT          # module retabli, Fn -> PRET
+USER_MAN        # PRET -> MANUEL
+DEFAUT          # encodeur muet en marche -> DEFAUT (E18)
+OBSTACLE        # un obstacle ne masque pas le defaut (I8)
+ESTOP           # E-Stop l'emporte sur le defaut -> ARRET_URGENCE
+DEFAUT          # le defaut ne remplace pas l'urgence (I7)
+ACQUIT          # E-Stop relache, Fn -> PRET (fsm.c reapplique ensuite le defaut actif)
+DEFAUT          # stabilisation : defaut encore actif -> DEFAUT
+ACQUIT          # defaut disparu, Fn -> PRET
+USER_AUT        # PRET -> AUTONOME
+ESTOP           # E-Stop en accelerant -> ARRET_URGENCE
+ACQUIT          # Touch En ou Fn, E-Stop relache -> PRET

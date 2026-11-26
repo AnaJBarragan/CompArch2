@@ -1,0 +1,13 @@
+# Sequence 2 : trajet autonome, feu rouge, reprise, fin de trajet
+INIT_OK         # INIT -> PRET
+USER_AUT        # PRET -> AUTONOME (mode choisi par Next/Back en PRET)
+FEU             # SW1 pendant S2 -> ARRET_EVENEMENT
+FEU             # feu encore allume : on reste
+ACQUIT          # SW1 de nouveau, puis Fn -> PRET
+USER_AUT        # reprise du trajet a la position atteinte
+OBSTACLE        # SW2 (obstacle simule) -> ARRET_EVENEMENT
+ACQUIT          # SW2 relache, Fn -> PRET
+USER_AUT        # PRET -> AUTONOME
+FIN             # 105 tours parcourus -> PRET, signalisation FIN
+USER_AUT        # nouveau trajet
+USER_AUT        # User arrete -> PRET
