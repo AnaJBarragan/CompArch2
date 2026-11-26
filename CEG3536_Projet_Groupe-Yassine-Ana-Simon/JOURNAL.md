@@ -30,8 +30,8 @@
 
 | Module | Relevé | Valeur | Preuve (fichier) |
 |---|---|---|---|
-| Bus I²C | Adresses trouvées par `i2c_scan`    |   0x38, 0x39, 0x3E, 0X5A, 0x2D | |
-| Bus I²C | `GPIOF->IDR` bits 0 et 1 au repos ; `I2C2->ISR` après une transaction | | |
+| Bus I²C | Adresses trouvées par `i2c_scan`    |   0x38, 0x39, 0x3E, 0X5A, 0x2D |T1-TEST(t1-t18).pdf |
+| Bus I²C | `GPIOF->IDR` bits 0 et 1 au repos ; `I2C2->ISR` après une transaction |4329235, 1,  1, 4294967290, 3, 68 (decimal) |T1-TEST(t1-t18).pdf |
 | Extenseur des DEL | Octet écrit pour allumer Y1 seule ; R4 seule |    0x7F, 0xFE | |
 | Extenseur des commutateurs | Octet lu au repos ; SW1 enfoncé ; SW8 enfoncé | 0x7F, 0xFE, 0xFF | |
 | LCD | Octets de commande confirmés (fonction, allumage, effacement, mode) |0x01,0x06, 0x0C, 0x28 | |
