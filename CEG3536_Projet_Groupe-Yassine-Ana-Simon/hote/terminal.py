@@ -25,19 +25,24 @@ import argparse, os, select, sys, termios, time, tty
 COLONNES = ["ticks_ms", "etat", "sens", "consigne_pct", "pwm_pct", "temp_c_x10",
             "vitesse_rpm_x100", "nb_evenements", "evq_debordements", "mode", "cause",
             "plafond_pct", "env_t_x10", "env_h_x10", "env_p_x10", "i2c_erreurs",
-            "ticks_perdus"]
+            "ticks_perdus",
+            # partie II (E21)
+            "mode_essai", "segment", "dist_x10", "consigne_rpm", "code_defaut", "evq_max",
+            "crit_max_cycles"]
 ETATS = ["ARRET", "MARCHE_AVANT", "MARCHE_ARRIERE", "URGENCE", "ARRET_EVENEMENT",
          "INIT", "DEFAUT"]
 CAUSES = ["-", "FIN", "FEU", "OBSTACLE", "DEFAUT", "THERMIQUE"]
 EVENEMENTS = {1: "User", 2: "Touch En", 3: "E-Stop", 7: "essai", 8: "touche",
-              9: "PIR", 10: "commutateur", 11: "mesure env.", 12: "module I2C"}
+              9: "PIR", 10: "commutateur", 11: "mesure env.", 12: "defaut",
+              13: "thermique", 14: "fin de trajet", 15: "mode essai"}
 TOUCHES = {10: "Fn (Shift)", 11: "Next/Back"}
 # colonnes comparées telles quelles : tout changement est affiché
 EXACTES = ["etat", "sens", "consigne_pct", "mode", "cause", "plafond_pct",
-           "evq_debordements", "i2c_erreurs", "ticks_perdus"]
+           "evq_debordements", "i2c_erreurs", "ticks_perdus",
+           "mode_essai", "segment", "consigne_rpm", "code_defaut"]
 # colonnes bruitées : affichées seulement si l'écart dépasse le seuil
 SEUILS = {"pwm_pct": 5, "temp_c_x10": 5, "vitesse_rpm_x100": 1000,
-          "env_t_x10": 5, "env_h_x10": 10, "env_p_x10": 10}
+          "env_t_x10": 5, "env_h_x10": 10, "env_p_x10": 10, "dist_x10": 50}
 
 
 # ---- 1. console --------------------------------------------------------------
@@ -156,10 +161,14 @@ def filtrer(ligne, precedente):
     corps = ligne.split("*")[0]
     if ligne.startswith("T,"):
         try:
-            t = dict(zip(COLONNES, map(int, corps.split(",")[1:18])))
+            champs = corps.split(",")[1:]
+            noms = COLONNES[:len(champs)] if len(champs) in (17, 24) else COLONNES
+            t = dict(zip(noms, map(int, champs)))
+            for k in COLONNES[len(t):]:
+                t[k] = 0                        # trame de 17 colonnes (partie I)
         except ValueError:
             return f"(trame illisible) {ligne}"
-        if len(t) < len(COLONNES):
+        if len(champs) not in (17, 24):
             return f"(trame tronquee) {ligne}"
         if not precedente:
             precedente.update(t)

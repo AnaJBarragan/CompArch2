@@ -103,8 +103,68 @@ int main(void)
     u = regul_step(&r2, 170u, 0u, 100u);
     VERIFIER(u == 50u, "deux instances : l'etat de l'une n'influence pas l'autre");
 
-    /* À COMPLÉTER : au moins deux cas de l'équipe (autres gains, autre
-     * consigne, plafond abaissé en marche, ...)                              */
+    /* ---- cas de l'équipe ---- */
+    /* T14 : plafond abaissé au TouchPad pendant S2 (250 tr/min), puis relevé */
+    regul_reset(&r);
+    vitesse = 0.0;
+    (void)converge(&r, 250u, 100u, PAS_2S);
+    u_max = 0u;
+    for (unsigned i = 0u; i < 20u; i++) {
+        pas(&r, 250u, 50u);                     /* touche 5 : plafond 50 %    */
+    }
+    VERIFIER(u_max <= 50u && vitesse < 0.5 * 340.0 + 1.0,
+             "plafond abaisse a 50 % en marche : commande et vitesse plafonnees");
+    VERIFIER(converge(&r, 250u, 100u, PAS_2S), "plafond releve a 100 % : 250 tr/min rejoint en 2 s");
+
+    /* bornes de la plage de consigne (80 et 300 tr/min) depuis l'arrêt */
+    regul_reset(&r);
+    vitesse = 0.0;
+    VERIFIER(converge(&r, 300u, 100u, PAS_2S), "300 tr/min (borne haute) depuis l'arret : erreur <= 10 %");
+    regul_reset(&r);
+    vitesse = 0.0;
+    VERIFIER(converge(&r, 80u, 100u, PAS_2S), "80 tr/min (borne basse) depuis l'arret : erreur <= 10 %");
+
+    /* état interne borné : 50 pas saturés n'accumulent rien au-delà du plafond */
+    regul_reset(&r);
+    for (unsigned i = 0u; i < 50u; i++) {
+        (void)regul_step(&r, 300u, 0u, 40u);    /* moteur bloqué, mesure nulle */
+    }
+    VERIFIER(r.u_q8 == 40 * 256, "moteur bloque : u_q8 reste exactement au plafond (anti-emballement)");
+
+    /* intégration de main.c : la rampe du laboratoire 2 (1 point par 10 ms)
+     * borne la commande appliquée, et main.c passe au régulateur le plafond
+     * min(plafond, pwm appliquée + 10) : l'état interne ne devance jamais la
+     * rampe de plus d'une fenêtre. Trajet de référence, 2 s par consigne.   */
+    {
+        static const unsigned c4[4] = { 150u, 250u, 100u, 200u };
+        unsigned pwm_rampe = 0u, ok = 1u, depasse = 0u;
+        regul_reset(&r);
+        vitesse = 0.0;
+        for (unsigned s = 0u; s < 4u; s++) {
+            for (unsigned k = 0u; k < PAS_2S; k++) {
+                unsigned borne = (pwm_rampe + 10u > 100u) ? 100u : pwm_rampe + 10u;
+                unsigned cible = regul_step(&r, c4[s], (unsigned)(vitesse + 0.5), borne);
+                for (unsigned m = 0u; m < 10u; m++) {
+                    pwm_rampe += (pwm_rampe < cible) ? 1u : 0u;
+                    pwm_rampe -= (pwm_rampe > cible) ? 1u : 0u;
+                }
+                vitesse = 0.51 * vitesse + 0.49 * gain * (double)pwm_rampe;
+                if (s == 0u && vitesse > 1.10 * c4[0]) {
+                    depasse = 1u;
+                }
+            }
+            if ((vitesse - c4[s]) * (vitesse - c4[s]) > 0.01 * c4[s] * c4[s]) {
+                ok = 0u;
+            }
+        }
+        VERIFIER(ok && !depasse, "avec la rampe du lab. 2 et la borne pwm + 10 : quatre segments dans +/- 10 %, sans depassement au demarrage");
+    }
+
+    /* gains nuls : la commande reste celle de la boucle ouverte */
+    regul_init(&r2, 0, 0);
+    (void)regul_step(&r2, 204u, 0u, 100u);
+    u = regul_step(&r2, 204u, 150u, 100u);
+    VERIFIER(u == 60u, "Kp = Ki = 0 : commande figee a la boucle ouverte (204 tr/min -> 60 %)");
 
     return banc_bilan("test_regul");
 }

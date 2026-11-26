@@ -64,8 +64,43 @@ int main(void)
     VERIFIER(trajet_total_tours() == 5u && trajet_segment() == 2u && trajet_consigne_rpm() == 120u,
              "second trajet (3 + 2 tours) : segment 2 apres 3 tours");
 
-    /* À COMPLÉTER : au moins deux cas de l'équipe (trajet de l'équipe, reprise
-     * après un arrêt, trajet d'un seul segment, ...)                         */
+    /* ---- cas de l'équipe ---- */
+    trajet_init(TRAJET_REF, TRAJET_REF_N);
+    trajet_avancer(30u * TOUR);                 /* arrêt au feu rouge pendant S2 */
+    for (unsigned i = 0u; i < 50u; i++) {
+        trajet_avancer(0u);                     /* véhicule arrêté : 5 s sans front */
+    }
+    trajet_avancer(5u * TOUR);                  /* reprise après l'acquittement  */
+    VERIFIER(trajet_segment() == 2u && trajet_dist_x10() == 350u,
+             "reprise apres un arret : la distance repart de la position atteinte");
+
+    trajet_avancer(25u * TOUR);
+    VERIFIER(trajet_segment() == 3u && trajet_consigne_rpm() == 100u && trajet_dist_x10() == 600u,
+             "60 tours : segment 3 (100 tr/min), limite S2/S3 de T13");
+    trajet_avancer(15u * TOUR);
+    VERIFIER(trajet_segment() == 4u && trajet_dist_x10() == 750u, "75 tours : segment 4, limite S3/S4 de T13");
+
+    {
+        static const segment_t seul[1] = { { 4u, 180u } };
+        trajet_init(seul, 1u);
+        trajet_avancer(4u * TOUR - 1u);
+        VERIFIER(trajet_nb_segments() == 1u && trajet_segment() == 1u && !trajet_fini()
+                 && trajet_consigne_rpm() == 180u, "trajet d'un seul segment : 1/1 jusqu'a la fin");
+        trajet_avancer(0xFFFFFFFFu);
+        VERIFIER(trajet_fini() && trajet_dist_x10() == 40u,
+                 "avance enorme (2^32 - 1 fronts) : plafonnee, sans debordement");
+    }
+
+    trajet_init(TRAJET_EQUIPE, TRAJET_EQUIPE_N);
+    VERIFIER(trajet_total_tours() == 25u && trajet_consigne_rpm() == 120u,
+             "trajet de l'equipe : 25 tours, depart a 120 tr/min");
+    trajet_avancer(19u * TOUR);
+    VERIFIER(trajet_segment() == 3u && trajet_consigne_rpm() == 80u,
+             "trajet de l'equipe : segment court de 2 tours a 80 tr/min");
+
+    trajet_init(court, 0u);
+    VERIFIER(trajet_fini() && trajet_segment() == 0u && trajet_consigne_rpm() == 0u
+             && trajet_total_tours() == 0u, "trajet vide (n = 0) : fini d'emblee, aucune consigne");
 
     return banc_bilan("test_trajet");
 }

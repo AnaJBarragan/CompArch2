@@ -1,0 +1,12 @@
+# Sequence 1 : conduite manuelle, obstacle (PIR), acquittement refuse puis accepte
+# (fsm.c n'emet ACQUIT que si la garde est vraie : un Fn refuse ne produit aucune entree)
+INIT_OK         # INIT -> PRET : ressources conformes (E22)
+USER_MAN        # PRET -> MANUEL (marche avant)
+OBSTACLE        # PIR en marche -> ARRET_EVENEMENT (E6)
+USER_MAN        # User ignore pendant l'arret : aucune reprise
+OBSTACLE        # signal encore haut : on reste
+ACQUIT          # PIR retombe, Fn -> PRET
+USER_MAN        # PRET -> MANUEL (marche arriere : sens choisi par fsm.c)
+USER_MAN        # MANUEL -> PRET
+THERMIQUE       # 50 C a l'arret -> ARRET_EVENEMENT (E19)
+ACQUIT          # 45 C atteint, Fn -> PRET

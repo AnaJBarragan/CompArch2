@@ -1,0 +1,82 @@
+{
+  "nom": "vehicule",
+  "description": "Automate du vehicule (projet final CEG 3536, E15, L5-B). Sept etats imposes (section 4.8). Le sens de marche, le mode choisi en PRET et la cause d'arret sont des variables bornees de fsm.c, pas des etats : le modele reste petit et chaque etat garde le sens de l'enonce. Les entrees sont des conditions calculees par fsm.c a partir des evenements de la file et des gardes (voir l en-tete de Core/Src/fsm.c).",
+  "auteurs": "equipe Yassine-Ana-Simon",
+
+  "entrees": ["ESTOP", "ACQUIT", "DEFAUT", "THERMIQUE", "OBSTACLE", "FEU", "FIN",
+              "USER_MAN", "USER_AUT", "INIT_OK"],
+  "sorties": ["moteur", "regulation", "alarme", "voyant"],
+  "initial": "INIT",
+
+  "etats": {
+    "INIT":            { "moteur": 0, "regulation": 0, "alarme": 0, "voyant": 0 },
+    "PRET":            { "moteur": 0, "regulation": 0, "alarme": 0, "voyant": 0 },
+    "MANUEL":          { "moteur": 1, "regulation": 0, "alarme": 0, "voyant": 1 },
+    "AUTONOME":        { "moteur": 1, "regulation": 1, "alarme": 0, "voyant": 1 },
+    "ARRET_EVENEMENT": { "moteur": 0, "regulation": 0, "alarme": 1, "voyant": 0 },
+    "ARRET_URGENCE":   { "moteur": 0, "regulation": 0, "alarme": 2, "voyant": 2 },
+    "DEFAUT":          { "moteur": 0, "regulation": 0, "alarme": 1, "voyant": 0 }
+  },
+
+  "transitions": [
+    { "de": "*", "sur": "ESTOP", "vers": "ARRET_URGENCE" },
+
+    { "de": ["ARRET_URGENCE", "ARRET_EVENEMENT", "DEFAUT"], "sur": "ACQUIT", "vers": "PRET" },
+    { "de": ["INIT", "PRET", "MANUEL", "AUTONOME"],         "sur": "ACQUIT", "vers": "=" },
+
+    { "de": ["INIT", "PRET", "MANUEL", "AUTONOME", "ARRET_EVENEMENT"], "sur": "DEFAUT", "vers": "DEFAUT" },
+    { "de": ["ARRET_URGENCE", "DEFAUT"],                               "sur": "DEFAUT", "vers": "=" },
+
+    { "de": ["PRET", "MANUEL", "AUTONOME"],                         "sur": "THERMIQUE", "vers": "ARRET_EVENEMENT" },
+    { "de": ["INIT", "ARRET_EVENEMENT", "ARRET_URGENCE", "DEFAUT"], "sur": "THERMIQUE", "vers": "=" },
+
+    { "de": ["MANUEL", "AUTONOME"], "sur": ["OBSTACLE", "FEU"], "vers": "ARRET_EVENEMENT" },
+    { "de": ["INIT", "PRET", "ARRET_EVENEMENT", "ARRET_URGENCE", "DEFAUT"],
+      "sur": ["OBSTACLE", "FEU"], "vers": "=" },
+
+    { "de": "AUTONOME", "sur": "FIN", "vers": "PRET" },
+    { "de": ["INIT", "PRET", "MANUEL", "ARRET_EVENEMENT", "ARRET_URGENCE", "DEFAUT"],
+      "sur": "FIN", "vers": "=" },
+
+    { "de": "PRET", "sur": "USER_MAN", "vers": "MANUEL" },
+    { "de": "PRET", "sur": "USER_AUT", "vers": "AUTONOME" },
+    { "de": ["MANUEL", "AUTONOME"], "sur": ["USER_MAN", "USER_AUT"], "vers": "PRET" },
+    { "de": ["INIT", "ARRET_EVENEMENT", "ARRET_URGENCE", "DEFAUT"],
+      "sur": ["USER_MAN", "USER_AUT"], "vers": "=" },
+
+    { "de": "INIT", "sur": "INIT_OK", "vers": "PRET" },
+    { "de": ["PRET", "MANUEL", "AUTONOME", "ARRET_EVENEMENT", "ARRET_URGENCE", "DEFAUT"],
+      "sur": "INIT_OK", "vers": "=" }
+  ],
+
+  "invariants": [
+    { "nom": "I1 (impose) moteur non autorise dans INIT, PRET, ARRET_EVENEMENT, ARRET_URGENCE et DEFAUT",
+      "type": "sortie", "etats": ["INIT", "PRET", "ARRET_EVENEMENT", "ARRET_URGENCE", "DEFAUT"],
+      "sortie": "moteur", "valeur": 0 },
+    { "nom": "I2 (impose) aucune transition d'un etat d'arret ou de defaut vers MANUEL ou AUTONOME",
+      "type": "interdit", "de": ["INIT", "ARRET_EVENEMENT", "ARRET_URGENCE", "DEFAUT"],
+      "vers": ["MANUEL", "AUTONOME"] },
+    { "nom": "I3 (impose) on ne quitte un arret pour PRET que par un acquittement explicite",
+      "type": "interdit", "de": ["ARRET_EVENEMENT", "ARRET_URGENCE", "DEFAUT"], "vers": ["PRET"],
+      "sur": ["ESTOP", "DEFAUT", "THERMIQUE", "OBSTACLE", "FEU", "FIN", "USER_MAN", "USER_AUT", "INIT_OK"] },
+    { "nom": "I4 (impose) E-Stop mene a ARRET_URGENCE depuis tous les etats",
+      "type": "toujours", "sur": "ESTOP", "vers": "ARRET_URGENCE" },
+    { "nom": "I5 (impose) changement de sens seulement en passant par PRET : aucune transition directe entre MANUEL et AUTONOME",
+      "type": "interdit", "de": ["MANUEL", "AUTONOME"], "vers": ["MANUEL", "AUTONOME"] },
+    { "nom": "I6 (impose, priorites) un defaut l'emporte sur tout sauf E-Stop",
+      "type": "toujours", "sur": "DEFAUT", "vers": "DEFAUT", "sauf": ["ARRET_URGENCE"] },
+    { "nom": "I7 (impose, priorites) ARRET_URGENCE n'est jamais remplace par un etat de moindre priorite",
+      "type": "interdit", "de": ["ARRET_URGENCE"],
+      "vers": ["INIT", "MANUEL", "AUTONOME", "ARRET_EVENEMENT", "DEFAUT"] },
+    { "nom": "I8 (impose, priorites) un defaut n'est jamais masque par un arret sur evenement",
+      "type": "interdit", "de": ["DEFAUT"], "vers": ["ARRET_EVENEMENT", "MANUEL", "AUTONOME"] },
+    { "nom": "I9 (equipe) alarme d'urgence implique moteur coupe",
+      "type": "sortie", "si": { "alarme": 2 }, "alors": { "moteur": 0 } },
+    { "nom": "I10 (equipe) la regulation n'est active que moteur autorise",
+      "type": "sortie", "si": { "regulation": 1 }, "alors": { "moteur": 1 } },
+    { "nom": "I11 (equipe) aucun etat piege : PRET reste toujours atteignable",
+      "type": "retour", "vers": "PRET" },
+    { "nom": "I12 (equipe) les sept etats sont accessibles depuis INIT",
+      "type": "accessible" }
+  ]
+}

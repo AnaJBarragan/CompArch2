@@ -35,12 +35,28 @@
  *     m->ta_c10 sur 4 caractères
  *   si m->valide == 0 : "T --.-C  H --.-%" et "P ---.-hPa A24.1" (la
  *     température analogique reste affichée)
+ *
+ * PARTIE II (LISEZMOI, « pages du LCD ») :
+ *   PAGE_CONDUITE, ligne 1 : en mode essai (v->mode_essai), la colonne 3
+ *     devient '*' : "AUT*AV MARCHE   " ; états ajoutés : "INIT", "DEFAUT n"
+ *     (ETAT_DEFAUT, n = v->code_defaut, 1 à 5, colonne 14), "THERMIQUE"
+ *     (ARRÊT_ÉVÉNEMENT, CAUSE_THERMIQUE) ; si DRAPEAU_FILE est levé, "FILE"
+ *     remplace l'état pendant FILE_MESSAGE_MS.
+ *   PAGE_TRAJET (projet.h) :
+ *     ligne 1 : "Ss/n D ddd.d/ttt"   exemple : "S2/4 D 012.5/105"
+ *       s = v->segment ('-' si 0), n = v->nb_segments, ddd.d = v->dist_x10,
+ *       ttt = v->total_tours (trois chiffres, zéros de tête)
+ *     ligne 2 : "Rrrr Vvvv.v ±ee%"   exemple : "R250 V245.3 +02%"
+ *       rrr = v->consigne_rpm ; vvv.v = vitesse (5 caractères) ;
+ *       ee = erreur relative (consigne - vitesse) / consigne en %, arrondie,
+ *       bornée à 99 ; hors du mode AUTONOME ou consigne nulle (à l'arrêt) :
+ *       "R--- V  0.0 ---%"
  * ------------------------------------------------------------------------- */
 #ifndef TABLEAU_H
 #define TABLEAU_H
 
 #include <stdint.h>
-#include "lab4.h"
+#include "projet.h"     /* lab4.h, états INIT et DÉFAUT, PAGE_TRAJET, ...    */
 
 /* ---- tableau.c : sans matériel ----------------------------------------- */
 void tableau_formater(const etat_vehicule_t *v, const env_mesure_t *m,
@@ -49,12 +65,13 @@ void tableau_formater(const etat_vehicule_t *v, const env_mesure_t *m,
 /* image logique des huit DEL (DEL_x de lab4.h, bit à 1 = allumée) :
  *   Y1 = DRAPEAU_LIMITATION   Y2 = mode AUTONOME      Y3 = DRAPEAU_TOUCH
  *   Y4 = DRAPEAU_FIN          R1 = DRAPEAU_FEU        R2 = DRAPEAU_OBSTACLE
- *   R3 = DRAPEAU_DEFAUT       R4 = état ARRÊT_URGENCE                        */
+ *   R3 = DRAPEAU_DEFAUT ou DRAPEAU_THERMIQUE (le clignotement de R3 en arrêt
+ *        thermique est fait par tableau_pres.c)   R4 = état ARRÊT_URGENCE    */
 uint8_t tableau_del(const etat_vehicule_t *v);
 
 /* ---- tableau_pres.c : présentation -------------------------------------- */
 void    tableau_init(void);
-void    tableau_page_basculer(void);            /* SW8 : conduite <-> capteurs */
+void    tableau_page_basculer(void);            /* SW8 : conduite -> capteurs -> trajet */
 void    tableau_verrou(void);                   /* touche refusée : « VERROU » */
 void    tableau_env(const env_mesure_t *m);     /* dernière mesure à afficher  */
 /* à appeler chaque tick, après fsm_sorties : met à jour le texte et la couleur

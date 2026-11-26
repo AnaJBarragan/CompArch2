@@ -9,6 +9,9 @@
  * Cas ajoutés par l'équipe : 7 MARCHE_ARRIÈRE ; 8 DEFAUT et DEL rouges ;
  * 9 FIN ; 10 PAGE_VERROU ; 11 mesure non valide ; 12 températures négatives ;
  * 13 vitesse à quatre chiffres.
+ * Partie II : 14 INIT ; 15 DEFAUT et motif ; 16 THERMIQUE et R3 ; 17 astérisque
+ * du mode essai ; 18 FILE ; 19 page de trajet en AUTONOME ; 20 page de trajet
+ * hors du mode AUTONOME (tirets) et erreur négative bornée.
  * ------------------------------------------------------------------------- */
 #include "tableau.h"
 #include "tableau_test.h"
@@ -38,7 +41,7 @@ static int egal(const char *obtenu, const char *attendu)
 static etat_vehicule_t vehicule(uint32_t mode, uint32_t etat, uint32_t cause,
                                 uint32_t consigne, uint32_t q16, uint32_t plafond)
 {
-    etat_vehicule_t v;
+    etat_vehicule_t v = { 0u };     /* partie II : tous les champs à zéro d'abord */
 
     v.etat = etat;
     v.sens = SENS_IMMOBILE;
@@ -142,6 +145,73 @@ uint32_t tableau_autotest(void)
     v = vehicule(MODE_MANUEL, ETAT_MARCHE_AVANT, CAUSE_AUCUNE, 100u, 80904192u, 100u);
     tableau_formater(&v, &m, PAGE_CONDUITE, l1, l2);
     echecs += cas_ok(12u, egal(l2, "C100% V1234.5 PX"));
+
+    /* ---- partie II (cas de l'équipe) ---- */
+
+    /* 14. INIT au démarrage (E22) */
+    v = vehicule(MODE_MANUEL, ETAT_INIT, CAUSE_AUCUNE, 0u, 0u, 100u);
+    tableau_formater(&v, &m, PAGE_CONDUITE, l1, l2);
+    echecs += cas_ok(13u, egal(l1, "MAN -- INIT     "));
+
+    /* 15. état DÉFAUT avec son motif (E18, E22), R3 allumée */
+    v = vehicule(MODE_AUTONOME, ETAT_DEFAUT, CAUSE_DEFAUT, 0u, 0u, 100u);
+    v.code_defaut = DEFAUT_ENCODEUR;
+    v.drapeaux = DRAPEAU_DEFAUT;
+    tableau_formater(&v, &m, PAGE_CONDUITE, l1, l2);
+    echecs += cas_ok(14u, egal(l1, "AUT -- DEFAUT 4 ") && (tableau_del(&v) & DEL_R3) != 0u);
+
+    /* 16. arrêt thermique : message et R3 (le clignotement est fait par
+     *     tableau_pres.c) ; limitation thermique -> Y1                       */
+    v = vehicule(MODE_MANUEL, ETAT_ARRET_EVENEMENT, CAUSE_THERMIQUE, 0u, 0u, 100u);
+    v.drapeaux = DRAPEAU_THERMIQUE | DRAPEAU_LIMITATION;
+    tableau_formater(&v, &m, PAGE_CONDUITE, l1, l2);
+    echecs += cas_ok(15u, egal(l1, "MAN -- THERMIQUE")
+                          && tableau_del(&v) == (DEL_Y1 | DEL_R3));
+
+    /* 17. mode essai : astérisque à la place de l'espace (E20) */
+    v = vehicule(MODE_AUTONOME, ETAT_MARCHE_AVANT, CAUSE_AUCUNE, 60u, 16075981u, 90u);
+    v.mode_essai = 1u;
+    tableau_formater(&v, &m, PAGE_CONDUITE, l1, l2);
+    echecs += cas_ok(16u, egal(l1, "AUT*AV MARCHE   ") && egal(l2, "C060% V 245.3 P9"));
+
+    /* 18. message FILE après un débordement (E14), même en DÉFAUT */
+    v.drapeaux = DRAPEAU_FILE;
+    tableau_formater(&v, &m, PAGE_CONDUITE, l1, l2);
+    {
+        int ok = egal(l1, "AUT*AV FILE     ");
+        v = vehicule(MODE_MANUEL, ETAT_DEFAUT, CAUSE_DEFAUT, 0u, 0u, 100u);
+        v.code_defaut = DEFAUT_I2C;
+        v.drapeaux = DRAPEAU_FILE;
+        tableau_formater(&v, &m, PAGE_CONDUITE, l1, l2);
+        echecs += cas_ok(17u, ok && egal(l1, "MAN -- FILE     "));
+    }
+
+    /* 19. page de trajet en AUTONOME : exemple du LISEZMOI
+     *     (consigne 250, vitesse 245,3 : erreur +1,88 % -> +02 %)            */
+    v = vehicule(MODE_AUTONOME, ETAT_MARCHE_AVANT, CAUSE_AUCUNE, 73u, 16075981u, 100u);
+    v.segment = 2u;
+    v.nb_segments = 4u;
+    v.dist_x10 = 125u;
+    v.total_tours = 105u;
+    v.consigne_rpm = 250u;
+    tableau_formater(&v, &m, PAGE_TRAJET, l1, l2);
+    echecs += cas_ok(18u, egal(l1, "S2/4 D 012.5/105") && egal(l2, "R250 V245.3 +02%"));
+
+    /* 20. page de trajet : erreur négative bornée à -99 (vitesse très au-
+     *     dessus de la consigne), puis mode MANUEL : tirets                  */
+    {
+        int ok;
+        v.consigne_rpm = 100u;
+        v.vitesse_rpm_q16 = 300u << 16;             /* 300,0 tr/min           */
+        tableau_formater(&v, &m, PAGE_TRAJET, l1, l2);
+        ok = egal(l2, "R100 V300.0 -99%");
+        v = vehicule(MODE_MANUEL, ETAT_MARCHE_AVANT, CAUSE_AUCUNE, 40u, 0u, 100u);
+        v.nb_segments = 4u;
+        v.dist_x10 = 1050u;
+        v.total_tours = 105u;
+        tableau_formater(&v, &m, PAGE_TRAJET, l1, l2);
+        echecs += cas_ok(19u, ok && egal(l1, "S-/4 D 105.0/105") && egal(l2, "R--- V  0.0 ---%"));
+    }
 
     return echecs;
 }

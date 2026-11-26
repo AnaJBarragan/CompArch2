@@ -36,3 +36,10 @@
 
 /* ---- Filtrage du PIR (E6) ---------------------------------------------- */
     .equ PIR_FILTRE_MS,         50          /* identique à lab4.h            */
+
+/* ---- Partie II (ajout de l'équipe) : numéros des types d'événements poussés
+ * depuis l'assembleur ; identiques à EV_ESTOP et EV_PIR de evq.h (projet.h,
+ * EV_NUM_ESTOP et EV_NUM_PIR). Un changement de evq_type_t doit être reporté
+ * ici : c'est pourquoi les nouveaux types s'ajoutent à la FIN de l'énumération. */
+    .equ EV_NUM_ESTOP,          3
+    .equ EV_NUM_PIR,            9

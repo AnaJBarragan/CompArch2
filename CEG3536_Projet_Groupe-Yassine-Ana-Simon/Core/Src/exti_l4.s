@@ -6,8 +6,11 @@
  * Variables (.bss)    : pir_flag, pir_t_ms, thi_flag
  *
  * Règle du laboratoire : un gestionnaire lève un drapeau et mémorise un
- * horodatage, rien d'autre. Aucun accès au bus I2C ni au moteur ici ; seul
- * le gestionnaire E-Stop (estop.s) agit sur la propulsion.
+ * horodatage. Aucun accès au bus I2C ni au moteur ici ; seul le gestionnaire
+ * E-Stop (estop.s) agit sur la propulsion. Partie II (LISEZMOI, E14) : le
+ * gestionnaire du PIR pousse en plus EV_PIR dans la file (bl evq_push) ;
+ * celui de THI ne fait que lever thi_flag (la lecture du TouchPad, sur le
+ * bus, reste dans la boucle principale).
  *
  * Au moins un des deux gestionnaires est écrit en assembleur (E10) :
  *   - EXTI9_IRQHandler (PIR, PB9) : squelette ci-dessous ;
@@ -114,41 +117,57 @@ exti_l4_init:
 
 /* void EXTI9_IRQHandler(void)   — vecteur d'interruption EXTI ligne 9 (PIR)
  * Remplace le gestionnaire faible (.weak) du fichier de démarrage.
- *   1. filtrage : si ticks_ms - pir_t_ms < PIR_FILTRE_MS et qu'un front a déjà
- *      été retenu, ignorer ce front (même principe que l'anti-rebond du
- *      laboratoire 1 ; soustraction non signée, correcte au débordement) ;
- *   2. sinon pir_t_ms = ticks_ms et pir_flag = 1 ;
- *   3. dans tous les cas, effacer la requête (RPR1, écriture d'un 1) puis dsb.
- * Routine feuille : seuls r0-r3 sont utilisés (empilés par le matériel).
- * L'étape 3 est fournie : sans elle, le gestionnaire serait rappelé sans fin. */
+ *   1. effacer la requête (RPR1, écriture d'un 1) puis dsb — fait EN PREMIER
+ *      à la partie II : un nouveau front pendant l'appel de evq_push n'est
+ *      ainsi pas effacé par erreur ;
+ *   2. filtrage : si un front a déjà été retenu et que ticks_ms - pir_t_ms <
+ *      PIR_FILTRE_MS, ignorer ce front (soustraction non signée, correcte au
+ *      débordement de ticks_ms) ;
+ *   3. sinon pir_t_ms = ticks_ms, pir_flag = 1 (gardé pour le débogueur et
+ *      pour le suivi du retour à 0 dans main.c) ;
+ *   4. partie II (E14) : evq_push(EV_PIR, pir_t_ms, ticks_ms) — l'événement
+ *      entre dans la file à l'instant de l'interruption. evq_push protège la
+ *      file par crit_entrer / crit_sortir : l'appel depuis un gestionnaire est
+ *      sûr. La valeur 0 étant réservée au retour à 0 du signal, un
+ *      horodatage nul est remplacé par 1.
+ * Routine NON feuille depuis la partie II : push {r4, lr} (r4 garde
+ * l'horodatage à travers l'appel ; 8 octets, pile alignée), retour par
+ * pop {r4, pc} (EXC_RETURN). Aucun accès au bus, aucune action sur le moteur. */
     .global EXTI9_IRQHandler
     .type   EXTI9_IRQHandler, %function
 EXTI9_IRQHandler:
+    push    {r4, lr}
+    ldr     r0, =EXTI_BASE              /* 1. requête effacée [FOURNI, déplacé] */
+    mov     r1, #EXTI_LIGNE9
+    str     r1, [r0, #EXTI_RPR1]
+    str     r1, [r0, #EXTI_FPR1]
+    dsb
     ldr     r0, =ticks_ms
-    ldr     r0, [r0]                    /* r0 = maintenant                   */
+    ldr     r4, [r0]                    /* r4 = maintenant                   */
     ldr     r1, =pir_deja
     ldr     r2, [r1]
     cbz     r2, EXTI9_retenir           /* premier front : toujours retenu   */
     ldr     r2, =pir_t_ms
     ldr     r2, [r2]
-    subs    r2, r0, r2                  /* écoulé = maintenant - pir_t_ms    */
+    subs    r2, r4, r2                  /* 2. écoulé = maintenant - pir_t_ms */
     cmp     r2, #PIR_FILTRE_MS          /* comparaison NON signée :          */
-    blo     EXTI9_effacer               /* < 50 ms -> front ignoré           */
+    blo     EXTI9_fin                   /* < 50 ms -> front ignoré           */
 EXTI9_retenir:
     movs    r2, #1
-    str     r2, [r1]                    /* pir_deja = 1                      */
+    str     r2, [r1]                    /* 3. pir_deja = 1                   */
     ldr     r1, =pir_t_ms
-    str     r0, [r1]                    /* pir_t_ms = maintenant             */
+    str     r4, [r1]                    /* pir_t_ms = maintenant             */
     ldr     r1, =pir_flag
-    str     r2, [r1]                    /* pir_flag = 1 (consommé par main)  */
-EXTI9_effacer:
-
-    ldr     r0, =EXTI_BASE              /* 3. requête effacée [FOURNI]       */
-    mov     r1, #EXTI_LIGNE9
-    str     r1, [r0, #EXTI_RPR1]
-    str     r1, [r0, #EXTI_FPR1]
-    dsb
-    bx      lr
+    str     r2, [r1]                    /* pir_flag = 1                      */
+    movs    r0, #EV_NUM_PIR             /* 4. evq_push(EV_PIR, valeur, t)    */
+    mov     r1, r4                      /* valeur = pir_t_ms ...             */
+    cbnz    r1, EXTI9_pousser
+    movs    r1, #1                      /* ... jamais 0 (0 = signal retombé) */
+EXTI9_pousser:
+    mov     r2, r4                      /* t_ms = instant de l'interruption  */
+    bl      evq_push
+EXTI9_fin:
+    pop     {r4, pc}
     .size   EXTI9_IRQHandler, .-EXTI9_IRQHandler
 
 /* void EXTI6_IRQHandler(void)   — vecteur d'interruption EXTI ligne 6 (THI)

@@ -131,14 +131,16 @@ void telem_entete(void)
 {
     telem_put("H,ticks_ms,etat,sens,consigne_pct,pwm_pct,temp_c_x10,vitesse_rpm_x100,"
               "nb_evenements,evq_debordements,mode,cause,plafond_pct,env_t_x10,"
-              "env_h_x10,env_p_x10,i2c_erreurs,ticks_perdus\r\n");
+              "env_h_x10,env_p_x10,i2c_erreurs,ticks_perdus,"
+              "mode_essai,segment,dist_x10,consigne_rpm,code_defaut,evq_max,crit_max_cycles\r\n");
 }
 
 void telem_trame(const etat_vehicule_t *v, int32_t temp_c_x10,
                  uint32_t nb_evenements, uint32_t debordements,
-                 const env_mesure_t *m, uint32_t i2c_err, uint32_t ticks_perdus)
+                 const env_mesure_t *m, uint32_t i2c_err, uint32_t ticks_perdus,
+                 uint32_t occupation_max, uint32_t crit_max)
 {
-    char ligne[160];
+    char ligne[200];    /* 24 colonnes : au plus ~150 caractères        */
     char *p = ligne;
     uint32_t rpm_x100 = (uint32_t)(((uint64_t)v->vitesse_rpm_q16 * 100u + 32768u) >> 16);
     uint32_t env_ok = (m != 0) && m->valide;    /* sinon : trois colonnes à 0 */
@@ -161,7 +163,15 @@ void telem_trame(const etat_vehicule_t *v, int32_t temp_c_x10,
     p = telem_fmt_u32(p, env_ok ? m->h_x10 : 0u);             *p++ = ',';
     p = telem_fmt_u32(p, env_ok ? m->p_hpa_x10 : 0u);         *p++ = ',';
     p = telem_fmt_u32(p, i2c_err);           *p++ = ',';
-    p = telem_fmt_u32(p, ticks_perdus);
+    p = telem_fmt_u32(p, ticks_perdus);      *p++ = ',';
+    /* --- partie II : sept colonnes de plus (E21) --- */
+    p = telem_fmt_u32(p, v->mode_essai);     *p++ = ',';
+    p = telem_fmt_u32(p, v->segment);        *p++ = ',';
+    p = telem_fmt_u32(p, v->dist_x10);       *p++ = ',';
+    p = telem_fmt_u32(p, v->consigne_rpm);   *p++ = ',';
+    p = telem_fmt_u32(p, v->code_defaut);    *p++ = ',';
+    p = telem_fmt_u32(p, occupation_max);    *p++ = ',';
+    p = telem_fmt_u32(p, crit_max);
     terminer_ligne(ligne, p);
 }
 

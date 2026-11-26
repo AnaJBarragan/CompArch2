@@ -2,29 +2,34 @@
  * main.c — programme principal en C (CEG 3536)
  *          Base : corrigé du laboratoire 3 (à citer). Étendu pour le projet,
  *          partie I : bus I2C (répartiteur), extenseurs, LCD, TouchPad, PIR,
- *          capteur environnemental, télémétrie contrôlée (E1 à E12).
+ *          capteur environnemental, télémétrie contrôlée (E1 à E12) ;
+ *          partie II : phase INIT, fenêtre de 100 ms (trajet, régulateur,
+ *          surveillances), mode essai, rafale, télémétrie étendue (E13 à E22).
  *
  * Boucle cadencée par tick_1ms. À chaque tick, dans cet ordre :
  *   1. décompte des ticks manqués (ticks_perdus, E11) ;
- *   2. producteurs : boutons, E-Stop, encodeur, potentiomètre, télémétrie,
- *      PIR, capteur environnemental, surveillance des modules I2C ;
+ *   2. producteurs : boutons, E-Stop (l'ISR a déjà poussé EV_ESTOP), fenêtre
+ *      de 100 ms (vitesse, trajet, régulateur, surveillances), potentiomètre,
+ *      télémétrie, retour à 0 du PIR (le front montant est poussé par
+ *      l'ISR), capteur environnemental, modules I2C, fin de la phase INIT ;
  *   3. commande série éventuelle (un caractère) ;
  *   4. consommateur : machine à états, lignes « E », page, « VERROU » ;
  *   5. fsm_sorties (rampe, DEL, avertisseur) ;
  *   6. UN SEUL travail lourd : trame « T », OU tableau de bord, OU capteur
  *      environnemental (SPI), OU une transaction I2C (répartiteur) ;
  *   7. telem_step (vidage non bloquant de la file d'émission).
- * Le point 6 borne la durée d'un passage : jamais deux travaux lourds dans le
- * même tick (mesure : boucle_max_cycles, DWT ; 4000 cycles = 1 ms).
  *
- * Commandes série : z, t, q, b, a (laboratoire 3) ; x banc de trame_xor8 ;
- * f autotest du tableau ; i nouveau balayage (étalé, une adresse par tick) ;
- * d LCD simulé absent pendant 2 s (E12) ; w mesure DWT d'une écriture de deux
- * octets, puis NACK sur une adresse libre (T1) ; p relecture de registres du
- * TouchPad (L4-A).
+ * Producteurs de la file (E14) : gestionnaires EXTI2 (E-Stop, estop.s),
+ * EXTI9 (PIR, exti_l4.s), EXTI15 (rafale « e », crit_test.c), et cette
+ * boucle ; consommateur unique : le point 4 de cette boucle.
+ *
+ * Commandes série : z, t, q, b, a (laboratoire 3) ; x, f, i, d, w, p
+ * (partie I) ; m, 1, 2, 3, h, s, n (mode essai), e (rafale), r (trajet à
+ * zéro), c (banc des sections critiques), g (autotest de l'automate généré),
+ * j (rejeu des traces compilées, L5-C) (partie II).
  * ------------------------------------------------------------------------- */
 #include "stm32l552xx.h"
-#include "lab4.h"
+#include "projet.h"
 #include "evq.h"
 #include "evq_test.h"
 #include "acq.h"
@@ -42,6 +47,14 @@
 #include "tableau.h"
 #include "tableau_test.h"
 #include "somme_test.h"
+#include "crit_test.h"
+#include "trajet.h"
+#include "regul.h"
+#include "surv.h"
+#include "essai.h"
+#include "automate_gen.h"
+#include "rejeu.h"
+#include "rejeu_donnees.h"    /* traces compilées (hote/csv_vers_c.py, L5-C) */
 
 /* Pilote du TouchPad : celui de l'équipe, ou celui de L4-A (lab4.h) */
 #if L4A_ESSAI
@@ -60,6 +73,7 @@
 #define I2C_ADR_LIBRE   0x10u   /* aucun module à cette adresse (T1)    */
 #define SW_N            8u
 #define SW_ECHANTILLONS (COMMUT_ANTIREBOND_MS / COMMUT_PERIODE_MS)   /* 3 */
+#define RAMPE_PAR_FENETRE (REGUL_PERIODE_MS / RAMPE_PAS_MS)  /* 10 points / 100 ms */
 
 /* tampon DMA : ADC_N_MOY échantillons par voie, entrelacés IN1, IN2, ... */
 static volatile uint16_t tampon_adc[ADC_N_VOIES * ADC_N_MOY];
@@ -67,7 +81,8 @@ static acq_t acq_pot;      /* potentiomètre : 0..100 %                        *
 static acq_t acq_temp;     /* température : dixièmes de degré Celsius         */
 
 static ioexp_t      x_del, x_commut;        /* deux instances du même objet   */
-static env_mesure_t mesure_env;             /* dernière mesure (et ta_c10)    */
+static env_mesure_t mesure_env;             /* dernière mesure réelle         */
+static env_mesure_t mesure_aff;             /* telle qu'utilisée (mode essai) */
 static int32_t      derniere_consigne = -1;
 static uint32_t     trame_due;              /* EV_TELEM consommé              */
 static uint32_t     pir_haut;               /* signal PIR vu à 1              */
@@ -78,6 +93,18 @@ static uint8_t      sw_compte[SW_N];        /* échantillons différents de suit
 static uint32_t     scan_actif, scan_n;     /* balayage étalé (commande i)    */
 static uint8_t      scan_adr, scan_trouvees[8];
 static uint32_t     t_commut, t_tp_surv, t_del_essai, t_tableau, t_env;
+
+/* ---- partie II ---- */
+static regul_t      regul;                  /* objet régulateur (E17)         */
+static uint32_t     init_en_cours, t_init;  /* phase INIT (E22)               */
+static uint32_t     init_fronts;            /* fronts vus pendant INIT        */
+static uint8_t      scan_init[8];           /* balayage du démarrage          */
+static uint32_t     scan_init_n;
+static bool         env_init_ok;
+static bool         auto_prec;              /* AUTONOME en marche, fenêtre précédente */
+static bool         fin_poussee;            /* EV_FIN déjà poussé pour ce trajet */
+static uint32_t     surv_signale;           /* DEFAUT_x signalé, en attente de disparition */
+static uint32_t     therm_prec;             /* dernier niveau thermique poussé */
 
 /* variables à observer au débogueur (Live Expressions) */
 volatile uint32_t compteur_pas;             /* passages dans la boucle        */
@@ -98,21 +125,52 @@ static void dwt_init(void)
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 }
 
+static char *copier(char *p, const char *s)
+{
+    while (*s) {
+        *p++ = *s++;
+    }
+    *p = '\0';
+    return p;
+}
+
+static char *copier_hex8(char *p, uint32_t v)
+{
+    static const char hex[] = "0123456789ABCDEF";
+    for (int32_t d = 28; d >= 0; d -= 4) {
+        *p++ = hex[(v >> (uint32_t)d) & 0xFu];
+    }
+    *p = '\0';
+    return p;
+}
+
 static void reponse_u32(const char *etiquette, uint32_t v)
 {
     char ligne[48];
-    char *p = ligne;
-    while (*etiquette) *p++ = *etiquette++;
+    char *p = copier(ligne, etiquette);
     p = telem_fmt_u32(p, v);
-    *p++ = '\r'; *p++ = '\n'; *p = '\0';
+    copier(p, "\r\n");
     telem_put(ligne);
 }
 
+/* Mesures telles que le véhicule les utilise : réelles, ou injectées en mode
+ * essai (E20) — signalées par la colonne mode_essai et l'astérisque du LCD.
+ * Appelée à chaque nouvelle mesure et après chaque commande du mode essai.  */
+static void publier_env(uint32_t t)
+{
+    mesure_aff = mesure_env;
+    mesure_aff.ta_c10 = essai_temp_c10(acq_valeur(&acq_temp));
+    mesure_aff.h_x10 = essai_hum_x10(mesure_env.h_x10);
+    tableau_env(&mesure_aff);
+    evq_push(EV_ENV, mesure_aff.h_x10, t);
+}
+
 /* ---- consommateur ------------------------------------------------------- */
-static bool journalise(evq_type_t type)     /* E10 : types qui ont une ligne E */
+static bool journalise(evq_type_t type)     /* E10, E21 : types qui ont une ligne E */
 {
     return type == EV_ESTOP || type == EV_TOUCHE || type == EV_PIR
-        || type == EV_COMMUT || type == EV_DEFAUT;
+        || type == EV_COMMUT || type == EV_DEFAUT
+        || type == EV_THERMIQUE || type == EV_FIN || type == EV_ESSAI;
 }
 
 static void consommer(const evq_event_t *e)
@@ -129,9 +187,23 @@ static void consommer(const evq_event_t *e)
             return;
         }
         break;
-    case EV_COMMUT:
-        if (e->valeur == SW_PAGE) {             /* SW8 : présentation seulement */
+    case EV_COMMUT:                             /* commutateurs de présentation */
+        if (e->valeur == SW_PAGE) {             /* SW8 : trois pages           */
             tableau_page_basculer();
+            telem_evenement(e);
+            return;
+        }
+        if (e->valeur == SW_TRAJET) {           /* SW6 : trajet à zéro, à l'arrêt */
+            if (!fsm_en_marche()) {
+                trajet_reset();
+            }
+            telem_evenement(e);
+            return;
+        }
+        if (e->valeur == SW_ESSAI) {            /* SW7 : comme la commande m   */
+            (void)essai_commande('m');
+            evq_push(EV_ESSAI, (uint32_t)'m', e->t_ms);
+            publier_env(e->t_ms);
             telem_evenement(e);
             return;
         }
@@ -145,30 +217,138 @@ static void consommer(const evq_event_t *e)
     }
 }
 
-/* E-Stop et défauts : jamais perdus, même file pleine (E12) — traités sur-
- * le-champ si la file refuse l'événement.                                  */
-static void pousser_garanti(evq_type_t type, uint32_t valeur, uint32_t t)
-{
-    if (!evq_push(type, valeur, t)) {
-        evq_event_t e = { type, valeur, t };
-        consommer(&e);
-    }
-}
-
 /* ---- surveillance des modules I2C (E12) ----------------------------------
  * Trois erreurs consécutives : module muet -> EV_DEFAUT (valeur = adresse).
- * Première réussite ensuite : module rétabli -> EV_DEFAUT | DEFAUT_RETABLI. */
+ * Première réussite ensuite : module rétabli -> EV_DEFAUT | DEFAUT_RETABLI.
+ * Partie II : evq_push suffit, la file ne perd jamais un EV_DEFAUT (evq.c). */
 static void surveiller(uint32_t bit, uint32_t echecs, uint8_t adr7, uint32_t t)
 {
     uint32_t tp = (bit == MOD_TP) ? DEFAUT_TP : 0u;
 
     if (!(modules_muets & bit) && echecs >= I2C_ERREURS_DEFAUT) {
         modules_muets |= bit;
-        pousser_garanti(EV_DEFAUT, adr7 | tp, t);
+        evq_push(EV_DEFAUT, adr7 | tp, t);
     } else if ((modules_muets & bit) && echecs == 0u) {
         modules_muets &= ~bit;
-        pousser_garanti(EV_DEFAUT, adr7 | tp | DEFAUT_RETABLI, t);
+        evq_push(EV_DEFAUT, adr7 | tp | DEFAUT_RETABLI, t);
     }
+}
+
+/* ---- partie II : fenêtre de 100 ms (E16 à E19) --------------------------- */
+/* Le défaut de surveillance est-il encore présent, l'arrêt obtenu ? Un défaut
+ * réel ne se voit qu'en marche : il a disparu dès l'arrêt. Un défaut injecté
+ * (mode essai) dure tant que l'injection est active (T15).                  */
+static bool surv_cause_presente(uint32_t code)
+{
+    if (code == DEFAUT_SENS) {
+        return essai_sens(SENS_AVANT) != SENS_AVANT;
+    }
+    if (code == DEFAUT_ENCODEUR) {
+        return essai_fronts(1u) == 0u;
+    }
+    return false;
+}
+
+static void fenetre_100ms(uint32_t t)
+{
+    uint32_t fronts = encoder_read(&sens_mesure);
+    const etat_vehicule_t *v = fsm_etat();
+    uint32_t rpm = (RPM_Q16_100MS(fronts) + 32768u) >> 16;    /* tr/min arrondis */
+    bool     autonome_marche = fsm_en_marche() && v->mode == MODE_AUTONOME;
+    uint32_t code, th;
+
+    evq_push(EV_VITESSE, fronts, t);
+    if (v->etat == ETAT_INIT) {
+        init_fronts += fronts;                  /* E22 : aucun front attendu   */
+    }
+
+    /* trajet et régulateur : mesures RÉELLES seulement (essai.h, sécurité) */
+    if (autonome_marche) {
+        uint32_t plafond = fsm_plafond_pct();
+        uint32_t plafond_rpm = plafond * VITESSE_MAX_RPM / 100u;
+        uint32_t borne = v->pwm_pct + RAMPE_PAR_FENETRE;
+        uint32_t consigne, pwm;
+
+        if (!auto_prec) {                       /* départ en AUTONOME          */
+            if (trajet_fini()) {
+                trajet_reset();                 /* nouveau trajet après « FIN » */
+            }
+            fin_poussee = false;
+            regul_reset(&regul);
+        }
+        trajet_avancer(fronts);
+        consigne = trajet_consigne_rpm();
+        if (consigne > plafond_rpm) {
+            consigne = plafond_rpm;             /* TouchPad et limitations (E17) */
+        }
+        /* la commande ne peut pas devancer la rampe de plus d'une fenêtre :
+         * le plafond du régulateur sert aussi d'anti-emballement vis-à-vis
+         * de la rampe (10 points par 100 ms)                                  */
+        if (borne > plafond) {
+            borne = plafond;
+        }
+        pwm = regul_step(&regul, consigne, rpm, borne);
+        fsm_auto(pwm, consigne, trajet_segment(), trajet_dist_x10());
+        if (trajet_fini() && !fin_poussee) {
+            fin_poussee = true;
+            evq_push(EV_FIN, trajet_total_tours(), t);
+        }
+    } else {
+        regul_reset(&regul);                    /* remis à zéro à chaque arrêt */
+        fsm_auto(0u, 0u, trajet_segment(), trajet_dist_x10());
+    }
+    auto_prec = autonome_marche;
+
+    /* surveillances : valeurs éventuellement injectées (E18 à E20) */
+    surv_step(v, essai_sens(sens_mesure), essai_fronts(fronts),
+              essai_temp_c10(acq_valeur(&acq_temp)), REGUL_PERIODE_MS);
+    code = surv_code();
+    if (code != DEFAUT_AUCUN && surv_signale == DEFAUT_AUCUN) {
+        surv_signale = code;
+        evq_push(EV_DEFAUT, EV_DEFAUT_CODE_BASE + code, t);
+    } else if (surv_signale != DEFAUT_AUCUN && !fsm_en_marche()
+               && !surv_cause_presente(surv_signale)) {
+        surv_acquitter();                       /* le défaut a disparu         */
+        evq_push(EV_DEFAUT, (EV_DEFAUT_CODE_BASE + surv_signale) | DEFAUT_RETABLI, t);
+        surv_signale = DEFAUT_AUCUN;
+    }
+    th = surv_thermique();
+    if (th != therm_prec) {
+        therm_prec = th;
+        evq_push(EV_THERMIQUE, th, t);
+    }
+}
+
+/* ---- partie II : vérification des ressources à la fin de INIT (E22) ----- */
+static uint32_t verifier_ressources(void)
+{
+    static const uint8_t attendues[INIT_N_ADRESSES] = {
+        I2C_ADR_RVB, I2C_ADR_DEL, I2C_ADR_COMMUT, I2C_ADR_LCD, I2C_ADR_TOUCHPAD
+    };                                          /* ordre croissant, comme i2c_scan */
+    uint32_t mv = acq_mv(&acq_temp);
+    bool i2c_ok = (scan_init_n == INIT_N_ADRESSES) && modules_muets == 0u;
+    bool env_ok = env_init_ok && env_identifiant() == INIT_ENV_ID;
+    bool adc_ok = adc_dma_tours() > 0u && mv >= INIT_TEMP_MV_MIN && mv <= INIT_TEMP_MV_MAX;
+    bool enc_ok = (init_fronts == 0u);
+    uint32_t code;
+    char ligne[96];
+    char *p;
+
+    for (uint32_t i = 0u; i < INIT_N_ADRESSES && i2c_ok; i++) {
+        i2c_ok = (scan_init[i] == attendues[i]);
+    }
+    code = (i2c_ok && env_ok && adc_ok && enc_ok) ? DEFAUT_AUCUN : DEFAUT_INIT;
+
+    /* motif détaillé dans la télémétrie (T18) */
+    p = copier(ligne, "INIT,i2c=");   p = telem_fmt_u32(p, scan_init_n);
+    p = copier(p, ",env_id=");        p = telem_fmt_u32(p, env_identifiant());
+    p = copier(p, ",temp_mv=");       p = telem_fmt_u32(p, mv);
+    p = copier(p, ",dma=");           p = telem_fmt_u32(p, adc_dma_tours());
+    p = copier(p, ",fronts=");        p = telem_fmt_u32(p, init_fronts);
+    p = copier(p, ",code=");          p = telem_fmt_u32(p, code);
+    copier(p, "\r\n");
+    telem_put(ligne);
+    return code;
 }
 
 /* ---- demandeurs du bus -------------------------------------------------- */
@@ -257,7 +437,9 @@ static void bus_step(uint32_t t)
 
 /* ---- commandes série ----------------------------------------------------
  * Retourne true pour un banc d'essai bloquant (plusieurs ms par nature) :
- * le tick suivant n'est alors pas compté dans ticks_perdus.               */
+ * le tick suivant n'est alors pas compté dans ticks_perdus.
+ * Aucune réponse ne commence par « T, », « E, » ou « I, » : telemetrie.py
+ * les prendrait pour des trames.                                           */
 static bool traiter_commande(int rx, uint32_t t)
 {
     switch (rx) {
@@ -267,6 +449,8 @@ static bool traiter_commande(int rx, uint32_t t)
         ticks_perdus = 0u;
         touches_refusees = 0u;
         boucle_max_cycles = 0u;
+        crit_max_cycles = 0u;
+        crit_rafale_refus = 0u;
         telem_put("Z,ok\r\n");
         return false;
     case 't':
@@ -292,6 +476,8 @@ static bool traiter_commande(int rx, uint32_t t)
         reponse_u32("A,tours_dma=", adc_dma_tours());
         reponse_u32("A,env_id=", env_identifiant());
         reponse_u32("A,boucle_max_cycles=", boucle_max_cycles);
+        reponse_u32("A,crit_max_cycles=", crit_max_cycles);
+        reponse_u32("A,evq_max=", evq_max());
         return true;
     case 'x':
         reponse_u32("X,echecs=", somme_autotest());
@@ -357,6 +543,72 @@ static bool traiter_commande(int rx, uint32_t t)
         reponse_u32("P,tp_etat=", tp_etat);
         return true;
     }
+    /* ---- partie II ---- */
+    case 'm': case '1': case '2': case '3': case 'h': case 's': case 'n':
+        if (essai_commande((char)rx)) {         /* mode essai et injections (E20) */
+            evq_push(EV_ESSAI, (uint32_t)rx, t);
+            publier_env(t);                     /* effet immédiat sur l'humidité */
+            if (rx == 'm') {                    /* m bascule : on dit dans quel sens */
+                telem_put(essai_actif() ? "M,essai=1\r\n" : "M,essai=0\r\n");
+            }
+        } else {
+            telem_put("M,refuse (mode essai inactif)\r\n");
+        }
+        return false;
+    case 'e':                                   /* rafale depuis une ISR (E14) */
+        crit_rafale(ESSAI_RAFALE_N);
+        telem_put("RAFALE,40\r\n");
+        return false;
+    case 'r':                                   /* trajet à zéro (E16)         */
+        if (!fsm_en_marche()) {
+            trajet_reset();
+            telem_put("TRAJET,0\r\n");
+        } else {
+            telem_put("TRAJET,refuse (en marche)\r\n");
+        }
+        return false;
+    case 'c':                                   /* banc des sections critiques */
+        reponse_u32("C,echecs=", crit_autotest());
+        return true;
+    case 'g': {                                 /* autotest de l'automate généré */
+        char ligne[40];
+        char *p = copier(ligne, "G,echecs=");
+        p = telem_fmt_u32(p, automate_autotest());
+        p = copier(p, ",somme=");
+        p = copier_hex8(p, AUTO_SOMME);
+        copier(p, "\r\n");
+        telem_put(ligne);
+        return true;
+    }
+    case 'j':                                   /* rejeu des traces (L5-C)     */
+        if (fsm_en_marche()) {
+            telem_put("J,refuse (en marche)\r\n");
+            return false;
+        }
+        for (uint32_t i = 0u; i < REJEU_N_SCENARIOS; i++) {
+            rejeu_bilan_t b;
+            char ligne[128];
+            char *p;
+            rejeu_executer(REJEU_SCENARIOS[i].t, REJEU_SCENARIOS[i].n, TRAJET_REF, TRAJET_REF_N,
+                           0, &b);
+            p = copier(ligne, "J,");            p = copier(p, REJEU_SCENARIOS[i].nom);
+            p = copier(p, ",trames=");          p = telem_fmt_u32(p, b.n);
+            p = copier(p, ",somme=");           p = copier_hex8(p, b.somme);
+            p = copier(p, ",concordants=");     p = telem_fmt_u32(p, b.concordants);
+            p = copier(p, ",segment=");         p = telem_fmt_u32(p, b.segment_final);
+            p = copier(p, ",dist_x10=");        p = telem_fmt_u32(p, b.dist_x10_final);
+            p = copier(p, ",defauts=");         p = telem_fmt_u32(p, b.defauts);
+            copier(p, "\r\n");
+            telem_put(ligne);
+        }
+        /* trajet et surv sont à état unique : le rejeu les a utilisés */
+#if TRAJET_EQUIPE_ESSAI
+        trajet_init(TRAJET_EQUIPE, TRAJET_EQUIPE_N);
+#else
+        trajet_init(TRAJET_REF, TRAJET_REF_N);
+#endif
+        surv_init();
+        return true;
     default:
         return false;
     }
@@ -366,20 +618,28 @@ int main(void)
 {
     uint32_t fenetre = 0u, periode_telem = 0u, t_prec;
     uint32_t banc = 0u;
-    uint8_t  adresses[8];
-    uint32_t n;
     evq_event_t e;
 
-    /* couche assembleur (sorties en état sûr avant les interruptions) */
+    /* couche assembleur (sorties en état sûr avant les interruptions) ; la
+     * file est prête avant le premier producteur d'interruption (E-Stop)    */
     gpio_init();
     buzzer_init();
-    motor_init();
+    motor_init();                   /* CCR1 = 0, STB = 0 dès la mise sous tension */
+    evq_init();
     encoder_init();
     estop_init();
     systick_init(1000u);
     /* couche C */
     dwt_init();
-    evq_init();
+    crit_rafale_init();             /* EXTI15, déclenchée par logiciel (« e ») */
+    essai_init();
+    surv_init();
+#if TRAJET_EQUIPE_ESSAI
+    trajet_init(TRAJET_EQUIPE, TRAJET_EQUIPE_N);
+#else
+    trajet_init(TRAJET_REF, TRAJET_REF_N);
+#endif
+    regul_init(&regul, REGUL_KP_Q8, REGUL_KI_Q8);
     adc_dma_init(tampon_adc, ADC_N_MOY);
     acq_init(&acq_pot, &tampon_adc[0], ADC_N_VOIES, ADC_N_MOY, 100, (int32_t)ADC_VREF_MV, 0);
     acq_config_filtre(&acq_pot, CONSIGNE_HYSTERESIS, POT_ZONE_MORTE_PCT, 0, 100);
@@ -387,13 +647,13 @@ int main(void)
              -10000, -TEMP_PENTE_UV_PAR_C,
              TEMP_C10_REF + (TEMP_MV_REF * 10000) / (-TEMP_PENTE_UV_PAR_C));
     telem_init(TELEM_BAUDS);
-    fsm_init();
+    fsm_init();                     /* état INIT (E22)                         */
     telem_entete();
 
-    /* projet, partie I : bus I2C et balayage (ligne « I », E1) */
+    /* projet, partie I : bus I2C et balayage (ligne « I », E1 ; INIT, E22) */
     i2c_init();
-    n = i2c_scan(adresses, 8u);
-    telem_balayage(adresses, n < 8u ? n : 8u);
+    scan_init_n = i2c_scan(scan_init, 8u);
+    telem_balayage(scan_init, scan_init_n < 8u ? scan_init_n : 8u);
     /* extenseurs : DEL éteintes ; commutateurs en entrée (0xFF une fois) */
     ioexp_init(&x_del, I2C_ADR_DEL);
     ioexp_init(&x_commut, I2C_ADR_COMMUT);
@@ -405,9 +665,10 @@ int main(void)
     tableau_init();
     /* SPI et capteur environnemental (identifiant, coefficients) */
     spi_init();
-    (void)env_init();
+    env_init_ok = env_init();
     mesure_env.valide = 0u;
     mesure_env.ta_c10 = acq_valeur(&acq_temp);
+    mesure_aff = mesure_env;
     /* EXTI6 (THI) et EXTI9 (PIR) en dernier */
     exti_l4_init();
     pir_flag = 0u;
@@ -415,6 +676,8 @@ int main(void)
                                        une demande déjà en attente           */
     t_commut = t_tp_surv = t_del_essai = t_tableau = t_env = ticks_ms;
     t_prec = ticks_ms;
+    t_init = ticks_ms;              /* fin de INIT dans INIT_DUREE_MS          */
+    init_en_cours = 1u;
 
     for (;;) {
         if (tick_1ms == 0u) {
@@ -434,15 +697,15 @@ int main(void)
         /* --- 2. producteurs d'événements --- */
         if (button_pressed(BTN_USER))  { evq_push(EV_USER, 0u, t); }
         if (button_pressed(BTN_TOUCH)) { evq_push(EV_TOUCH, 0u, t); }
-        if (estop_flag) {
+        if (estop_flag) {                       /* EV_ESTOP poussé par l'ISR   */
             estop_flag = 0u;
-            motor_stop_now();                           /* redondant avec l'ISR */
-            pousser_garanti(EV_ESTOP, 0u, t);
+            motor_stop_now();                   /* redondant avec l'ISR        */
         }
-        if (++fenetre >= FENETRE_VITESSE_MS) {
+        bool fenetre_faite = false, fin_init = false;
+        if (++fenetre >= REGUL_PERIODE_MS) {    /* 100 ms (partie II)          */
             fenetre = 0u;
-            uint32_t fronts = encoder_read(&sens_mesure);
-            evq_push(EV_VITESSE, fronts, t);
+            fenetre_100ms(t);
+            fenetre_faite = true;               /* travail lourd de ce tick (point 6) */
         }
         int32_t c = acq_valeur(&acq_pot);
         if (c != derniere_consigne) {
@@ -453,21 +716,18 @@ int main(void)
             periode_telem = 0u;
             evq_push(EV_TELEM, 0u, t);
         }
-        /* PIR : front montant retenu par EXTI9 (valeur = instant de l'IRQ),
-         * puis retour du signal à 0 (lu sur PB9)                             */
+        /* PIR : le front montant (EXTI9) a déjà poussé EV_PIR avec l'instant
+         * de l'interruption ; ici, le retour du signal à 0 (lu sur PB9)      */
         if (pir_flag) {
             pir_flag = 0u;
             pir_haut = 1u;
-            evq_push(EV_PIR, (pir_t_ms != 0u) ? pir_t_ms : 1u, t);
         } else if (pir_haut && (GPIOB->IDR & GPIO_IDR_ID9) == 0u) {
             pir_haut = 0u;
             evq_push(EV_PIR, 0u, t);
         }
         /* capteur environnemental : nouvelle mesure (E7) */
         if (env_mesure(&mesure_env)) {
-            mesure_env.ta_c10 = acq_valeur(&acq_temp);
-            tableau_env(&mesure_env);
-            evq_push(EV_ENV, mesure_env.h_x10, t);
+            publier_env(t);
         }
         /* modules I2C muets ou rétablis (E12) */
         surveiller(MOD_DEL, ioexp_echecs(&x_del), I2C_ADR_DEL, t);
@@ -475,10 +735,16 @@ int main(void)
         surveiller(MOD_LCD, lcd_echecs(), I2C_ADR_LCD, t);
         surveiller(MOD_TP, tp_echecs, I2C_ADR_TOUCHPAD, t);
         adc_dma_step();
+        /* fin de la phase INIT (E22) */
+        if (init_en_cours && (t - t_init) >= INIT_DUREE_MS) {
+            init_en_cours = 0u;
+            fsm_fin_init(verifier_ressources());
+            fin_init = true;                    /* vérification unique, comme un banc */
+        }
 
         /* --- 3. commandes série --- */
         int rx = telem_rx();
-        banc = (rx >= 0) ? traiter_commande(rx, t) : false;
+        banc = ((rx >= 0) ? traiter_commande(rx, t) : false) || fin_init;
 
         /* --- 4. consommateur --- */
         while (evq_pop(&e)) {
@@ -487,11 +753,18 @@ int main(void)
         /* --- 5. sorties --- */
         fsm_sorties();
 
-        /* --- 6. un seul travail lourd par tick --- */
-        if (trame_due) {
+        /* --- 6. un seul travail lourd par tick ---
+         * La fenêtre de 100 ms (point 2) EST le travail lourd de son tick :
+         * trame, tableau, SPI et bus attendent le tick suivant. Sans cette
+         * règle, la fenêtre et la trame (200 ms) tombaient dans le même tick
+         * une fois sur deux : un tick perdu par trame, relevé sur la carte. */
+        if (fenetre_faite) {
+            /* rien d'autre dans ce tick (E11 : ticks_perdus = 0) */
+        } else if (trame_due) {
             trame_due = 0u;
-            telem_trame(fsm_etat(), acq_valeur(&acq_temp), evq_total(), evq_debordements(),
-                        &mesure_env, i2c_erreurs(), ticks_perdus);
+            telem_trame(fsm_etat(), essai_temp_c10(acq_valeur(&acq_temp)), evq_total(),
+                        evq_debordements(), &mesure_aff, i2c_erreurs(), ticks_perdus,
+                        evq_max(), crit_max_cycles);
         } else if ((t - t_tableau) >= TABLEAU_PERIODE_MS) {
             t_tableau = t;
             tableau_step();
