@@ -10,11 +10,16 @@
  * (buzzer_set, buzzer_continu = 1) avant de positionner estop_flag. Les deux
  * routines appelées n'utilisent que r0-r1 ; l'ISR sauvegarde LR (push {r4, lr},
  * 8 octets) et retourne par pop {r4, pc} (EXC_RETURN). Le changement complet
- * d'état vers ARRÊT_URGENCE reste dans fsm_step.
+ * d'état vers ARRÊT_URGENCE reste dans fsm.c.
+ * Projet, partie II (E14) : après la coupure, l'ISR pousse EV_ESTOP dans la
+ * file (bl evq_push), sauf si estop_flag était déjà à 1 (rebonds du bouton
+ * dans la même milliseconde : un seul événement). evq_push garantit qu'un
+ * EV_ESTOP n'est jamais perdu, même file pleine (evq.c).
  * estop_init est inchangée par rapport au laboratoire 1.
  * ------------------------------------------------------------------------- */
 #include "registres.inc"
 #include "registres_lab2.inc"
+#include "registres_lab4.inc"       /* EV_NUM_ESTOP (partie II)              */
 
     .syntax unified
     .cpu    cortex-m33
@@ -79,8 +84,9 @@ estop_init:
  *   1. propulsion en sécurité : motor_stop_now (CCR1 = 0, STB = 0, AI1 = AI2 = 0) ;
  *   2. son continu : buzzer_set(1) et buzzer_continu = 1 ;
  *   3. DEL : verte et bleue éteintes, rouge allumée (BSRR) ;
- *   4. estop_flag = 1 ;
- *   5. effacement de la requête (RPR1 et FPR1, w1c) puis dsb.
+ *   4. estop_flag = 1 (ancienne valeur gardée dans r4) ;
+ *   5. effacement de la requête (RPR1 et FPR1, w1c) puis dsb ;
+ *   6. partie II : evq_push(EV_ESTOP, 0, ticks_ms) si r4 valait 0.
  * Délai PB2 -> PE9 : quelques microsecondes (latence 12 cycles + ~15
  * instructions à 4 MHz), la PWM s'arrêtant au plus tard au débordement
  * suivant (50 µs) ; STB = 0 coupe le pilote immédiatement.                 */
@@ -104,6 +110,7 @@ EXTI2_IRQHandler:
     mov     r1, #(1 << LED_ROUGE_PIN)
     str     r1, [r0, #GPIO_BSRR]
     ldr     r0, =estop_flag             /* 4. drapeau                        */
+    ldr     r4, [r0]                    /* r4 = ancienne valeur (r4 sauvé)   */
     movs    r1, #1
     str     r1, [r0]
     ldr     r0, =EXTI_BASE              /* 5. requête effacée                */
@@ -111,5 +118,12 @@ EXTI2_IRQHandler:
     str     r1, [r0, #EXTI_RPR1]
     str     r1, [r0, #EXTI_FPR1]
     dsb
+    cbnz    r4, EXTI2_fin               /* 6. déjà signalé : pas de doublon  */
+    movs    r0, #EV_NUM_ESTOP           /* evq_push(EV_ESTOP, 0, ticks_ms)   */
+    movs    r1, #0
+    ldr     r2, =ticks_ms
+    ldr     r2, [r2]
+    bl      evq_push
+EXTI2_fin:
     pop     {r4, pc}
     .size   EXTI2_IRQHandler, .-EXTI2_IRQHandler

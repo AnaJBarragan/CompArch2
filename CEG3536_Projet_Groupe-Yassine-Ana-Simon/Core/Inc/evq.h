@@ -2,8 +2,11 @@
  * evq.h — file circulaire d'événements (CEG 3536, laboratoire 3, E7)
  * Module indépendant du matériel : aucun en-tête CMSIS, aucun registre.
  * Le même source est compilé sur la cible STM32 et sur hôte (hote/).
- * Un seul producteur et un seul consommateur sont supposés s'exécuter dans le
- * même contexte (boucle principale) : aucune section critique (laboratoire 5).
+ * Projet, partie II : plusieurs producteurs (gestionnaires d'interruption et
+ * boucle principale), un seul consommateur (boucle principale). Indices et
+ * compteurs protégés par crit_entrer / crit_sortir (crit.s ; crit_hote.c sur
+ * hôte). Débordement : le plus ancien événement ordinaire est écrasé ; un
+ * EV_ESTOP ou un EV_DEFAUT n'est jamais perdu (voir evq.c).
  * ------------------------------------------------------------------------- */
 #ifndef EVQ_H
 #define EVQ_H
@@ -44,11 +47,11 @@ typedef struct {
 } evq_event_t;
 
 void     evq_init(void);
-bool     evq_push(evq_type_t type, uint32_t valeur, uint32_t t_ms); /* false si pleine */
+bool     evq_push(evq_type_t type, uint32_t valeur, uint32_t t_ms); /* false si débordement */
 bool     evq_pop(evq_event_t *e);                                   /* false si vide   */
 uint32_t evq_count(void);                                           /* éléments présents */
-uint32_t evq_debordements(void);                                    /* push refusés    */
-uint32_t evq_max(void);                                             /* partie II (E14) : à écrire */
+uint32_t evq_debordements(void);                                    /* événements perdus */
+uint32_t evq_max(void);                                             /* occupation maximale (E14) */
 uint32_t evq_total(void);                                           /* push acceptés   */
 
 #endif /* EVQ_H */
