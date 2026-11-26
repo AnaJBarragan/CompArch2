@@ -30,14 +30,14 @@
 
 | Module | Relevé | Valeur | Preuve (fichier) |
 |---|---|---|---|
-| Bus I²C | Adresses trouvées par `i2c_scan` | | |
+| Bus I²C | Adresses trouvées par `i2c_scan`    |   0x38, 0x39, 0x3E, 0X5A, 0x2D | |
 | Bus I²C | `GPIOF->IDR` bits 0 et 1 au repos ; `I2C2->ISR` après une transaction | | |
-| Extenseur des DEL | Octet écrit pour allumer Y1 seule ; R4 seule | | |
-| Extenseur des commutateurs | Octet lu au repos ; SW1 enfoncé ; SW8 enfoncé | | |
-| LCD | Octets de commande confirmés (fonction, allumage, effacement, mode) | | |
-| Rétroéclairage | Registres rouge / vert / bleu confirmés | | |
+| Extenseur des DEL | Octet écrit pour allumer Y1 seule ; R4 seule |    0x7F, 0xFE | |
+| Extenseur des commutateurs | Octet lu au repos ; SW1 enfoncé ; SW8 enfoncé | 0x7F, 0xFE, 0xFF | |
+| LCD | Octets de commande confirmés (fonction, allumage, effacement, mode) |0x01,0x06, 0x0C, 0x28 | |
+| Rétroéclairage | Registres rouge / vert / bleu confirmés | 0x01, 0x02, 0x03 | |
 | TouchPad | Front actif de THI ; `0x5E` relu après `tp_init` ; deux seuils relus | | |
-| Capteur environnemental | Identifiant lu ; page utilisée pour chaque registre | | |
+| Capteur environnemental | Identifiant lu ; page utilisée pour chaque registre |97/0x61 | |
 | Capteur environnemental | Température / humidité / pression au repos ; écart avec le capteur analogique | | |
 | PIR | Durée du niveau haut ; `pir_t_ms` de deux fronts successifs | | |
 
@@ -45,7 +45,7 @@ Table des touches (électrode → touche), relevée au débogueur :
 
 | Électrode | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Touche | | | | | | | | | | | | |
+| Touche |0|1|2|3|4|5|6|7|8|9|SHIFT|NEXT/BACK(<->) |
 
 ## Partie I — Essais hôte (E11)
 
