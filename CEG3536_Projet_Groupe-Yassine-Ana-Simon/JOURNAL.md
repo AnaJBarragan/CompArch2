@@ -38,7 +38,7 @@
 | Rétroéclairage | Registres rouge / vert / bleu confirmés | 0x01, 0x02, 0x03 | |
 | TouchPad | Front actif de THI ; `0x5E` relu après `tp_init` ; deux seuils relus | | |
 | Capteur environnemental | Identifiant lu ; page utilisée pour chaque registre |97/0x61 | |
-| Capteur environnemental | Température / humidité / pression au repos ; écart avec le capteur analogique  |25.1 C / 1021.7hPa / 22,4%|TEST(t1-t18).pdf|
+| Capteur environnemental | Température / humidité / pression au repos ; écart avec le capteur analogique  |25.1 C / 1021.7hPa / 22,4%|T6 - TEST(t1-t18).pdf|
 | PIR | Durée du niveau haut ; `pir_t_ms` de deux fronts successifs | | |2
 
 Table des touches (électrode → touche), relevée au débogueur :
