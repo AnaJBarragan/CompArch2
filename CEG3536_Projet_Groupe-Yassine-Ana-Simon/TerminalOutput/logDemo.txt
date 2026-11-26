@@ -1,0 +1,38 @@
+Last login: Tue Nov 24 12:21:08 on ttys006
+➜  ~ cd ~/Documents/Software/CEG3536/CEG3536_Projet_Groupe-Yassine-Ana-Simon/hote && python3 telemetrie.py demo.log
+lignes lues : 3898 ; trames T valides : 3771 ; evenements E : 107 ; balayages I : 1 ; autres lignes : 18
+en-tete H : present
+  balayage : 0x2D 0x38 0x39 0x3E 0x5A
+periode (ticks_ms) : moyenne 184.4 ms, min -58600, max 208 ; cadence 5.42 Hz (OK)
+  etat               min       0  max       4  dernier       0
+  sens               min       0  max       2  dernier       0
+  consigne_pct       min       0  max     100  dernier       0
+  pwm_pct            min       0  max     100  dernier       0
+  temp_c_x10         min     253  max     270  dernier     260
+  vitesse_rpm_x100   min       0  max   37701  dernier       0
+  nb_evenements      min       3  max    7592  dernier    7592
+  evq_debordements   min       0  max       0  dernier       0
+  mode               min       0  max       1  dernier       0
+  cause              min       0  max       4  dernier       0
+  plafond_pct        min      10  max     100  dernier      30
+  env_t_x10          min     244  max     285  dernier     254
+  env_h_x10          min     206  max     522  dernier     212
+  env_p_x10          min   10239  max   10257  dernier   10243
+  i2c_erreurs        min       0  max       1  dernier       1
+  ticks_perdus       min       0  max       0  dernier       0
+  mode_essai         min       0  max       0  dernier       0
+  segment            min       0  max       0  dernier       0
+  dist_x10           min       0  max       0  dernier       0
+  consigne_rpm       min       0  max       0  dernier       0
+  code_defaut        min       0  max       0  dernier       0
+  evq_max            min       0  max       0  dernier       0
+  crit_max_cycles    min       0  max       0  dernier       0
+  vitesse 0.00 .. 377.01 tr/min
+  etats releves : ARRET, MARCHE_AVANT, MARCHE_ARRIERE, ARRET_URGENCE, ARRET_EVENEMENT
+  capteur : 25.4 C, 21.2 %, 1024.3 hPa ; analogique 26.0 C
+  file : occupation maximale 0 ; masquage maximal 0 cycles (borne : 200)
+  evenements par type : 3 x 1, 8 x 38, 9 x 26, 10 x 42
+AVIS : 3771 trame(s) de 17 colonnes (format de la partie I) : les sept colonnes de la partie II sont comptees a zero (E21)
+AVIS : i2c_erreurs = 1 (attendu apres la commande d, sinon a expliquer)
+RESULTAT : OK
+➜  hote git:(Ana) ✗

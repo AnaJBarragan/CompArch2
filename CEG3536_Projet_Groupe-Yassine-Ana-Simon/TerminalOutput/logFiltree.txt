@@ -1,0 +1,406 @@
+T,247236,0,0,0,0,255,0,2473,0,0,0,100,245,208,10243,1,0*43
+T,247436,0,0,0,0,255,0,2475,0,0,0,100,245,208,10243,1,0*43
+T,247636,0,0,0,0,254,0,2477,0,0,0,100,245,208,10243,1,0*42
+T,247836,0,0,0,0,256,0,2479,0,0,0,100,245,208,10243,1,0*40
+T,248036,0,0,0,0,255,0,2481,0,0,0,100,245,208,10243,1,0*43
+T,248236,0,0,0,0,255,0,2483,0,0,0,100,245,208,10243,1,0*43
+T,248436,0,0,0,0,255,0,2485,0,0,0,100,245,208,10243,1,0*43
+T,248636,0,0,0,0,253,0,2487,0,0,0,100,245,208,10243,1,0*45
+T,248836,0,0,0,0,255,0,2489,0,0,0,100,245,208,10243,1,0*43
+T,249036,0,0,0,0,255,0,2491,0,0,0,100,245,208,10243,1,0*43
+T,249236,0,0,0,0,254,0,2493,0,0,0,100,245,208,10243,1,0*42
+T,249436,0,0,0,0,256,0,2495,0,0,0,100,245,208,10243,1,0*40
+T,249636,0,0,0,0,256,0,2497,0,0,0,100,245,208,10243,1,0*40
+T,249836,0,0,0,0,255,0,2499,0,0,0,100,245,208,10243,1,0*43
+T,250036,0,0,0,0,255,0,2501,0,0,0,100,245,208,10243,1,0*43
+T,250236,0,0,0,0,254,0,2503,0,0,0,100,245,208,10244,1,0*45
+T,250436,0,0,0,0,255,0,2505,0,0,0,100,245,208,10244,1,0*44
+T,250636,0,0,0,0,255,0,2507,0,0,0,100,245,208,10244,1,0*44
+T,250836,0,0,0,0,256,0,2509,0,0,0,100,245,208,10244,1,0*47
+T,251036,0,0,0,0,256,0,2511,0,0,0,100,245,208,10244,1,0*47
+T,251236,0,0,0,0,255,0,2513,0,0,0,100,245,208,10244,1,0*44
+T,251436,0,0,0,0,254,0,2515,0,0,0,100,245,208,10244,1,0*45
+T,251636,0,0,0,0,256,0,2517,0,0,0,100,245,208,10244,1,0*47
+T,251836,0,0,0,0,256,0,2519,0,0,0,100,245,208,10244,1,0*47
+T,252036,0,0,0,0,255,0,2521,0,0,0,100,245,208,10244,1,0*44
+T,252236,0,0,0,0,255,0,2523,0,0,0,100,245,208,10244,1,0*44
+T,252436,0,0,0,0,255,0,2525,0,0,0,100,245,208,10244,1,0*44
+T,252636,0,0,0,0,255,0,2527,0,0,0,100,245,208,10244,1,0*44
+T,252836,0,0,0,0,255,0,2529,0,0,0,100,245,208,10244,1,0*44
+
+[fin]
+➜  hote git:(Ana) ✗ clear
+➜  hote git:(Ana) ✗ cd ~/Documents/Software/CEG3536/CEG3536_Projet_Groupe-Yassine-Ana-Simon/hote && python3 terminal.py --suivre demo.log
+[changements de demo.log ; Ctrl-C pour quitter]
+   40.636 s  etat ARRET | sens immobile | consigne_pct 0 | pwm_pct 0 | T analog. 25.6 C | vitesse 0.0 tr/min | mode MAN | cause - | plafond_pct 100 | T env. 24.5 C | H 20.8 % | P 1024.4 hPa | i2c_erreurs 0 | ticks_perdus 0
+---------- carte reinitialisee (ligne H) ----------
+           BALAYAGE I2C : 5 adresse(s) : 2D 38 39 3E 5A
+    0.236 s  etat ARRET | sens immobile | consigne_pct 0 | pwm_pct 0 | T analog. 25.5 C | vitesse 0.0 tr/min | mode MAN | cause - | plafond_pct 100 | T env. 24.5 C | H 20.8 % | P 1024.4 hPa | i2c_erreurs 0 | ticks_perdus 0
+           W,statut=0
+           W,cycles=1399
+           W,us=349
+           W,cycles_2octets=1399
+           W,cycles_4octets=2167
+           W,khz_x10=937
+           W,nack=1
+           W,busy=0
+           W,i2c_erreurs=1
+    1.244 s  i2c_erreurs 1
+   46.840 s  EVENEMENT touche : Next/Back
+   46.844 s  mode AUT
+   56.391 s  EVENEMENT commutateur : SW3
+   61.261 s  EVENEMENT commutateur : SW1
+   63.351 s  EVENEMENT commutateur : SW2
+   66.291 s  EVENEMENT commutateur : SW5
+   66.444 s  etat ARRET_EVENEMENT | cause DEFAUT
+   70.921 s  EVENEMENT commutateur : SW5
+   72.091 s  EVENEMENT commutateur : SW2
+   72.991 s  EVENEMENT commutateur : SW1
+   75.091 s  EVENEMENT commutateur : SW3
+   82.991 s  EVENEMENT touche : Fn (Shift)
+   83.044 s  etat ARRET | cause -
+   90.426 s  EVENEMENT touche : Next/Back
+   90.444 s  mode MAN
+   94.162 s  EVENEMENT commutateur : SW1
+   94.662 s  EVENEMENT commutateur : SW1
+   95.102 s  EVENEMENT commutateur : SW1
+   95.532 s  EVENEMENT commutateur : SW1
+   95.942 s  EVENEMENT commutateur : SW1
+   96.322 s  EVENEMENT commutateur : SW1
+   96.702 s  EVENEMENT commutateur : SW1
+   97.072 s  EVENEMENT commutateur : SW1
+   97.462 s  EVENEMENT commutateur : SW1
+   97.822 s  EVENEMENT commutateur : SW1
+   98.192 s  EVENEMENT commutateur : SW1
+   98.562 s  EVENEMENT commutateur : SW1
+   98.922 s  EVENEMENT commutateur : SW1
+   99.272 s  EVENEMENT commutateur : SW1
+   99.632 s  EVENEMENT commutateur : SW1
+   99.992 s  EVENEMENT commutateur : SW1
+  100.352 s  EVENEMENT commutateur : SW1
+  100.722 s  EVENEMENT commutateur : SW1
+  101.072 s  EVENEMENT commutateur : SW1
+  101.452 s  EVENEMENT commutateur : SW1
+  108.322 s  EVENEMENT commutateur : SW2
+  108.332 s  EVENEMENT commutateur : SW1
+  130.644 s  etat MARCHE_AVANT | consigne_pct 58 | pwm_pct 7
+  130.844 s  sens avant | pwm_pct 27 | vitesse 15.1 tr/min
+  131.044 s  pwm_pct 47 | vitesse 100.1 tr/min
+  131.244 s  pwm_pct 58
+  131.444 s  vitesse 184.5 tr/min
+  131.644 s  vitesse 201.8 tr/min
+  135.444 s  consigne_pct 61
+  135.644 s  consigne_pct 85 | pwm_pct 79
+  135.844 s  consigne_pct 100 | pwm_pct 99 | vitesse 275.9 tr/min
+  136.044 s  vitesse 348.5 tr/min
+  137.044 s  consigne_pct 82 | pwm_pct 86
+  137.244 s  consigne_pct 55 | pwm_pct 66
+  137.444 s  consigne_pct 37 | pwm_pct 46 | vitesse 276.3 tr/min
+  137.644 s  consigne_pct 22 | pwm_pct 26 | vitesse 186.1 tr/min
+  137.844 s  consigne_pct 0 | pwm_pct 6 | vitesse 91.8 tr/min
+  138.044 s  pwm_pct 0 | vitesse 10.9 tr/min
+  138.444 s  sens immobile | vitesse 0.0 tr/min
+  138.844 s  consigne_pct 9 | pwm_pct 7
+  139.044 s  sens avant | consigne_pct 30 | pwm_pct 27 | vitesse 37.9 tr/min
+  139.244 s  consigne_pct 42 | pwm_pct 42
+  139.444 s  consigne_pct 51 | pwm_pct 49 | vitesse 121.9 tr/min
+  139.644 s  consigne_pct 63 | pwm_pct 63 | vitesse 169.7 tr/min
+  139.844 s  consigne_pct 72 | pwm_pct 72 | vitesse 217.5 tr/min
+  140.044 s  vitesse 254.4 tr/min
+  141.444 s  consigne_pct 66
+  141.644 s  consigne_pct 21 | pwm_pct 48
+  141.844 s  consigne_pct 0 | pwm_pct 28 | vitesse 174.9 tr/min
+  142.044 s  pwm_pct 8 | vitesse 80.5 tr/min
+  142.244 s  pwm_pct 0
+  142.444 s  vitesse 6.7 tr/min
+  142.644 s  sens immobile
+  144.444 s  etat ARRET
+  147.044 s  etat MARCHE_ARRIERE
+  148.444 s  consigne_pct 18 | pwm_pct 10
+  148.644 s  sens arriere | consigne_pct 63 | pwm_pct 30
+  148.844 s  consigne_pct 96 | pwm_pct 50 | vitesse 100.4 tr/min
+  149.044 s  consigne_pct 100 | pwm_pct 70 | vitesse 194.4 tr/min
+  149.244 s  pwm_pct 90
+  149.444 s  pwm_pct 100 | vitesse 289.7 tr/min
+  149.644 s  vitesse 363.9 tr/min
+  150.444 s  vitesse 374.4 tr/min
+  154.052 s  EVENEMENT E-Stop : 0
+  154.244 s  etat URGENCE | consigne_pct 0 | pwm_pct 0
+  154.444 s  vitesse 310.9 tr/min
+  154.644 s  vitesse 189.3 tr/min
+  154.844 s  vitesse 94.7 tr/min
+  155.044 s  vitesse 25.0 tr/min
+  155.444 s  sens immobile | vitesse 0.0 tr/min
+  155.870 s  EVENEMENT touche : Fn (Shift)
+  156.044 s  etat ARRET
+  160.982 s  EVENEMENT commutateur : SW8
+  164.492 s  EVENEMENT commutateur : SW8
+  185.078 s  EVENEMENT touche : chiffre 1
+  185.244 s  plafond_pct 10
+  185.821 s  EVENEMENT touche : chiffre 2
+  185.844 s  plafond_pct 20
+  186.426 s  EVENEMENT touche : chiffre 3
+  186.444 s  plafond_pct 30
+  187.001 s  EVENEMENT touche : chiffre 4
+  187.044 s  plafond_pct 40
+  187.572 s  EVENEMENT touche : chiffre 5
+  187.644 s  plafond_pct 50
+  188.158 s  EVENEMENT touche : chiffre 6
+  188.244 s  plafond_pct 60
+  188.717 s  EVENEMENT touche : chiffre 7
+  188.844 s  plafond_pct 70
+  189.281 s  EVENEMENT touche : chiffre 8
+  189.444 s  plafond_pct 80
+  189.836 s  EVENEMENT touche : chiffre 9
+  189.844 s  plafond_pct 90
+  190.836 s  EVENEMENT touche : Fn (Shift)
+  191.392 s  EVENEMENT touche : chiffre 0
+  191.444 s  plafond_pct 100
+  191.895 s  EVENEMENT touche : Next/Back
+  192.044 s  mode AUT
+  197.450 s  EVENEMENT touche : Next/Back
+  197.644 s  mode MAN
+  217.844 s  etat MARCHE_AVANT
+  219.244 s  consigne_pct 3
+  219.444 s  sens avant | consigne_pct 54 | pwm_pct 20
+  219.644 s  consigne_pct 93 | pwm_pct 40 | vitesse 45.6 tr/min
+  219.844 s  consigne_pct 100 | pwm_pct 60 | vitesse 136.7 tr/min
+  220.044 s  pwm_pct 80 | vitesse 226.8 tr/min
+  220.244 s  pwm_pct 100
+  220.444 s  vitesse 316.1 tr/min
+  220.644 s  vitesse 355.8 tr/min
+  221.745 s  EVENEMENT touche : chiffre 5
+  221.844 s  consigne_pct 50 | pwm_pct 90 | plafond_pct 50
+  222.044 s  pwm_pct 70 | vitesse 306.4 tr/min
+  222.244 s  pwm_pct 50
+  222.444 s  vitesse 217.5 tr/min
+  222.644 s  vitesse 177.1 tr/min
+  225.120 s  EVENEMENT touche : chiffre 9
+  225.244 s  consigne_pct 90 | pwm_pct 62 | plafond_pct 90
+  225.444 s  pwm_pct 82 | vitesse 191.6 tr/min
+  225.644 s  pwm_pct 90 | vitesse 272.1 tr/min
+  225.844 s  vitesse 319.9 tr/min
+  228.491 s  EVENEMENT touche : chiffre 0
+  228.644 s  consigne_pct 100 | pwm_pct 100 | plafond_pct 100
+  228.844 s  vitesse 352.6 tr/min
+  233.590 s  EVENEMENT touche : Next/Back
+  234.050 s  EVENEMENT touche : Next/Back
+  234.480 s  EVENEMENT touche : Next/Back
+  242.044 s  etat ARRET | consigne_pct 0 | pwm_pct 0 | vitesse 328.2 tr/min
+  242.444 s  vitesse 220.8 tr/min
+  242.644 s  vitesse 129.3 tr/min
+  242.844 s  vitesse 57.4 tr/min
+  243.044 s  vitesse 7.1 tr/min
+  243.444 s  sens immobile
+  244.095 s  EVENEMENT touche : Next/Back
+  244.244 s  mode AUT
+  257.761 s  EVENEMENT PIR : signal haut, traite 1 ms apres l'IRQ
+  260.579 s  EVENEMENT PIR : signal retombe
+  275.593 s  EVENEMENT PIR : signal haut, traite 1 ms apres l'IRQ
+  278.087 s  EVENEMENT PIR : signal retombe
+  283.546 s  EVENEMENT PIR : signal haut, traite 1 ms apres l'IRQ
+  289.847 s  EVENEMENT PIR : signal retombe
+  297.444 s  etat MARCHE_ARRIERE | consigne_pct 60 | pwm_pct 7
+  297.644 s  sens arriere | pwm_pct 27
+  297.844 s  pwm_pct 47 | vitesse 88.9 tr/min
+  298.044 s  pwm_pct 60 | vitesse 180.3 tr/min
+  298.444 s  vitesse 217.5 tr/min
+  308.440 s  EVENEMENT PIR : signal haut, traite 1 ms apres l'IRQ
+  308.444 s  etat ARRET_EVENEMENT | consigne_pct 0 | pwm_pct 0 | cause OBSTACLE
+  308.844 s  vitesse 131.2 tr/min
+  309.044 s  vitesse 53.9 tr/min
+  309.444 s  vitesse 3.9 tr/min
+  309.644 s  sens immobile
+  314.028 s  EVENEMENT PIR : signal retombe
+  318.025 s  EVENEMENT touche : Fn (Shift)
+  318.044 s  etat ARRET | cause -
+  331.244 s  etat MARCHE_AVANT | consigne_pct 60 | pwm_pct 8
+  331.444 s  sens avant | pwm_pct 28
+  331.644 s  pwm_pct 48 | vitesse 75.7 tr/min
+  331.844 s  pwm_pct 60 | vitesse 165.6 tr/min
+  332.044 s  vitesse 211.4 tr/min
+  335.165 s  EVENEMENT touche : chiffre 4
+  335.244 s  consigne_pct 40 | pwm_pct 52 | plafond_pct 40
+  335.444 s  pwm_pct 40
+  335.644 s  vitesse 150.5 tr/min
+  336.868 s  EVENEMENT touche : chiffre 0
+  337.044 s  consigne_pct 60 | pwm_pct 58 | plafond_pct 100
+  337.444 s  vitesse 210.5 tr/min
+           A,pot_brut=2187
+           A,pot_mv=1762
+           A,temp_brut=2263
+           A,temp_mv=1824
+           A,tours_dma=66301
+           A,env_id=97
+           A,boucle_max_cycles=6498
+  354.833 s  EVENEMENT commutateur : SW8
+  370.845 s  T analog. 26.0 C
+  372.182 s  EVENEMENT PIR : signal haut, traite 1 ms apres l'IRQ
+  372.245 s  etat ARRET_EVENEMENT | consigne_pct 0 | pwm_pct 0 | cause OBSTACLE
+  372.645 s  vitesse 129.9 tr/min
+  372.845 s  vitesse 58.7 tr/min
+  373.045 s  vitesse 8.3 tr/min
+  373.445 s  sens immobile
+  374.659 s  EVENEMENT PIR : signal retombe
+  376.245 s  H 22.0 %
+  376.603 s  EVENEMENT touche : Fn (Shift)
+  376.645 s  etat ARRET | cause -
+  385.645 s  etat MARCHE_ARRIERE | consigne_pct 60 | pwm_pct 9
+  385.845 s  sens arriere | pwm_pct 29 | vitesse 24.1 tr/min
+  386.045 s  pwm_pct 49 | vitesse 119.4 tr/min
+  386.245 s  pwm_pct 60
+  386.445 s  vitesse 204.7 tr/min
+  386.645 s  vitesse 221.4 tr/min
+  394.245 s  H 23.0 %
+  405.245 s  H 24.1 %
+  420.902 s  EVENEMENT PIR : signal haut, traite 1 ms apres l'IRQ
+  421.045 s  etat ARRET_EVENEMENT | consigne_pct 0 | pwm_pct 0 | vitesse 207.0 tr/min | cause OBSTACLE
+  421.445 s  vitesse 122.9 tr/min
+  421.645 s  vitesse 50.7 tr/min
+  421.845 s  vitesse 3.9 tr/min
+  422.045 s  sens immobile
+  423.276 s  EVENEMENT touche : Fn (Shift)
+  423.524 s  EVENEMENT PIR : signal retombe
+  424.632 s  EVENEMENT touche : Fn (Shift)
+  424.645 s  etat ARRET | cause -
+  441.245 s  H 23.1 %
+  451.416 s  EVENEMENT touche : Fn (Shift)
+  452.245 s  H 22.1 %
+  452.481 s  EVENEMENT touche : Next/Back
+  452.645 s  mode MAN
+  491.645 s  T analog. 26.5 C
+  493.228 s  EVENEMENT PIR : signal haut, traite 1 ms apres l'IRQ
+  495.245 s  H 23.2 %
+  495.787 s  EVENEMENT PIR : signal retombe
+  498.245 s  H 24.2 %
+  500.045 s  T analog. 27.0 C
+  507.845 s  T analog. 26.4 C
+  513.245 s  T env. 25.1 C
+  513.677 s  EVENEMENT PIR : signal haut, traite 1 ms apres l'IRQ
+  514.245 s  T env. 25.6 C | H 25.8 %
+  515.245 s  H 27.5 %
+  516.245 s  T env. 26.2 C | H 29.7 %
+  517.245 s  H 32.1 %
+  518.245 s  H 34.3 %
+  519.245 s  H 35.4 %
+  519.667 s  EVENEMENT PIR : signal retombe
+  520.245 s  T env. 26.8 C | H 36.7 %
+  521.245 s  H 38.5 % | P 1025.7 hPa
+  522.245 s  T env. 27.5 C | H 40.6 %
+  523.245 s  H 42.4 % | P 1024.6 hPa
+  524.245 s  T env. 27.0 C
+  525.170 s  EVENEMENT PIR : signal haut, traite 1 ms apres l'IRQ
+  526.245 s  H 41.4 %
+  527.245 s  H 40.1 %
+  528.245 s  H 38.7 %
+  529.071 s  EVENEMENT PIR : signal retombe
+  529.245 s  H 37.3 %
+  530.245 s  T env. 26.5 C | H 36.0 %
+  531.245 s  H 34.8 %
+  532.245 s  H 33.6 %
+  533.245 s  H 32.5 %
+  535.245 s  H 31.4 %
+  535.853 s  EVENEMENT PIR : signal haut, traite 1 ms apres l'IRQ
+  536.245 s  T env. 27.1 C | H 32.6 %
+  537.245 s  H 34.4 %
+  538.245 s  T env. 27.9 C | H 37.0 %
+  538.491 s  EVENEMENT PIR : signal retombe
+  539.245 s  H 39.3 %
+  540.245 s  H 41.2 %
+  541.245 s  H 43.4 %
+  542.245 s  T env. 28.5 C | H 45.5 %
+  543.245 s  H 47.5 %
+  544.245 s  H 48.6 %
+  544.285 s  EVENEMENT PIR : signal haut, traite 1 ms apres l'IRQ
+  546.245 s  H 50.3 %
+  548.245 s  H 51.9 %
+  550.245 s  T env. 28.0 C
+  551.405 s  EVENEMENT PIR : signal retombe
+  554.245 s  H 50.8 %
+  556.338 s  EVENEMENT PIR : signal haut, traite 0 ms apres l'IRQ
+  558.861 s  EVENEMENT PIR : signal retombe
+  559.245 s  H 49.6 %
+  560.245 s  T env. 27.5 C | H 48.2 %
+  561.245 s  H 46.6 %
+  562.245 s  H 44.9 %
+  563.245 s  H 43.8 %
+  565.245 s  T env. 28.1 C
+  565.978 s  EVENEMENT PIR : signal haut, traite 0 ms apres l'IRQ
+  566.245 s  H 45.8 %
+  567.245 s  T env. 27.6 C
+  570.245 s  H 44.7 %
+  570.330 s  EVENEMENT PIR : signal retombe
+  571.245 s  H 43.6 %
+  572.245 s  H 42.4 %
+  573.245 s  T env. 27.1 C | H 41.0 %
+  574.245 s  H 39.7 %
+  575.245 s  H 38.4 %
+  576.245 s  H 37.2 %
+  577.245 s  H 36.0 %
+  578.245 s  H 35.0 %
+  579.245 s  H 34.0 %
+  581.245 s  H 32.3 %
+  582.245 s  T env. 26.6 C
+  583.245 s  H 30.8 %
+  585.245 s  H 29.5 %
+  588.245 s  H 28.3 %
+  591.245 s  H 27.3 %
+  596.245 s  H 26.2 %
+  604.245 s  H 25.2 %
+  607.445 s  T analog. 25.9 C
+  608.245 s  T env. 26.1 C
+  612.245 s  H 24.1 %
+  624.317 s  EVENEMENT commutateur : SW8
+  625.615 s  EVENEMENT touche : Next/Back
+  625.645 s  mode AUT
+  628.245 s  H 23.1 %
+  630.445 s  etat MARCHE_AVANT | consigne_pct 60 | pwm_pct 19
+  630.645 s  sens avant | pwm_pct 39 | vitesse 40.4 tr/min
+  630.845 s  pwm_pct 59 | vitesse 132.5 tr/min
+  631.045 s  vitesse 205.0 tr/min
+  634.221 s  EVENEMENT touche : chiffre 3
+  634.245 s  consigne_pct 30 | plafond_pct 30
+  634.445 s  pwm_pct 37
+  634.645 s  pwm_pct 30 | vitesse 153.7 tr/min
+  634.845 s  vitesse 105.6 tr/min
+  638.827 s  EVENEMENT commutateur : SW1
+  638.845 s  etat ARRET_EVENEMENT | consigne_pct 0 | pwm_pct 0 | cause FEU
+  639.045 s  vitesse 79.2 tr/min
+  639.445 s  vitesse 20.9 tr/min
+  639.645 s  sens immobile | vitesse 0.0 tr/min
+  641.917 s  EVENEMENT commutateur : SW2
+  642.045 s  cause OBSTACLE
+  648.850 s  EVENEMENT touche : Fn (Shift)
+  650.245 s  H 22.1 %
+  653.940 s  EVENEMENT commutateur : SW2
+  655.023 s  EVENEMENT touche : Fn (Shift)
+  655.045 s  cause FEU
+  658.920 s  EVENEMENT commutateur : SW1
+  664.455 s  EVENEMENT touche : Fn (Shift)
+  664.645 s  etat ARRET | cause -
+  666.245 s  T env. 25.6 C
+  671.045 s  etat MARCHE_ARRIERE | sens arriere | consigne_pct 30 | pwm_pct 16
+  671.245 s  pwm_pct 30
+  671.445 s  vitesse 85.7 tr/min
+  671.645 s  vitesse 107.5 tr/min
+  674.390 s  EVENEMENT commutateur : SW4
+  674.445 s  etat ARRET | consigne_pct 0 | pwm_pct 0 | cause FIN
+  674.645 s  vitesse 93.7 tr/min
+  674.845 s  vitesse 33.4 tr/min
+  675.045 s  vitesse 0.3 tr/min
+  675.445 s  sens immobile
+  685.310 s  EVENEMENT commutateur : SW3
+  688.267 s  EVENEMENT touche : Next/Back
+  688.445 s  mode MAN | cause -
+  691.280 s  EVENEMENT commutateur : SW1
+  691.750 s  EVENEMENT commutateur : SW2
+           X,echecs=0
+           F,echecs=0
+  723.247 s  H 21.1 %
+           D,ok
+  729.848 s  evq_debordements 8 | ticks_perdus 1
+  738.449 s  evq_debordements 16 | ticks_perdus 2
+  797.249 s  T env. 25.1 C
+^C
+[fin]
+➜  hote git:(Ana) ✗
